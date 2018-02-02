@@ -1,0 +1,69 @@
+#include <stdint.h>
+
+#ifndef MMIO_H
+#define MMIO_H
+
+#define MMIO_BASE 0x3F000000
+#define MMIO_PTR(offset, size, name) \
+    [[maybe_unused]] static volatile uint ## size ## _t* name = (volatile uint ## size ## _t*) (MMIO_BASE + offset);
+
+namespace mmio
+{
+    MMIO_PTR(0x00200000, 32, gpfsel0);              // GPIO Function Select 0
+    MMIO_PTR(0x00200004, 32, gpfsel1);              // GPIO Function Select 1
+    MMIO_PTR(0x00200008, 32, gpfsel2);              // GPIO Function Select 2
+    MMIO_PTR(0x0020000C, 32, gpfsel3);              // GPIO Function Select 3
+    MMIO_PTR(0x00200010, 32, gpfsel4);              // GPIO Function Select 4
+    MMIO_PTR(0x00200014, 32, gpfsel5);              // GPIO Function Select 5
+    MMIO_PTR(0x0020001C, 32, gpset0);               // GPIO Pin Output Set 0
+    MMIO_PTR(0x00200020, 32, gpset1);               // GPIO Pin Output Set 1
+    MMIO_PTR(0x00200028, 32, gpclr0);               // GPIO Pin Output Clear 0
+    MMIO_PTR(0x0020002C, 32, gpclr1);               // GPIO Pin Output Clear 1
+    MMIO_PTR(0x00200034, 32, gplev0);               // GPIO Pin Level 0
+    MMIO_PTR(0x00200038, 32, gplev1);               // GPIO Pin Level 1
+    MMIO_PTR(0x00200040, 32, gpeds0);               // GPIO Pin Event Detect Status 0
+    MMIO_PTR(0x00200044, 32, gpeds1);               // GPIO Pin Event Detect Status 1
+    MMIO_PTR(0x0020004C, 32, gpren0);               // GPIO Pin Rising Edge Detect Enable 0
+    MMIO_PTR(0x00200050, 32, gpren1);               // GPIO Pin Rising Edge Detect Enable 1
+    MMIO_PTR(0x00200058, 32, gpfen0);               // GPIO Pin Falling Edge Detect Enable 0
+    MMIO_PTR(0x0020005C, 32, gpfen1);               // GPIO Pin Falling Edge Detect Enable 1
+    MMIO_PTR(0x00200064, 32, gphen0);               // GPIO Pin High Detect Enable 0
+    MMIO_PTR(0x00200068, 32, gphen1);               // GPIO Pin High Detect Enable 1
+    MMIO_PTR(0x00200070, 32, gplen0);               // GPIO Pin Low Detect Enable 0
+    MMIO_PTR(0x00200074, 32, gplen1);               // GPIO Pin Low Detect Enable 1
+    MMIO_PTR(0x0020007C, 32, gparen0);              // GPIO Pin Async. Rising Edge Detect 0
+    MMIO_PTR(0x00200080, 32, gparen1);              // GPIO Pin Async. Rising Edge Detect 1
+    MMIO_PTR(0x00200088, 32, gpafen0);              // GPIO Pin Async. Falling Edge Detect 0
+    MMIO_PTR(0x0020008C, 32, gpafen1);              // GPIO Pin Async. Falling Edge Detect 1
+    MMIO_PTR(0x00200094, 32, gppud);                // GPIO Pin Pull-up/down Enable
+    MMIO_PTR(0x00200098, 32, gppudclk0);            // GPIO Pin Pull-up/down Enable Clock 0
+    MMIO_PTR(0x0020009C, 32, gppudclk1);            // GPIO Pin Pull-up/down Enable Clock 1
+
+    MMIO_PTR(0x00215000,  8, aux_irq);              // Auxiliary Interrupt status
+    MMIO_PTR(0x00215004,  8, aux_enables);          // Auxiliary enables
+
+    MMIO_PTR(0x00215040,  8, aux_mu_io);            // Mini Uart I/O Data
+    MMIO_PTR(0x00215044,  8, aux_mu_ier);           // Mini Uart Interrupt Enable
+    MMIO_PTR(0x00215048,  8, aux_mu_iir);           // Mini Uart Interrupt Identify
+    MMIO_PTR(0x0021504C,  8, aux_mu_lcr);           // Mini Uart Line Control
+    MMIO_PTR(0x00215050,  8, aux_mu_mcr);           // Mini Uart Modem Control
+    MMIO_PTR(0x00215054,  8, aux_mu_lsr);           // Mini Uart Line Status
+    MMIO_PTR(0x00215058,  8, aux_mu_msr);           // Mini Uart Modem Status
+    MMIO_PTR(0x0021505C,  8, aux_mu_scratch);       // Mini Uart Scratch
+    MMIO_PTR(0x00215060,  8, aux_mu_cntl);          // Mini Uart Extra Control
+    MMIO_PTR(0x00215064, 32, aux_mu_stat);          // Mini Uart Extra Status
+    MMIO_PTR(0x00215068, 16, aux_mu_baud);          // Mini Uart Baudrate
+
+    MMIO_PTR(0x00215080, 32, aux_spi0_cntl0);       // SPI 1 Control register 0
+    MMIO_PTR(0x00215084,  8, aux_spi0_cntl1);       // SPI 1 Control register 1
+    MMIO_PTR(0x00215088, 32, aux_spi0_stat);        // SPI 1 Status
+    MMIO_PTR(0x00215090, 32, aux_spi0_io);          // SPI 1 Data
+    MMIO_PTR(0x00215094, 16, aux_spi0_peek);        // SPI 1 Peek
+    MMIO_PTR(0x002150C0, 32, aux_spi1_cntl0);       // SPI 2 Control register 0
+    MMIO_PTR(0x002150C4,  8, aux_spi1_cntl1);       // SPI 2 Control register 1
+    MMIO_PTR(0x002150C8, 32, aux_spi1_stat);        // SPI 2 Status
+    MMIO_PTR(0x002150D0, 32, aux_spi1_io);          // SPI 2 Data
+    MMIO_PTR(0x002150D4, 16, aux_spi1_peek);        // SPI 2 Peek
+}
+
+#endif

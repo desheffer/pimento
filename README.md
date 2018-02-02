@@ -1,0 +1,33 @@
+# pi-os
+
+These are my experiments in building an operating system for Raspberry Pi 3.
+This project has been heavily guided by the following resources:
+
+- https://github.com/bztsrc/raspi3-tutorial
+- https://jsandler18.github.io/
+- https://wiki.osdev.org/Main_Page
+
+## Getting Started
+
+This code is designed to run on a Raspberry Pi 3. Be aware that older versions
+of the Pi are likely to experience compatibility issues.
+
+Before you can build the project, you will need the GCC `arm-none-eabi`
+toolchain. You can download it using [this
+link](https://developer.arm.com/open-source/gnu-toolchain/gnu-rm/downloads) or
+your favorite package manager.
+
+Build the project by running `make`. This will generate a file called
+`build/kernel7.img`. Copy this file to the SD card of your Pi, replacing the
+existing `/boot/kernel7.img` file. You can now boot the Pi and it will run the
+new code.
+
+You will quickly become tired of swapping the SD card back and forth every time
+a change is made. It is recommended that you purchase a USB-to-TTL serial cable
+and install [Raspbootin](https://github.com/desheffer/raspbootin). This setup
+uses the serial connection to load the newest kernel image every time the Pi is
+booted.
+
+Finally, it's worth noting that it is possible to emulate some aspects of the
+Pi using QEMU. Unfortunately, there is very limited support for the Raspberry
+Pi 3, so your mileage may vary.
