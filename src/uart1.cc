@@ -38,7 +38,7 @@ namespace uart1
         char r;
 
         while (!(*mmio::aux_mu_lsr & 0x01)) {
-            asm volatile("nop");
+            timer::nop();
         }
 
         r = *mmio::aux_mu_io;
@@ -49,7 +49,7 @@ namespace uart1
     void putc(char c)
     {
         while (!(*mmio::aux_mu_lsr & 0x20)) {
-            asm volatile("nop");
+            timer::nop();
         }
 
         *mmio::aux_mu_io = c;

@@ -9,6 +9,14 @@
 
 namespace mmio
 {
+    MMIO_PTR(0x00003000, 32, system_timer_cs);      // System Timer Control/Status
+    MMIO_PTR(0x00003004, 32, system_timer_clo);     // System Timer Counter Lower 32 bits
+    MMIO_PTR(0x00003008, 32, system_timer_chi);     // System Timer Counter Higher 32 bits
+    MMIO_PTR(0x0000300C, 32, system_timer_c0);      // System Timer Compare 0
+    MMIO_PTR(0x00003010, 32, system_timer_c1);      // System Timer Compare 1
+    MMIO_PTR(0x00003014, 32, system_timer_c2);      // System Timer Compare 2
+    MMIO_PTR(0x00003018, 32, system_timer_c3);      // System Timer Compare 3
+
     MMIO_PTR(0x00200000, 32, gpfsel0);              // GPIO Function Select 0
     MMIO_PTR(0x00200004, 32, gpfsel1);              // GPIO Function Select 1
     MMIO_PTR(0x00200008, 32, gpfsel2);              // GPIO Function Select 2

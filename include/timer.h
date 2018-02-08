@@ -4,18 +4,18 @@
 #define TIMER_H
 
 namespace timer {
-    static inline void wait(int32_t count)
-    {
-        count *= 1000;
+    struct counter_t {
+        uint32_t low;
+        uint32_t high;
+    };
 
-        asm volatile("__delay_%=: subs %[count], %[count], #1; bne __delay_%=\n"
-                : "=r"(count): [count]"0"(count) : "cc");
-    }
-
-    static inline void nop()
+    inline void nop()
     {
         asm volatile("nop");
     }
+
+    counter_t counter();
+    void wait(uint32_t);
 }
 
 #endif
