@@ -1,5 +1,6 @@
 #include <mmio.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <timer.h>
 #include <uart1.h>
 
@@ -46,33 +47,12 @@ namespace uart1
         return r == '\r' ? '\n' : r;
     }
 
-    void putc(char c)
+    void putc(void*, char c)
     {
         while (!(*mmio::aux_mu_lsr & 0x20)) {
             timer::nop();
         }
 
         *mmio::aux_mu_io = c;
-    }
-
-    void puts(const char* s)
-    {
-        while (*s) {
-            if (*s == '\n') {
-                putc('\r');
-            }
-            putc(*s++);
-        }
-    }
-
-    void putx(uint32_t x)
-    {
-        uint32_t c;
-
-        for (int32_t i = 32 - 4; i >= 0; i -= 4) {
-            c = (x >> i) & 0xF;
-            c += c > 9 ? 'A' - 10 : '0';
-            putc(c);
-        }
     }
 }

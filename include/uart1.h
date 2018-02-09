@@ -7,9 +7,7 @@ namespace uart1
 {
     void init();
     char getc();
-    void putc(char);
-    void puts(const char*);
-    void putx(uint32_t);
+    void putc(void*, char);
 }
 
 #endif

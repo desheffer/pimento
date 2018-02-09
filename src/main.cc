@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdio.h>
 #include <timer.h>
 #include <uart1.h>
 
@@ -13,16 +14,14 @@ void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
     (void) atags;
 
     uart1::init();
-    uart1::puts("Hello, World!\n");
+    init_printf(0, uart1::putc);
+
+    printf("Hello, World!\n");
 
     while (1) {
         timer::wait(1000);
 
         timer::counter_t counter = timer::counter();
-
-        uart1::puts("time: ");
-        uart1::putx(counter.high);
-        uart1::putx(counter.low);
-        uart1::puts("\n");
+        printf("time: %08x %08x\n", counter.high, counter.low);
     }
 }
