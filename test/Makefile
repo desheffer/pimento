@@ -5,14 +5,18 @@ OBJCOPY   := $(TOOLCHAIN)-objcopy
 IMG := kernel7
 
 BUILD   := build
-INCLUDE := include
-SRC     := src
-TEST    := test
+INCLUDE := ../include
+SRC     := ../src
+TEST    := .
 
 INCLUDES := $(wildcard $(INCLUDE)/*.h)
+INCLUDES += $(wildcard $(TEST)/*.h)
 
 OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.o, $(wildcard $(SRC)/*.S))
 OBJECTS += $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(wildcard $(SRC)/*.cc))
+OBJECTS += $(patsubst $(TEST)/%.cc, $(BUILD)/test-%.o, $(wildcard $(TEST)/*.cc))
+
+OBJECTS := $(filter-out $(BUILD)/main.o, $(OBJECTS))
 
 BASEFLAGS := -O2 -fpic -nostdlib
 BASEFLAGS += -nostartfiles -ffreestanding -nodefaultlibs
@@ -29,25 +33,23 @@ WARNFLAGS += -Wno-sign-compare -Wswitch -Wsystem-headers
 WARNFLAGS += -Wno-pragmas -Wno-unused-but-set-parameter
 WARNFLAGS += -Wno-unused-but-set-variable -Wno-unused-result
 WARNFLAGS += -Wwrite-strings -Wdisabled-optimization -Wpointer-arith
-WARNFLAGS += -Werror
 ASFLAGS   := -D__ASSEMBLY__
-CXXFLAGS  := -I$(INCLUDE) $(BASEFLAGS) $(WARNFLAGS)
+CXXFLAGS  := -I$(TEST) -I$(INCLUDE) $(BASEFLAGS) $(WARNFLAGS)
 CXXFLAGS  += -fno-exceptions -std=gnu++11
 LDFLAGS   := $(BASEFLAGS)
 
-.PHONY: default clean test
+.PHONY: default clean
 
 default: $(BUILD)/$(IMG).img
 
 clean:
 	rm -rf $(BUILD)
-	$(MAKE) -C $(TEST) clean
 
 $(BUILD)/$(IMG).img: $(BUILD)/$(IMG).elf
 	$(OBJCOPY) $(BUILD)/$(IMG).elf -O binary $@
 
-$(BUILD)/$(IMG).elf: $(OBJECTS) link-arm-eabi.ld
-	$(CC) $(LDFLAGS) $(OBJECTS) -Tlink-arm-eabi.ld -lgcc -o $@
+$(BUILD)/$(IMG).elf: $(OBJECTS) ../link-arm-eabi.ld
+	$(CC) $(LDFLAGS) $(OBJECTS) -T../link-arm-eabi.ld -lgcc -o $@
 
 $(BUILD)/%.o: $(SRC)/%.S
 	@mkdir -p $(@D)
@@ -57,5 +59,6 @@ $(BUILD)/%.o: $(SRC)/%.cc $(INCLUDES)
 	@mkdir -p $(@D)
 	$(CC) $(CXXFLAGS) -c $< -o $@
 
-test:
-	$(MAKE) -C $(TEST)
+$(BUILD)/test-%.o: $(TEST)/%.cc $(INCLUDES)
+	@mkdir -p $(@D)
+	$(CC) $(CXXFLAGS) -c $< -o $@
