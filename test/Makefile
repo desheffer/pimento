@@ -1,8 +1,8 @@
-TOOLCHAIN ?= arm-none-eabi
+TOOLCHAIN ?= aarch64-none-elf
 CC        := $(TOOLCHAIN)-g++
 OBJCOPY   := $(TOOLCHAIN)-objcopy
 
-IMG := kernel7
+IMG := kernel8
 
 BUILD   := build
 INCLUDE := ../include
@@ -48,8 +48,8 @@ clean:
 $(BUILD)/$(IMG).img: $(BUILD)/$(IMG).elf
 	$(OBJCOPY) $(BUILD)/$(IMG).elf -O binary $@
 
-$(BUILD)/$(IMG).elf: $(OBJECTS) ../link-arm-eabi.ld
-	$(CC) $(LDFLAGS) $(OBJECTS) -T../link-arm-eabi.ld -lgcc -o $@
+$(BUILD)/$(IMG).elf: $(OBJECTS) ../link-aarch64-elf.ld
+	$(CC) $(LDFLAGS) $(OBJECTS) -T../link-aarch64-elf.ld -lgcc -o $@
 
 $(BUILD)/%.o: $(SRC)/%.S
 	@mkdir -p $(@D)

@@ -1,32 +1,30 @@
 .section ".text.boot"
 
-.global _start
+.globl _start
 
 _start:
-    mrc p15, #0, r1, c0, c0, #5
-    and r1, r1, #3
-    cmp r1, #0
-    bne halt
+    // Isolate core 0.
+    mrs x4, mpidr_el1
+    and x4, x4, #3
+    cbnz x4, halt
 
-    mov sp, #0x8000
+    // Set up the stack.
+    mov sp, #0x80000
 
-    ldr r4, =__bss_start
-    ldr r9, =__bss_end
-    mov r5, #0
-    mov r6, #0
-    mov r7, #0
-    mov r8, #0
-    b       2f
+    // Clear out bss.
+    adr x4, __bss_start
+    adr x5, __bss_end
+loop_clear_bss:
+    // Store zero at x4.
+    stp xzr, xzr, [x4], #16
 
-1:
-    stmia r4!, {r5-r8}
+    // Loop until bss_end.
+    cmp x4, x5
+    blo loop_clear_bss
 
-2:
-    cmp r4, r9
-    blo 1b
-
-    ldr r3, =kernel_main
-    blx r3
+    // Call kernel_main.
+    ldr x3, =kernel_main
+    blr x3
 
 halt:
     wfe

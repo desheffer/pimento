@@ -17,10 +17,10 @@ void init_printf(void* data, putc_t putc)
 
 struct vcprintf_specifiers_t {
     char* buf;
-    uint8_t alt: 1;
-    uint8_t left_align: 1;
-    uint8_t pad: 1;
-    uint8_t uppercase: 1;
+    uint8_t alt;
+    uint8_t left_align;
+    uint8_t pad;
+    uint8_t uppercase;
     uint8_t base;
     char sign;
     uint8_t width;
@@ -67,7 +67,7 @@ static void vcprintf_uint(vcprintf_specifiers_t* sp, uint32_t i)
 
 static void vcprintf_sp(void* data, putc_t putc, vcprintf_specifiers_t* sp)
 {
-    char* buf = sp->buf;
+    const char* buf = sp->buf;
     size_t len;
 
     len = strlen(sp->buf);
@@ -121,7 +121,8 @@ void vcprintf(void* data, putc_t putc, const char* format, va_list arg)
 
     while (*format) {
         if (*format != '%') {
-            putc(data, *(format++));
+            putc(data, *format);
+            format++;
         } else {
             format++;
 
