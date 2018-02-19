@@ -2,6 +2,28 @@
 #include <stdint.h>
 #include <string.h>
 
+void* memcpy(void* dest, const void* src, uint32_t bytes)
+{
+    volatile uint8_t* d = (uint8_t*) dest;
+    const char* s = (const char*) src;
+
+    while (bytes--) {
+        *(d++) = *(s++);
+    }
+
+    return dest;
+}
+
+void* memset(void* dest, uint8_t c, uint32_t bytes)
+{
+    volatile uint8_t* d = (uint8_t*) dest;
+    while (bytes--) {
+        *(d++) = c;
+    }
+
+    return dest;
+}
+
 int32_t strcmp(const char* str1, const char* str2)
 {
     while (*str1 && *str1 == *str2) {
