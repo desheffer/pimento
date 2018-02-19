@@ -1,15 +1,52 @@
 .section ".text.boot"
 
 .globl _start
-
 _start:
     // Isolate core 0.
     mrs x4, mpidr_el1
     and x4, x4, #3
     cbnz x4, halt
 
+    // Get current EL.
+    mrs x4, currentel
+    and x4, x4, #12
+
+    // Skip if we are already in EL1.
+    cmp x4, #4
+    beq enter_el1
+
+    // Set EL1 stack pointer.
+    ldr x4, =_start
+    msr sp_el1, x4
+
+    // Disable coprocessor traps.
+    mov x4, #0x33FF
+    msr cptr_el2, x4
+    msr hstr_el2, xzr
+    mov x4, #(3 << 20)
+    msr cpacr_el1, x4
+
+    // Enable AArch64 in EL1.
+    mov x4, #(1 << 31)    // AArch64
+    orr x4, x4, #(1 << 1) // SWIO hardwired on Pi3
+    msr hcr_el2, x4
+    mrs x4, hcr_el2
+
+    // Set up exception handlers.
+    ldr x4, =_vector_table
+    msr vbar_el1, x4
+
+    // Change execution level to EL1.
+    mov x4, #0x3c4
+    msr spsr_el2, x4
+    adr x4, enter_el1
+    msr elr_el2, x4
+    eret
+
+enter_el1:
     // Set up the stack.
-    mov sp, #0x80000
+    ldr x4, =_start
+    mov sp, x4
 
     // Clear out bss.
     adr x4, __bss_start
@@ -23,9 +60,65 @@ loop_clear_bss:
     blo loop_clear_bss
 
     // Call kernel_main.
-    ldr x3, =kernel_main
-    blr x3
+    bl kernel_main
 
 halt:
     wfe
     b halt
+
+.balign 0x800
+_vector_table:
+    // Synchronous
+    .balign 0x80
+    b halt
+
+    // IRQ
+    .balign 0x80
+    b asm_irq_handler
+
+    // FIQ
+    .balign 0x80
+    b halt
+
+    // SError
+    .balign 0x80
+    b halt
+
+asm_irq_handler:
+    stp x29, x30, [sp, #-16]!
+    stp x27, x28, [sp, #-16]!
+    stp x25, x26, [sp, #-16]!
+    stp x23, x24, [sp, #-16]!
+    stp x21, x22, [sp, #-16]!
+    stp x19, x20, [sp, #-16]!
+    stp x17, x18, [sp, #-16]!
+    stp x15, x16, [sp, #-16]!
+    stp x13, x14, [sp, #-16]!
+    stp x11, x12, [sp, #-16]!
+    stp x9, x10, [sp, #-16]!
+    stp x7, x8, [sp, #-16]!
+    stp x5, x6, [sp, #-16]!
+    stp x3, x4, [sp, #-16]!
+    stp x1, x2, [sp, #-16]!
+    str x0, [sp, #-16]!
+
+    bl irq_handler
+
+    ldr x0, [sp], #16
+    ldp x1, x2, [sp], #16
+    ldp x3, x4, [sp], #16
+    ldp x5, x6, [sp], #16
+    ldp x7, x8, [sp], #16
+    ldp x9, x10, [sp], #16
+    ldp x11, x12, [sp], #16
+    ldp x13, x14, [sp], #16
+    ldp x15, x16, [sp], #16
+    ldp x17, x18, [sp], #16
+    ldp x19, x20, [sp], #16
+    ldp x21, x22, [sp], #16
+    ldp x23, x24, [sp], #16
+    ldp x25, x26, [sp], #16
+    ldp x27, x28, [sp], #16
+    ldp x29, x30, [sp], #16
+
+    eret

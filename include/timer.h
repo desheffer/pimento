@@ -14,6 +14,7 @@ namespace timer {
         asm volatile("nop");
     }
 
+    void init();
     counter_t counter();
     void wait(uint32_t);
 }

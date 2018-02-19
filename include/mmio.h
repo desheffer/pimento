@@ -10,12 +10,33 @@
 namespace mmio
 {
     MMIO_PTR(0x00003000, 32, system_timer_cs);      // System Timer Control/Status
-    MMIO_PTR(0x00003004, 32, system_timer_clo);     // System Timer Counter Lower 32 bits
-    MMIO_PTR(0x00003008, 32, system_timer_chi);     // System Timer Counter Higher 32 bits
+    MMIO_PTR(0x00003004, 32, system_timer_clo);     // System Timer Counter Lower 32 Bits
+    MMIO_PTR(0x00003008, 32, system_timer_chi);     // System Timer Counter Higher 32 Bits
     MMIO_PTR(0x0000300C, 32, system_timer_c0);      // System Timer Compare 0
     MMIO_PTR(0x00003010, 32, system_timer_c1);      // System Timer Compare 1
     MMIO_PTR(0x00003014, 32, system_timer_c2);      // System Timer Compare 2
     MMIO_PTR(0x00003018, 32, system_timer_c3);      // System Timer Compare 3
+
+    MMIO_PTR(0x0000B200, 32, irq_pending_basic);    // Pending ARM-specific IRQs
+    MMIO_PTR(0x0000B204, 32, irq_pending_gpu1);     // Pending IRQs 0-31
+    MMIO_PTR(0x0000B208, 32, irq_pending_gpu2);     // Pending IRQs 32-63
+    MMIO_PTR(0x0000B20C, 32, fiq_controls);         // FIQ Control
+    MMIO_PTR(0x0000B210, 32, irq_enable_gpu1);      // Enable IRQs 0-31
+    MMIO_PTR(0x0000B214, 32, irq_enable_gpu2);      // Enable IRQs 32-63
+    MMIO_PTR(0x0000B218, 32, irq_enable_basic);     // Enable ARM-specific IRQs
+    MMIO_PTR(0x0000B21C, 32, irq_disable_gpu1);     // Disable IRQs 0-31
+    MMIO_PTR(0x0000B220, 32, irq_disable_gpu2);     // Disable IRQs 32-63
+    MMIO_PTR(0x0000B224, 32, irq_disable_basic);    // Disable ARM-specific IRQs
+
+    MMIO_PTR(0x0000B400, 32, arm_timer_lod);        // ARM Timer Load
+    MMIO_PTR(0x0000B404, 32, arm_timer_val);        // ARM Timer Value
+    MMIO_PTR(0x0000B408, 32, arm_timer_ctl);        // ARM Timer Control
+    MMIO_PTR(0x0000B40C, 32, arm_timer_cli);        // ARM Timer IRQ Clear/Ack
+    MMIO_PTR(0x0000B410, 32, arm_timer_ris);        // ARM Timer Raw IRQ
+    MMIO_PTR(0x0000B414, 32, arm_timer_mis);        // ARM Timer Masked IRQ
+    MMIO_PTR(0x0000B418, 32, arm_timer_rld);        // ARM Timer Reload
+    MMIO_PTR(0x0000B41C, 32, arm_timer_div);        // ARM Timer Pre-divider
+    MMIO_PTR(0x0000B420, 32, arm_timer_cnt);        // ARM Timer Free Running Counter
 
     MMIO_PTR(0x00200000, 32, gpfsel0);              // GPIO Function Select 0
     MMIO_PTR(0x00200004, 32, gpfsel1);              // GPIO Function Select 1
@@ -47,8 +68,8 @@ namespace mmio
     MMIO_PTR(0x00200098, 32, gppudclk0);            // GPIO Pin Pull-up/down Enable Clock 0
     MMIO_PTR(0x0020009C, 32, gppudclk1);            // GPIO Pin Pull-up/down Enable Clock 1
 
-    MMIO_PTR(0x00215000,  8, aux_irq);              // Auxiliary Interrupt status
-    MMIO_PTR(0x00215004,  8, aux_enables);          // Auxiliary enables
+    MMIO_PTR(0x00215000,  8, aux_irq);              // Auxiliary Interrupt Status
+    MMIO_PTR(0x00215004,  8, aux_enables);          // Auxiliary Enables
 
     MMIO_PTR(0x00215040,  8, aux_mu_io);            // Mini Uart I/O Data
     MMIO_PTR(0x00215044,  8, aux_mu_ier);           // Mini Uart Interrupt Enable

@@ -4,6 +4,8 @@ These are my experiments in building an operating system for Raspberry Pi 3.
 This project has been heavily guided by the following resources:
 
 - https://github.com/bztsrc/raspi3-tutorial
+- https://github.com/dwelch67/raspberrypi-three
+- https://github.com/rsta2/circle64
 - https://jsandler18.github.io/
 - https://wiki.osdev.org/Main_Page
 
