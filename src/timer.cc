@@ -1,51 +1,65 @@
-#include <irq.h>
 #include <mmio.h>
-#include <stdint.h>
 #include <timer.h>
 
-#include <stdio.h>
+Timer* Timer::_instance = 0;
 
-namespace timer
+Timer::Timer()
 {
-    static void irq_handler()
-    {
-        printf("t");
+}
+
+Timer::~Timer()
+{
+}
+
+Timer* Timer::instance()
+{
+    if (!_instance) {
+        _instance = new Timer();
     }
+    return _instance;
+}
 
-    static void irq_clearer()
-    {
-        *mmio::arm_timer_cli = 0;
-    }
+void Timer::init(Interrupt* interrupt)
+{
+    *arm_timer_ctl = 0x003E0000;
+    *arm_timer_lod = 2000000;
+    *arm_timer_rld = 2000000;
+    *arm_timer_cli = 0;
 
-    void init()
-    {
-        *mmio::arm_timer_ctl = 0x003E0000;
-        *mmio::arm_timer_lod = 2000000-1;
-        *mmio::arm_timer_rld = 2000000-1;
-        *mmio::arm_timer_cli = 0;
+    interrupt->connect(arm_timer, handleInterruptStub, this);
 
-        irq::register_handler(irq::arm_timer, irq_handler, irq_clearer);
+    *arm_timer_ctl = 0x003E00A2;
+    *arm_timer_cli = 0;
+}
 
-        *mmio::arm_timer_ctl = 0x003E00A2;
-        *mmio::arm_timer_cli = 0;
-    }
+counter_t Timer::counter()
+{
+    counter_t counter;
 
-    counter_t counter()
-    {
-        counter_t counter;
+    do {
+        counter.high = *system_timer_chi;
+        counter.low = *system_timer_clo;
+    } while (counter.high != *system_timer_chi);
 
-        do {
-            counter.high = *mmio::system_timer_chi;
-            counter.low = *mmio::system_timer_clo;
-        } while (counter.high != *mmio::system_timer_chi);
+    return counter;
+}
 
-        return counter;
-    }
+void Timer::wait(unsigned msecs)
+{
+    unsigned end = *system_timer_clo + msecs * 1000;
 
-    void wait(uint32_t msecs)
-    {
-        uint32_t end = *mmio::system_timer_clo + msecs * 1000;
+    while (*system_timer_clo < end);
+}
 
-        while (*mmio::system_timer_clo < end);
-    }
+#include <stdio.h>
+void Timer::handleInterrupt()
+{
+    *arm_timer_cli = 0;
+    printf("t");
+}
+
+void Timer::handleInterruptStub(void* ptr)
+{
+    Timer* timer = (Timer*) ptr;
+    timer->handleInterrupt();
 }

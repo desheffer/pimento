@@ -1,22 +1,28 @@
+#include <interrupt.h>
 #include <stdint.h>
 
 #ifndef TIMER_H
 #define TIMER_H
 
-namespace timer {
-    struct counter_t {
-        uint32_t low;
-        uint32_t high;
-    };
+struct counter_t {
+    uint32_t low;
+    uint32_t high;
+};
 
-    inline void nop()
-    {
-        asm volatile("nop");
-    }
+class Timer
+{
+  public:
+    static Timer* instance();
+    void init(Interrupt*);
+    static counter_t counter();
+    static void wait(unsigned);
+  private:
+    static Timer* _instance;
 
-    void init();
-    counter_t counter();
-    void wait(uint32_t);
-}
+    Timer();
+    ~Timer();
+    void handleInterrupt();
+    static void handleInterruptStub(void*);
+};
 
 #endif

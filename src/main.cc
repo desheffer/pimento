@@ -1,29 +1,31 @@
-#include <irq.h>
-#include <main.h>
+#include <interrupt.h>
+#include <serial.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <timer.h>
-#include <uart1.h>
 
-void kernel_main()
+extern "C" void kernel_main()
 {
-    uart1::init();
-    init_printf(0, uart1::putc);
+    Serial* serial = Serial::instance();
+    serial->init();
+    init_printf(0, Serial::putc);
 
     uint32_t el;
     asm volatile("mrs %0, currentel" : "=r" (el));
     printf("Execution Level = %u\n", (el >> 2) & 3);
 
-    printf("IRQs: ");
-    irq::init();
+    printf("Interrupts: ");
+    Interrupt* interrupt = Interrupt::instance();
+    interrupt->init();
     printf("OK\n");
 
     printf("System Timer: ");
-    timer::init();
+    Timer* timer = Timer::instance();
+    timer->init(interrupt);
     printf("OK\n");
 
     while (1) {
         printf(".");
-        timer::wait(1000);
+        Timer::wait(1000);
     }
 }

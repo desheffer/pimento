@@ -11,12 +11,12 @@ void init_printf(void*, putc_t);
 
 void vcprintf(void*, putc_t, const char*, va_list);
 void vprintf(const char*, va_list);
-uint32_t vsnprintf(char*, size_t, const char*, va_list);
-uint32_t vsprintf(char*, const char*, va_list);
+size_t vsnprintf(char*, size_t, const char*, va_list);
+size_t vsprintf(char*, const char*, va_list);
 
 void cprintf(void*, putc_t, const char*, ...);
 void printf(const char*, ...);
-uint32_t snprintf(char*, size_t, const char*, ...);
-uint32_t sprintf(char*, const char*, ...);
+size_t snprintf(char*, size_t, const char*, ...);
+size_t sprintf(char*, const char*, ...);
 
 #endif

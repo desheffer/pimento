@@ -1,8 +1,6 @@
-#include <stddef.h>
-#include <stdint.h>
 #include <string.h>
 
-void* memcpy(void* dest, const void* src, uint32_t bytes)
+void* memcpy(void* dest, const void* src, size_t bytes)
 {
     volatile uint8_t* d = (uint8_t*) dest;
     const char* s = (const char*) src;
@@ -14,7 +12,7 @@ void* memcpy(void* dest, const void* src, uint32_t bytes)
     return dest;
 }
 
-void* memset(void* dest, uint8_t c, uint32_t bytes)
+void* memset(void* dest, uint8_t c, size_t bytes)
 {
     volatile uint8_t* d = (uint8_t*) dest;
     while (bytes--) {
