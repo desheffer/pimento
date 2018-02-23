@@ -16,7 +16,7 @@ _start:
     beq enter_el1
 
     // Set EL1 stack pointer.
-    ldr x4, =_start
+    adr x4, _start
     msr sp_el1, x4
 
     // Disable coprocessor traps.
@@ -26,18 +26,16 @@ _start:
     mov x4, #(3 << 20)
     msr cpacr_el1, x4
 
-    // Enable AArch64 in EL1.
-    mov x4, #(1 << 31)    // AArch64
-    orr x4, x4, #(1 << 1) // SWIO hardwired on Pi3
+    // Enable A64 in EL1.
+    mov x4, #(1 << 31)
     msr hcr_el2, x4
-    mrs x4, hcr_el2
 
     // Set up exception handlers.
-    ldr x4, =_vector_table
+    adr x4, _vector_table
     msr vbar_el1, x4
 
     // Change execution level to EL1.
-    mov x4, #0x3c4
+    mov x4, #0x3C4
     msr spsr_el2, x4
     adr x4, enter_el1
     msr elr_el2, x4
@@ -45,7 +43,7 @@ _start:
 
 enter_el1:
     // Set up the stack.
-    ldr x4, =_start
+    adr x4, _start
     mov sp, x4
 
     // Clear out bss.
@@ -62,29 +60,17 @@ loop_clear_bss:
     // Call kernel_main.
     bl kernel_main
 
-halt:
-    wfe
-    b halt
-
 .balign 0x800
 _vector_table:
     // Synchronous
     .balign 0x80
-    b halt
+    mov x0, #0
+    mrs x1, esr_el1
+
+    bl exception_handler
 
     // IRQ
     .balign 0x80
-    b asm_irq_handler
-
-    // FIQ
-    .balign 0x80
-    b halt
-
-    // SError
-    .balign 0x80
-    b halt
-
-asm_irq_handler:
     stp x29, x30, [sp, #-16]!
     stp x27, x28, [sp, #-16]!
     stp x25, x26, [sp, #-16]!
@@ -122,3 +108,17 @@ asm_irq_handler:
     ldp x29, x30, [sp], #16
 
     eret
+
+    // FIQ
+    .balign 0x80
+    mov x0, #2
+    mrs x1, esr_el1
+
+    bl exception_handler
+
+    // SError
+    .balign 0x80
+    mov x0, #3
+    mrs x1, esr_el1
+
+    bl exception_handler
