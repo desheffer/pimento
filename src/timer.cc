@@ -22,14 +22,20 @@ Timer* Timer::instance()
 void Timer::init(Interrupt* interrupt)
 {
     *arm_timer_ctl = 0x003E0000;
-    *arm_timer_lod = 2000000;
-    *arm_timer_rld = 2000000;
+    *arm_timer_lod = 100000;
+    *arm_timer_rld = 100000;
     *arm_timer_cli = 0;
 
     interrupt->connect(arm_timer, handleInterruptStub, this);
 
     *arm_timer_ctl = 0x003E00A2;
     *arm_timer_cli = 0;
+}
+
+void Timer::setTickHandler(timer_handler_t* handler, void* handlerData)
+{
+    _handler = handler;
+    _handlerData = handlerData;
 }
 
 counter_t Timer::counter()
@@ -51,11 +57,13 @@ void Timer::wait(unsigned msecs)
     while (*system_timer_clo < end);
 }
 
-#include <stdio.h>
 void Timer::handleInterrupt()
 {
     *arm_timer_cli = 0;
-    printf("t");
+
+    if (_handler) {
+        _handler(_handlerData);
+    }
 }
 
 void Timer::handleInterruptStub(void* ptr)
