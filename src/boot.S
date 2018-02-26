@@ -60,92 +60,124 @@ loop_clear_bss:
     // Call kernel_main.
     bl kernel_main
 
+// Save registers to stack.
+.macro save_regs
+    stp x29, x30, [sp, #-16]!
+    stp x27, x28, [sp, #-16]!
+    stp x25, x26, [sp, #-16]!
+    stp x23, x24, [sp, #-16]!
+    stp x21, x22, [sp, #-16]!
+    stp x19, x20, [sp, #-16]!
+    stp x17, x18, [sp, #-16]!
+    stp x15, x16, [sp, #-16]!
+    stp x13, x14, [sp, #-16]!
+    stp x11, x12, [sp, #-16]!
+    stp x9, x10, [sp, #-16]!
+    stp x7, x8, [sp, #-16]!
+    stp x5, x6, [sp, #-16]!
+    stp x3, x4, [sp, #-16]!
+    stp x1, x2, [sp, #-16]!
+    stp xzr, x0, [sp, #-16]!
+.endm
+
+// Load registers from stack.
+.macro load_regs
+    ldp xzr, x0, [sp], #16
+    ldp x1, x2, [sp], #16
+    ldp x3, x4, [sp], #16
+    ldp x5, x6, [sp], #16
+    ldp x7, x8, [sp], #16
+    ldp x9, x10, [sp], #16
+    ldp x11, x12, [sp], #16
+    ldp x13, x14, [sp], #16
+    ldp x15, x16, [sp], #16
+    ldp x17, x18, [sp], #16
+    ldp x19, x20, [sp], #16
+    ldp x21, x22, [sp], #16
+    ldp x23, x24, [sp], #16
+    ldp x25, x26, [sp], #16
+    ldp x27, x28, [sp], #16
+    ldp x29, x30, [sp], #16
+.endm
+
 .balign 0x800
 _vector_table:
     // Synchronous
     .balign 0x80
+    save_regs
     mov x0, #0
-    mrs x1, esr_el1
-
-    bl exception_handler
+    b asm_exception_handler
 
     // IRQ
     .balign 0x80
+    save_regs
+    mov x0, #1
     b asm_irq_handler
 
     // FIQ
     .balign 0x80
+    save_regs
     mov x0, #2
-    mrs x1, esr_el1
-
-    bl exception_handler
+    b asm_exception_handler
 
     // SError
     .balign 0x80
+    save_regs
     mov x0, #3
-    mrs x1, esr_el1
+    b asm_exception_handler
 
-    bl exception_handler
+asm_exception_handler:
+    // Save exception index.
+    ldr xzr, [sp], #8
+    str x0, [sp, #-8]!
 
-asm_irq_handler:
-    // Save registers to stack.
-    stp x30, xzr, [sp, #-16]!
-    stp x28, x29, [sp, #-16]!
-    stp x26, x27, [sp, #-16]!
-    stp x24, x25, [sp, #-16]!
-    stp x22, x23, [sp, #-16]!
-    stp x20, x21, [sp, #-16]!
-    stp x18, x19, [sp, #-16]!
-    stp x16, x17, [sp, #-16]!
-    stp x14, x15, [sp, #-16]!
-    stp x12, x13, [sp, #-16]!
-    stp x10, x11, [sp, #-16]!
-    stp x8, x9, [sp, #-16]!
-    stp x6, x7, [sp, #-16]!
+    // Save system registers.
+    mrs x0, spsr_el1
+    mrs x1, elr_el1
+    mrs x2, esr_el1
+    mrs x3, far_el1
+    mrs x4, sctlr_el1
+    mrs x5, tcr_el1
     stp x4, x5, [sp, #-16]!
     stp x2, x3, [sp, #-16]!
     stp x0, x1, [sp, #-16]!
 
+    // Save stack pointer to debug_state.
+    adr x0, debug_state
+    mov x1, sp
+    str x1, [x0]
+
+    bl exception_handler
+
+    eret
+
+asm_irq_handler:
     // Save system registers.
     mrs x0, spsr_el1
     mrs x1, elr_el1
     stp x0, x1, [sp, #-16]!
 
     // Save stack pointer to process_state.
-    ldr x0, =process_state
+    adr x0, process_state
     mov x1, sp
     str x1, [x0]
 
     bl irq_handler
 
     // Load stack pointer from process_state.
-    ldr x0, =process_state
+    adr x0, process_state
     ldr x1, [x0]
     mov sp, x1
+
+    // Calculate stack pointer for after eret.
     add x1, x1, #272
     msr sp_el0, x1
 
-    // Restore system registers.
+    // Load system registers.
     ldp x0, x1, [sp], #16
     msr spsr_el1, x0
     msr elr_el1, x1
 
-    // Restore registers from stack.
-    ldp x0, x1, [sp], #16
-    ldp x2, x3, [sp], #16
-    ldp x4, x5, [sp], #16
-    ldp x6, x7, [sp], #16
-    ldp x8, x9, [sp], #16
-    ldp x10, x11, [sp], #16
-    ldp x12, x13, [sp], #16
-    ldp x14, x15, [sp], #16
-    ldp x16, x17, [sp], #16
-    ldp x18, x19, [sp], #16
-    ldp x20, x21, [sp], #16
-    ldp x22, x23, [sp], #16
-    ldp x24, x25, [sp], #16
-    ldp x26, x27, [sp], #16
-    ldp x28, x29, [sp], #16
-    ldp x30, xzr, [sp], #16
+    load_regs
 
     eret

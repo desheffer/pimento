@@ -9,8 +9,8 @@
 struct process_state_t {
     volatile uint64_t spsr;
     volatile uint64_t elr;
-    volatile uint64_t x[NUM_REGS];
     volatile uint64_t xzr; // Padding
+    volatile uint64_t x[NUM_REGS];
 };
 
 struct process_control_block_t {

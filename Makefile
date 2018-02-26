@@ -1,6 +1,7 @@
 TOOLCHAIN ?= aarch64-none-elf
 CC        := $(TOOLCHAIN)-g++
 OBJCOPY   := $(TOOLCHAIN)-objcopy
+OBJDUMP   := $(TOOLCHAIN)-objdump
 
 IMG := kernel8
 
@@ -44,6 +45,7 @@ clean:
 
 $(BUILD)/$(IMG).img: $(BUILD)/$(IMG).elf
 	$(OBJCOPY) $(BUILD)/$(IMG).elf -O binary $@
+	$(OBJDUMP) -D $(BUILD)/$(IMG).elf > $(BUILD)/$(IMG).list
 
 $(BUILD)/$(IMG).elf: $(OBJECTS) link-aarch64-elf.ld
 	$(CC) $(LDFLAGS) $(OBJECTS) -Tlink-aarch64-elf.ld -lgcc -o $@
