@@ -1,9 +1,8 @@
+#pragma once
+
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdint.h>
-
-#ifndef STDIO_H
-#define STDIO_H
 
 typedef void (*putc_t)(void*, char);
 
@@ -18,5 +17,3 @@ void cprintf(void*, putc_t, const char*, ...);
 void printf(const char*, ...);
 size_t snprintf(char*, size_t, const char*, ...);
 size_t sprintf(char*, const char*, ...);
-
-#endif

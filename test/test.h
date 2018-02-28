@@ -1,7 +1,4 @@
-#ifndef TEST_H
-#define TEST_H
+#pragma once
 
 void test_printf();
 void test_string();
-
-#endif

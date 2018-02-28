@@ -1,5 +1,4 @@
-#ifndef SERIAL_H
-#define SERIAL_H
+#pragma once
 
 class Serial
 {
@@ -14,5 +13,3 @@ class Serial
     Serial();
     ~Serial();
 };
-
-#endif

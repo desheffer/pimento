@@ -1,5 +1,4 @@
-#ifndef INTERRUPT_H
-#define INTERRUPT_H
+#pragma once
 
 #define NUM_IRQS 72
 
@@ -33,5 +32,3 @@ class Interrupt
     static void enableInterrupts();
     static void disableInterrupts();
 };
-
-#endif

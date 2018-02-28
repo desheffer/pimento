@@ -1,9 +1,6 @@
-#include <stddef.h>
+#pragma once
 
-#ifndef STDLIB_H
-#define STDLIB_H
+#include <stddef.h>
 
 void* malloc(size_t);
 void free(void*);
-
-#endif

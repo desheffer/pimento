@@ -1,8 +1,7 @@
+#pragma once
+
 #include <interrupt.h>
 #include <stdint.h>
-
-#ifndef TIMER_H
-#define TIMER_H
 
 struct counter_t {
     uint32_t low;
@@ -29,5 +28,3 @@ class Timer
     void handleInterrupt();
     static void handleInterruptStub(void*);
 };
-
-#endif

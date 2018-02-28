@@ -1,7 +1,6 @@
-#include <timer.h>
+#pragma once
 
-#ifndef SCHEDULER_H
-#define SCHEDULER_H
+#include <timer.h>
 
 #define NUM_REGS 31
 #define NUM_PROC 64
@@ -39,5 +38,3 @@ class Scheduler
     void schedule();
     static void handleTickStub(void*);
 };
-
-#endif

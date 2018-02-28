@@ -1,8 +1,7 @@
+#pragma once
+
 #include <scheduler.h>
 #include <stdint.h>
-
-#ifndef EXCEPTION_H
-#define EXCEPTION_H
 
 #define breakpoint asm volatile("brk #0");
 
@@ -20,5 +19,3 @@ struct debug_state_t {
 extern "C" debug_state_t* debug_state;
 
 extern "C" void exception_handler();
-
-#endif

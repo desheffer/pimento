@@ -1,7 +1,6 @@
-#include <stdint.h>
+#pragma once
 
-#ifndef MMIO_H
-#define MMIO_H
+#include <stdint.h>
 
 #define MMIO_BASE 0x3F000000
 #define MMIO_PTR(offset, size, name) \
@@ -91,5 +90,3 @@ MMIO_PTR(0x002150C4,  8, aux_spi1_cntl1);       // SPI 2 Control register 1
 MMIO_PTR(0x002150C8, 32, aux_spi1_stat);        // SPI 2 Status
 MMIO_PTR(0x002150D0, 32, aux_spi1_io);          // SPI 2 Data
 MMIO_PTR(0x002150D4, 16, aux_spi1_peek);        // SPI 2 Peek
-
-#endif
