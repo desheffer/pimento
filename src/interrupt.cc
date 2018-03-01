@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <interrupt.h>
 #include <mmio.h>
 
@@ -29,11 +30,13 @@ void Interrupt::init()
     *irq_disable_gpu2 = 0xFFFFFFFF;
     *irq_disable_basic = 0xFFFFFFFF;
 
-    enableInterrupts();
+    enable_interrupts();
 }
 
 bool Interrupt::isPending(unsigned num)
 {
+    assert(num < NUM_IRQS);
+
     if (num < 32) {
         return *irq_pending_gpu1 & (1 << (num - 0));
     } else if (num < 64) {
@@ -45,6 +48,8 @@ bool Interrupt::isPending(unsigned num)
 
 void Interrupt::connect(irq_number_t num, interrupt_handler_t* handler, void* handlerData)
 {
+    assert(num < NUM_IRQS);
+
     _handlers[num] = handler;
     _handlerData[num] = handlerData;
 
@@ -53,6 +58,8 @@ void Interrupt::connect(irq_number_t num, interrupt_handler_t* handler, void* ha
 
 void Interrupt::disconnect(irq_number_t num)
 {
+    assert(num < NUM_IRQS);
+
     disable(num);
 
     _handlers[num] = 0;
@@ -61,6 +68,8 @@ void Interrupt::disconnect(irq_number_t num)
 
 void Interrupt::enable(irq_number_t num)
 {
+    assert(num < NUM_IRQS);
+
     if (num < 32) {
         *irq_enable_gpu1 |= (1 << (num - 0));
     } else if (num < 64) {
@@ -72,6 +81,8 @@ void Interrupt::enable(irq_number_t num)
 
 void Interrupt::disable(irq_number_t num)
 {
+    assert(num < NUM_IRQS);
+
     if (num < 32) {
         *irq_enable_gpu1 ^= (1 << (num - 0));
     } else if (num < 64) {
@@ -91,12 +102,12 @@ void Interrupt::handle(process_state_t* state)
     }
 }
 
-void Interrupt::enableInterrupts()
+void enable_interrupts()
 {
     asm volatile("msr daifclr, #2");
 }
 
-void Interrupt::disableInterrupts()
+void disable_interrupts()
 {
     asm volatile("msr daifset, #2");
 }

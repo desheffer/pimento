@@ -10,10 +10,6 @@
 extern "C" void kernel_main()
 {
     Serial* serial = Serial::instance();
-    Interrupt* interrupt = Interrupt::instance();
-    Scheduler* scheduler = Scheduler::instance();
-    Timer* timer = Timer::instance();
-
     serial->init();
     init_printf(0, Serial::putc);
 
@@ -22,14 +18,17 @@ extern "C" void kernel_main()
     printf("Execution Level = %u\n", (el >> 2) & 3);
 
     printf("Interrupts: ");
+    Interrupt* interrupt = Interrupt::instance();
     interrupt->init();
     printf("OK\n");
 
     printf("Process Scheduler: ");
+    Scheduler* scheduler = Scheduler::instance();
     scheduler->init();
     printf("OK\n");
 
     printf("System Timer: ");
+    Timer* timer = Timer::instance();
     timer->init(interrupt, scheduler);
     printf("OK\n");
 

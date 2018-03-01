@@ -1,9 +1,10 @@
+#include <interrupt.h>
 #include <stdio.h>
 #include <sys.h>
 
 void halt()
 {
-    asm volatile("msr daifset, #2");
+    disable_interrupts();
 
     while (1) {
         asm volatile("wfi");

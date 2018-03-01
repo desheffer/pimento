@@ -39,8 +39,8 @@ class Interrupt
 
     Interrupt();
     ~Interrupt();
-    static void enableInterrupts();
-    static void disableInterrupts();
 };
 
+extern "C" void enable_interrupts();
+extern "C" void disable_interrupts();
 extern "C" void irq_handler(process_state_t*);
