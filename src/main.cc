@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <timer.h>
 
+#include <exception.h>
+
 extern "C" void kernel_main()
 {
     Serial* serial = Serial::instance();
@@ -24,14 +26,16 @@ extern "C" void kernel_main()
     printf("OK\n");
 
     printf("Process Scheduler: ");
-    scheduler->init(timer);
+    scheduler->init();
     printf("OK\n");
 
     printf("System Timer: ");
-    timer->init(interrupt);
+    timer->init(interrupt, scheduler);
     printf("OK\n");
 
     scheduler->spawn();
+
+    // breakpoint;
 
     while (1) {
         printf("\n[proc 1]");

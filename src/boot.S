@@ -16,7 +16,7 @@ _start:
     beq enter_el1
 
     // Set EL1 stack pointer.
-    adr x4, _start
+    mov x4, 0x8000
     msr sp_el1, x4
 
     // Disable coprocessor traps.
@@ -60,8 +60,8 @@ loop_clear_bss:
     // Call kernel_main.
     bl kernel_main
 
-// Save registers to stack.
 .macro save_regs
+    // Save registers.
     stp x29, x30, [sp, #-16]!
     stp x27, x28, [sp, #-16]!
     stp x25, x26, [sp, #-16]!
@@ -77,12 +77,24 @@ loop_clear_bss:
     stp x5, x6, [sp, #-16]!
     stp x3, x4, [sp, #-16]!
     stp x1, x2, [sp, #-16]!
-    stp xzr, x0, [sp, #-16]!
+
+    // Save system registers.
+    mrs x23, sp_el0
+    mrs x22, elr_el1
+    mrs x21, spsr_el1
+    stp x23, x0, [sp, #-16]!
+    stp x21, x22, [sp, #-16]!
 .endm
 
-// Load registers from stack.
 .macro load_regs
-    ldp xzr, x0, [sp], #16
+    // Load system registers.
+    ldp x21, x22, [sp], #16
+    ldp x23, x0, [sp], #16
+    msr spsr_el1, x21
+    msr elr_el1, x22
+    msr sp_el0, x23
+
+    // Load registers.
     ldp x1, x2, [sp], #16
     ldp x3, x4, [sp], #16
     ldp x5, x6, [sp], #16
@@ -105,79 +117,114 @@ _vector_table:
     // Synchronous
     .balign 0x80
     save_regs
-    mov x0, #0
+    mov x0, #0x11
     b asm_exception_handler
 
     // IRQ
     .balign 0x80
     save_regs
-    mov x0, #1
+    mov x0, #0x12
     b asm_irq_handler
 
     // FIQ
     .balign 0x80
     save_regs
-    mov x0, #2
+    mov x0, #0x14
     b asm_exception_handler
 
     // SError
     .balign 0x80
     save_regs
-    mov x0, #3
+    mov x0, #0x18
+    b asm_exception_handler
+
+    // Synchronous
+    .balign 0x80
+    save_regs
+    mov x0, #0x21
+    b asm_exception_handler
+
+    // IRQ
+    .balign 0x80
+    save_regs
+    mov x0, #0x22
+    b asm_exception_handler
+
+    // FIQ
+    .balign 0x80
+    save_regs
+    mov x0, #0x24
+    b asm_exception_handler
+
+    // SError
+    .balign 0x80
+    save_regs
+    mov x0, #0x28
+    b asm_exception_handler
+
+    // Synchronous
+    .balign 0x80
+    save_regs
+    mov x0, #0x41
+    b asm_exception_handler
+
+    // IRQ
+    .balign 0x80
+    save_regs
+    mov x0, #0x42
+    b asm_exception_handler
+
+    // FIQ
+    .balign 0x80
+    save_regs
+    mov x0, #0x44
+    b asm_exception_handler
+
+    // SError
+    .balign 0x80
+    save_regs
+    mov x0, #0x48
+    b asm_exception_handler
+
+    // Synchronous
+    .balign 0x80
+    save_regs
+    mov x0, #0x81
+    b asm_exception_handler
+
+    // IRQ
+    .balign 0x80
+    save_regs
+    mov x0, #0x82
+    b asm_exception_handler
+
+    // FIQ
+    .balign 0x80
+    save_regs
+    mov x0, #0x84
+    b asm_exception_handler
+
+    // SError
+    .balign 0x80
+    save_regs
+    mov x0, #0x88
     b asm_exception_handler
 
 asm_exception_handler:
-    // Save exception index.
-    ldr xzr, [sp], #8
-    str x0, [sp, #-8]!
-
-    // Save system registers.
-    mrs x0, spsr_el1
-    mrs x1, elr_el1
+    // Call exception_handler.
+    mov x1, x0
+    mov x0, sp
     mrs x2, esr_el1
     mrs x3, far_el1
-    mrs x4, sctlr_el1
-    mrs x5, tcr_el1
-    stp x4, x5, [sp, #-16]!
-    stp x2, x3, [sp, #-16]!
-    stp x0, x1, [sp, #-16]!
-
-    // Save stack pointer to debug_state.
-    adr x0, debug_state
-    mov x1, sp
-    str x1, [x0]
-
     bl exception_handler
 
+    load_regs
     eret
 
 asm_irq_handler:
-    // Save system registers.
-    mrs x0, spsr_el1
-    mrs x1, elr_el1
-    stp x0, x1, [sp, #-16]!
-
-    // Save stack pointer to process_state.
-    adr x0, process_state
-    mov x1, sp
-    str x1, [x0]
-
+    // Call irq_handler.
+    mov x0, sp
     bl irq_handler
 
-    // Load stack pointer from process_state.
-    adr x0, process_state
-    ldr x1, [x0]
-    mov sp, x1
-
-    // Calculate stack pointer for after eret.
-    add x1, x1, #272
-    msr sp_el0, x1
-
-    // Load system registers.
-    ldp x0, x1, [sp], #16
-    msr spsr_el1, x0
-    msr elr_el1, x1
-
     load_regs
-
     eret

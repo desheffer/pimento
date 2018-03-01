@@ -2,8 +2,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <stdio.h>
+#include <timer.h>
+
 Scheduler* Scheduler::_instance = 0;
-process_state_t* process_state = 0;
 
 Scheduler::Scheduler()
 {
@@ -21,9 +23,8 @@ Scheduler* Scheduler::instance()
     return _instance;
 }
 
-void Scheduler::init(Timer* timer)
+void Scheduler::init()
 {
-    _timer = timer;
     _nextPid = 1;
     _currentProcess = 0;
 
@@ -33,29 +34,21 @@ void Scheduler::init(Timer* timer)
 
     _processes[0].pid = _nextPid++;
     memcpy(_processes[0].pname, "Init", 5);
-
-    _timer->setTickHandler(handleTickStub, this);
+    _processes[0].state = new process_state_t;
 }
 
-void Scheduler::schedule()
+void Scheduler::schedule(process_state_t* state)
 {
-    _processes[_currentProcess].state = process_state;
+    memcpy(_processes[_currentProcess].state, state, sizeof(process_state_t));
 
     // Schedule the next process using round-robin.
     do {
         _currentProcess = (_currentProcess + 1) % NUM_PROC;
     } while (!_processes[_currentProcess].pid);
 
-    process_state = _processes[_currentProcess].state;
+    memcpy(state, _processes[_currentProcess].state, sizeof(process_state_t));
 }
 
-void Scheduler::handleTickStub(void* ptr)
-{
-    Scheduler* scheduler = (Scheduler*) ptr;
-    scheduler->schedule();
-}
-
-#include <stdio.h>
 void myproc2()
 {
     Timer::wait(300);
@@ -72,10 +65,8 @@ void Scheduler::spawn()
     _processes[1].pid = _nextPid++;
     memcpy(_processes[1].pname, "myproc2", 8);
 
-    process_state_t* state = ((process_state_t*) 0x70000) - 1; // @TODO: alloc
-    memset(state, 0, sizeof(process_state_t));
-
-    state->spsr = 0x304;
-    state->elr = (uint64_t) &myproc2;
-    _processes[1].state = state;
+    _processes[1].state = new process_state_t;
+    _processes[1].state->spsr = 0x304;
+    _processes[1].state->elr = (uint64_t) &myproc2;
+    _processes[1].state->sp = (uint64_t) ((char*) malloc(4096) + 4096);
 }

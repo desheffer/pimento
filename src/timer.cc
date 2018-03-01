@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <mmio.h>
 #include <timer.h>
 
@@ -19,23 +20,19 @@ Timer* Timer::instance()
     return _instance;
 }
 
-void Timer::init(Interrupt* interrupt)
+void Timer::init(Interrupt* interrupt, Scheduler* scheduler)
 {
+    _scheduler = scheduler;
+
     *arm_timer_ctl = 0x003E0000;
-    *arm_timer_lod = 100000;
-    *arm_timer_rld = 100000;
+    *arm_timer_lod = 10000;
+    *arm_timer_rld = 10000;
     *arm_timer_cli = 0;
 
     interrupt->connect(arm_timer, handleInterruptStub, this);
 
     *arm_timer_ctl = 0x003E00A2;
     *arm_timer_cli = 0;
-}
-
-void Timer::setTickHandler(timer_handler_t* handler, void* handlerData)
-{
-    _handler = handler;
-    _handlerData = handlerData;
 }
 
 counter_t Timer::counter()
@@ -57,17 +54,16 @@ void Timer::wait(unsigned msecs)
     while (*system_timer_clo < end);
 }
 
-void Timer::handleInterrupt()
+void Timer::handleInterrupt(process_state_t* state)
 {
     *arm_timer_cli = 0;
 
-    if (_handler) {
-        _handler(_handlerData);
-    }
+    assert(_scheduler);
+    _scheduler->schedule(state);
 }
 
-void Timer::handleInterruptStub(void* ptr)
+void Timer::handleInterruptStub(void* ptr, process_state_t* state)
 {
     Timer* timer = (Timer*) ptr;
-    timer->handleInterrupt();
+    timer->handleInterrupt(state);
 }

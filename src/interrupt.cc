@@ -81,11 +81,11 @@ void Interrupt::disable(irq_number_t num)
     }
 }
 
-void Interrupt::handle()
+void Interrupt::handle(process_state_t* state)
 {
     for (unsigned num = 0; num < NUM_IRQS; num++) {
         if (instance()->isPending(num) && _handlers[num]) {
-            _handlers[num](_handlerData[num]);
+            _handlers[num](_handlerData[num], state);
             break;
         }
     }
@@ -101,7 +101,7 @@ void Interrupt::disableInterrupts()
     asm volatile("msr daifset, #2");
 }
 
-extern "C" void irq_handler()
+void irq_handler(process_state_t* state)
 {
-    Interrupt::instance()->handle();
+    Interrupt::instance()->handle(state);
 }
