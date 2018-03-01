@@ -1,26 +1,27 @@
 #include <stdio.h>
 #include <string.h>
+#include <synchronize.h>
 
 #define BUF_MAX 13
 
-static putc_t vprintf_putc = 0;
-static void* vprintf_putc_data = 0;
+static void* _vprintf_putc_data = 0;
+static putc_t _vprintf_putc = 0;
 
 void init_printf(void* data, putc_t putc)
 {
-    vprintf_putc_data = data;
-    vprintf_putc = putc;
+    _vprintf_putc_data = data;
+    _vprintf_putc = putc;
 }
 
 struct vcprintf_specifiers_t {
     char* buf;
-    bool alt;
-    bool leftAlign;
-    bool uppercase;
-    char sign;
     unsigned base;
     unsigned pad;
     unsigned width;
+    bool alt;
+    bool left_align;
+    bool uppercase;
+    char sign;
 };
 
 static void vcprintf_char(vcprintf_specifiers_t* sp, char c)
@@ -83,18 +84,18 @@ static void vcprintf_sp(void* data, putc_t putc, vcprintf_specifiers_t* sp)
         len++;
     }
 
-    if (sp->sign && (sp->pad || sp->leftAlign)) {
+    if (sp->sign && (sp->pad || sp->left_align)) {
         putc(data, sp->sign);
     }
 
-    if (!sp->leftAlign) {
+    if (!sp->left_align) {
         while (len < sp->width) {
             putc(data, sp->pad ? '0' : ' ');
             len++;
         }
     }
 
-    if (sp->sign && !(sp->pad || sp->leftAlign)) {
+    if (sp->sign && !(sp->pad || sp->left_align)) {
         putc(data, sp->sign);
     }
 
@@ -103,7 +104,7 @@ static void vcprintf_sp(void* data, putc_t putc, vcprintf_specifiers_t* sp)
         buf++;
     }
 
-    if (sp->leftAlign) {
+    if (sp->left_align) {
         while (len < sp->width) {
             putc(data, ' ');
             len++;
@@ -113,8 +114,8 @@ static void vcprintf_sp(void* data, putc_t putc, vcprintf_specifiers_t* sp)
 
 void vcprintf(void* data, putc_t putc, const char* format, va_list arg)
 {
-    vcprintf_specifiers_t sp;
-    char buf[BUF_MAX];
+    vcprintf_specifiers_t* sp = new vcprintf_specifiers_t;
+    char* buf = new char[BUF_MAX];
 
     while (*format) {
         if (*format != '%') {
@@ -123,34 +124,34 @@ void vcprintf(void* data, putc_t putc, const char* format, va_list arg)
         } else {
             format++;
 
-            sp.buf = buf;
-            sp.alt = false;
-            sp.base = 0;
-            sp.leftAlign = false;
-            sp.pad = 0;
-            sp.sign = 0;
-            sp.uppercase = false;
-            sp.width = 0;
+            sp->buf = buf;
+            sp->alt = false;
+            sp->base = 0;
+            sp->left_align = false;
+            sp->pad = 0;
+            sp->sign = 0;
+            sp->uppercase = false;
+            sp->width = 0;
 
             // Flags
             while (*format) {
                 switch (*format) {
                     case '-':
-                        sp.leftAlign = true;
-                        sp.pad = 0;
+                        sp->left_align = true;
+                        sp->pad = 0;
                         format++;
                         continue;
                     case '+':
-                        sp.sign = '+';
+                        sp->sign = '+';
                         format++;
                         continue;
                     case '0':
-                        sp.pad = 1;
-                        sp.leftAlign = false;
+                        sp->pad = 1;
+                        sp->left_align = false;
                         format++;
                         continue;
                     case '#':
-                        sp.alt = true;
+                        sp->alt = true;
                         format++;
                         continue;
                 }
@@ -160,11 +161,11 @@ void vcprintf(void* data, putc_t putc, const char* format, va_list arg)
             // Width
             while (*format) {
                 if (*format >= '0' && *format <= '9') {
-                    sp.width = (sp.width * 10) + (*format - '0');
+                    sp->width = (sp->width * 10) + (*format - '0');
                     format++;
                     continue;
                 } else if (*format == '*') {
-                    sp.width = va_arg(arg, unsigned);
+                    sp->width = va_arg(arg, unsigned);
                     format++;
                 }
                 break;
@@ -188,39 +189,39 @@ void vcprintf(void* data, putc_t putc, const char* format, va_list arg)
                 switch (*format) {
                     case 'c':
                         // Character
-                        vcprintf_char(&sp, (char) va_arg(arg, unsigned));
+                        vcprintf_char(sp, (char) va_arg(arg, unsigned));
                         break;
                     case 'd':
                     case 'i':
                         // Signed decimal integer
-                        sp.base = 10;
-                        vcprintf_int(&sp, va_arg(arg, int));
+                        sp->base = 10;
+                        vcprintf_int(sp, va_arg(arg, int));
                         break;
                     case 'o':
                         // Unsigned octal
-                        sp.base = 8;
-                        vcprintf_uint(&sp, va_arg(arg, unsigned));
+                        sp->base = 8;
+                        vcprintf_uint(sp, va_arg(arg, unsigned));
                         break;
                     case 's':
                         // String of characters
-                        sp.buf = va_arg(arg, char*);
+                        sp->buf = va_arg(arg, char*);
                         break;
                     case 'u':
                         // Unsigned decimal integer
-                        sp.base = 10;
-                        vcprintf_uint(&sp, va_arg(arg, unsigned));
+                        sp->base = 10;
+                        vcprintf_uint(sp, va_arg(arg, unsigned));
                         break;
                     case 'x':
                     case 'p':
                         // Unsigned hexadecimal uppercase
-                        sp.base = 16;
-                        vcprintf_uint(&sp, va_arg(arg, unsigned));
+                        sp->base = 16;
+                        vcprintf_uint(sp, va_arg(arg, unsigned));
                         break;
                     case 'X':
                         // Signed hexadecimal uppercase
-                        sp.base = 16;
-                        sp.uppercase = true;
-                        vcprintf_uint(&sp, va_arg(arg, unsigned));
+                        sp->base = 16;
+                        sp->uppercase = true;
+                        vcprintf_uint(sp, va_arg(arg, unsigned));
                         break;
                     case '%':
                         // Literal
@@ -233,46 +234,56 @@ void vcprintf(void* data, putc_t putc, const char* format, va_list arg)
                 }
                 format++;
 
-                vcprintf_sp(data, putc, &sp);
+                vcprintf_sp(data, putc, sp);
             }
         }
     }
+
+    delete sp;
+    delete[] buf;
 }
 
 void vprintf(const char* format, va_list arg)
 {
-    if (vprintf_putc) {
-        vcprintf(vprintf_putc_data, vprintf_putc, format, arg);
+    enter_critical();
+
+    if (_vprintf_putc) {
+        vcprintf(_vprintf_putc_data, _vprintf_putc, format, arg);
     }
+
+    leave_critical();
 }
 
 struct vsnprintf_putc_data_t {
     char* dest;
-    size_t numChars;
-    size_t maxChars;
+    size_t num_chars;
+    size_t max_chars;
 };
 
 static void vsnprintf_putc(void* data, char c)
 {
     vsnprintf_putc_data_t* putc_data = (vsnprintf_putc_data_t*) data;
 
-    if (putc_data->numChars < putc_data->maxChars) {
-        putc_data->dest[putc_data->numChars++] = c;
+    if (putc_data->num_chars < putc_data->max_chars) {
+        putc_data->dest[putc_data->num_chars++] = c;
     }
 }
 
 size_t vsnprintf(char* s, size_t max, const char* format, va_list arg)
 {
-    vsnprintf_putc_data_t putc_data;
-    putc_data.dest = s;
-    putc_data.numChars = 0;
-    putc_data.maxChars = max;
+    vsnprintf_putc_data_t* putc_data = new vsnprintf_putc_data_t;
+    putc_data->dest = s;
+    putc_data->num_chars = 0;
+    putc_data->max_chars = max;
 
-    vcprintf(&putc_data, &vsnprintf_putc, format, arg);
+    vcprintf(putc_data, &vsnprintf_putc, format, arg);
 
-    putc_data.dest[putc_data.numChars] = 0;
+    putc_data->dest[putc_data->num_chars] = 0;
 
-    return putc_data.numChars;
+    unsigned num_chars = putc_data->num_chars;
+    delete putc_data;
+
+    return num_chars;
 }
 
 size_t vsprintf(char* s, const char* format, va_list arg)
