@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <limits.h>
 #include <mmio.h>
 #include <timer.h>
 
@@ -35,23 +36,25 @@ void Timer::init(Interrupt* interrupt, Scheduler* scheduler)
     *arm_timer_cli = 0;
 }
 
-counter_t Timer::counter()
+uint64_t Timer::counter()
 {
-    counter_t counter;
+    uint64_t high;
+    uint64_t low;
 
+    // Loop in case the timer rolls over.
     do {
-        counter.high = *system_timer_chi;
-        counter.low = *system_timer_clo;
-    } while (counter.high != *system_timer_chi);
+        high = *system_timer_chi;
+        low = *system_timer_clo;
+    } while (high != *system_timer_chi);
 
-    return counter;
+    return (high << 32) | low;
 }
 
 void Timer::wait(unsigned msecs)
 {
-    unsigned end = *system_timer_clo + msecs * 1000;
+    uint64_t end = counter() + ((uint64_t) msecs) * 1000;
 
-    while (*system_timer_clo < end);
+    while (counter() < end);
 }
 
 void Timer::handleInterrupt(process_state_t* state)

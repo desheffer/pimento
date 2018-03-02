@@ -4,17 +4,12 @@
 #include <scheduler.h>
 #include <stdint.h>
 
-struct counter_t {
-    uint32_t low;
-    uint32_t high;
-};
-
 class Timer
 {
   public:
     static Timer* instance();
     void init(Interrupt*, Scheduler*);
-    static counter_t counter();
+    static uint64_t counter();
     static void wait(unsigned);
   private:
     static Timer* _instance;
