@@ -1,8 +1,7 @@
 #pragma once
 
 #include <interrupt.h>
-
-#define NUM_PROC 64
+#include <list.h>
 
 struct process_control_block_t {
     unsigned pid;
@@ -19,8 +18,9 @@ class Scheduler
     void spawn(); // temporary
   private:
     static Scheduler* _instance;
-    process_control_block_t _processes[NUM_PROC]; // @TODO: use non-fixed length
-    unsigned _currentProcess;
+    List<process_control_block_t*> _processList;
+    List<process_control_block_t*> _processQueue;
+    process_control_block_t* _currentProcess;
     unsigned _nextPid;
 
     Scheduler();
