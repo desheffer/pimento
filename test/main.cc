@@ -1,6 +1,7 @@
 #include <serial.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <sys.h>
 #include <test.h>
 
 extern "C" void kernel_main()
@@ -9,9 +10,10 @@ extern "C" void kernel_main()
     init_printf(0, Serial::putc);
 
     printf("Running tests...\n");
+    test_list();
     test_printf();
     test_string();
     printf("All tests passed!\n");
 
-    while (1);
+    halt();
 }
