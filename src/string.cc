@@ -2,8 +2,8 @@
 
 void* memcpy(void* dest, const void* src, size_t bytes)
 {
-    volatile uint8_t* d = (uint8_t*) dest;
-    const char* s = (const char*) src;
+    auto d = (volatile uint8_t*) dest;
+    auto s = (const char*) src;
 
     while (bytes--) {
         *(d++) = *(s++);
@@ -14,7 +14,8 @@ void* memcpy(void* dest, const void* src, size_t bytes)
 
 void* memset(void* dest, uint8_t c, size_t bytes)
 {
-    volatile uint8_t* d = (uint8_t*) dest;
+    auto d = (volatile uint8_t*) dest;
+
     while (bytes--) {
         *(d++) = c;
     }

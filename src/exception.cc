@@ -64,7 +64,7 @@ void exception_handler(process_state_t* state, uint64_t index, uint64_t esr, uin
     printf("    far = %08x %08x", far >> 32, far);
     printf("\n\n");
 
-    for (unsigned i = 0; i < NUM_REGS; i++) {
+    for (unsigned i = 0; i < NUM_REGS; ++i) {
         printf("  %5u = %08x %08x", i, state->x[i] >> 32, state->x[i]);
         if (i % 4 == 3) {
             printf("\n");

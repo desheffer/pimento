@@ -23,8 +23,6 @@ Serial* Serial::instance()
 
 void Serial::init()
 {
-    uint32_t r;
-
     *aux_enables = 1;
     *aux_mu_ier = 0;
     *aux_mu_cntl = 0;
@@ -34,7 +32,7 @@ void Serial::init()
     *aux_mu_iir = 0xC6;
     *aux_mu_baud = 270;
 
-    r = *gpfsel1;
+    uint32_t r = *gpfsel1;
     r &= ~((7 << 12) | (7 << 15));
     r |= (2 << 12) | (2 << 15);
     *gpfsel1 = r;

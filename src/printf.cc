@@ -71,17 +71,17 @@ static void vcprintf_sp(void* data, putc_t putc, vcprintf_specifiers_t* sp)
     len = strlen(sp->buf);
 
     if (sp->sign) {
-        len++;
+        ++len;
     }
 
     if (sp->alt && (sp->base == 8 || sp->base == 16)) {
         putc(data, '0');
-        len++;
+        ++len;
     }
 
     if (sp->alt && sp->base == 16) {
         putc(data, sp->uppercase ? 'X' : 'x');
-        len++;
+        ++len;
     }
 
     if (sp->sign && (sp->pad || sp->left_align)) {
@@ -91,7 +91,7 @@ static void vcprintf_sp(void* data, putc_t putc, vcprintf_specifiers_t* sp)
     if (!sp->left_align) {
         while (len < sp->width) {
             putc(data, sp->pad ? '0' : ' ');
-            len++;
+            ++len;
         }
     }
 
@@ -101,13 +101,13 @@ static void vcprintf_sp(void* data, putc_t putc, vcprintf_specifiers_t* sp)
 
     while (*buf) {
         putc(data, *buf);
-        buf++;
+        ++buf;
     }
 
     if (sp->left_align) {
         while (len < sp->width) {
             putc(data, ' ');
-            len++;
+            ++len;
         }
     }
 }
@@ -120,9 +120,9 @@ void vcprintf(void* data, putc_t putc, const char* format, va_list arg)
     while (*format) {
         if (*format != '%') {
             putc(data, *format);
-            format++;
+            ++format;
         } else {
-            format++;
+            ++format;
 
             sp->buf = buf;
             sp->alt = false;
@@ -139,20 +139,20 @@ void vcprintf(void* data, putc_t putc, const char* format, va_list arg)
                     case '-':
                         sp->left_align = true;
                         sp->pad = 0;
-                        format++;
+                        ++format;
                         continue;
                     case '+':
                         sp->sign = '+';
-                        format++;
+                        ++format;
                         continue;
                     case '0':
                         sp->pad = 1;
                         sp->left_align = false;
-                        format++;
+                        ++format;
                         continue;
                     case '#':
                         sp->alt = true;
-                        format++;
+                        ++format;
                         continue;
                 }
                 break;
@@ -162,22 +162,22 @@ void vcprintf(void* data, putc_t putc, const char* format, va_list arg)
             while (*format) {
                 if (*format >= '0' && *format <= '9') {
                     sp->width = (sp->width * 10) + (*format - '0');
-                    format++;
+                    ++format;
                     continue;
                 } else if (*format == '*') {
                     sp->width = va_arg(arg, unsigned);
-                    format++;
+                    ++format;
                 }
                 break;
             }
 
             // Precision
             if (*format == '.') {
-                format++;
+                ++format;
 
                 while (*format) {
                     if (*format >= '0' && *format <= '9') {
-                        format++;
+                        ++format;
                         continue;
                     }
                     break;
@@ -226,13 +226,13 @@ void vcprintf(void* data, putc_t putc, const char* format, va_list arg)
                     case '%':
                         // Literal
                         putc(data, *format);
-                        format++;
+                        ++format;
                         continue;
                     default:
-                        format++;
+                        ++format;
                         continue;
                 }
-                format++;
+                ++format;
 
                 vcprintf_sp(data, putc, sp);
             }

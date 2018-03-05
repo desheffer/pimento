@@ -6,7 +6,7 @@ Interrupt* Interrupt::_instance = 0;
 
 Interrupt::Interrupt()
 {
-    for (unsigned i = 0; i < NUM_IRQS; i++) {
+    for (unsigned i = 0; i < NUM_IRQS; ++i) {
         _handlers[i] = 0;
         _handlerData[i] = 0;
     }
@@ -94,7 +94,7 @@ void Interrupt::disable(irq_number_t num)
 
 void Interrupt::handle(process_state_t* state)
 {
-    for (unsigned num = 0; num < NUM_IRQS; num++) {
+    for (unsigned num = 0; num < NUM_IRQS; ++num) {
         if (instance()->isPending(num) && _handlers[num]) {
             _handlers[num](_handlerData[num], state);
             break;
