@@ -1,17 +1,22 @@
 #include <interrupt.h>
+#include <memory.h>
 #include <scheduler.h>
 #include <serial.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <timer.h>
 
-#include <exception.h>
-
 extern "C" void kernel_main()
 {
+    Memory* memory = Memory::instance();
+    memory->init();
+
     Serial* serial = Serial::instance();
     serial->init();
     init_printf(0, Serial::putc);
+
+    printf("Memory Allocation = %u\n", memory->allocSize());
+    printf("Page Count = %u\n", memory->pageCount());
 
     unsigned el;
     asm volatile("mrs %0, currentel" : "=r" (el));
@@ -33,8 +38,6 @@ extern "C" void kernel_main()
     printf("OK\n");
 
     scheduler->spawn();
-
-    // breakpoint;
 
     while (1) {
         printf("\n[proc 1]");

@@ -1,3 +1,4 @@
+#include <memory.h>
 #include <scheduler.h>
 #include <stdlib.h>
 #include <string.h>
@@ -69,7 +70,7 @@ void Scheduler::spawn()
     process->state = new process_state_t;
     process->state->spsr = 0x304;
     process->state->elr = (uint64_t) &myproc2;
-    process->state->sp = (uint64_t) ((char*) malloc(4096) + 4096);
+    process->state->sp = (uint64_t) alloc_page() + PAGE_SIZE;
 
     _processList.push_back(process);
     _processQueue.push_back(process);

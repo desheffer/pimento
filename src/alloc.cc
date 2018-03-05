@@ -3,7 +3,9 @@
 
 // TODO: Write better implementations of malloc() and free(). These ones are
 // only intended to get us up and running.
-static char* _ptr = (char*) 0x800000;
+#include <stdint.h>
+extern uint8_t __end;
+static uint8_t* _ptr = (uint8_t*) 0x10000000;
 
 void* malloc(size_t size)
 {
@@ -34,12 +36,17 @@ void* operator new[](size_t size)
     return malloc(size);
 }
 
-void operator delete(void* block)
+void* operator new(size_t, void* ptr)
 {
-    free(block);
+    return ptr;
 }
 
-void operator delete[](void* block)
+void operator delete(void* ptr)
 {
-    free(block);
+    free(ptr);
+}
+
+void operator delete[](void* ptr)
+{
+    free(ptr);
 }

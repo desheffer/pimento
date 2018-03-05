@@ -1,3 +1,4 @@
+#include <memory.h>
 #include <serial.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -6,6 +7,9 @@
 
 extern "C" void kernel_main()
 {
+    Memory* memory = Memory::instance();
+    memory->init();
+
     Serial::instance()->init();
     init_printf(0, Serial::putc);
 

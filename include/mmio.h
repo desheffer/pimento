@@ -6,6 +6,8 @@
 #define MMIO_PTR(offset, size, name) \
     [[maybe_unused]] static volatile uint ## size ## _t* name = (volatile uint ## size ## _t*) (MMIO_BASE + offset);
 
+MMIO_PTR(0x00000000,  8, peripheral_start);     // Peripheral start
+
 MMIO_PTR(0x00003000, 32, system_timer_cs);      // System Timer Control/Status
 MMIO_PTR(0x00003004, 32, system_timer_clo);     // System Timer Counter Lower 32 Bits
 MMIO_PTR(0x00003008, 32, system_timer_chi);     // System Timer Counter Higher 32 Bits
@@ -90,3 +92,5 @@ MMIO_PTR(0x002150C4,  8, aux_spi1_cntl1);       // SPI 2 Control register 1
 MMIO_PTR(0x002150C8, 32, aux_spi1_stat);        // SPI 2 Status
 MMIO_PTR(0x002150D0, 32, aux_spi1_io);          // SPI 2 Data
 MMIO_PTR(0x002150D4, 16, aux_spi1_peek);        // SPI 2 Peek
+
+MMIO_PTR(0x00FFFFFF,  8, peripheral_end);       // Peripheral end
