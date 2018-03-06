@@ -1,29 +1,14 @@
+#include <heap.h>
 #include <stdlib.h>
-#include <synchronize.h>
-
-// TODO: Write better implementations of malloc() and free(). These ones are
-// only intended to get us up and running.
-#include <stdint.h>
-extern uint8_t __end;
-static uint8_t* _ptr = (uint8_t*) 0x10000000;
 
 void* malloc(size_t size)
 {
-    enter_critical();
-
-    void* alloc = _ptr;
-    _ptr += ((size / 0x80) + 1) * 0x80;
-
-    leave_critical();
-
-    return alloc;
+    return Heap::instance()->alloc(size);
 }
 
-void free(void*)
+void free(void* ptr)
 {
-    enter_critical();
-
-    leave_critical();
+    return Heap::instance()->free(ptr);
 }
 
 void* operator new(size_t size)

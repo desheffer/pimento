@@ -1,3 +1,4 @@
+#include <heap.h>
 #include <memory.h>
 #include <serial.h>
 #include <stdint.h>
@@ -9,6 +10,9 @@ extern "C" void kernel_main()
 {
     Memory* memory = Memory::instance();
     memory->init();
+
+    Heap* heap = Heap::instance();
+    heap->init(memory);
 
     Serial::instance()->init();
     init_printf(0, Serial::putc);

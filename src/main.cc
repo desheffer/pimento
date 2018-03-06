@@ -1,3 +1,4 @@
+#include <heap.h>
 #include <interrupt.h>
 #include <memory.h>
 #include <scheduler.h>
@@ -10,6 +11,9 @@ extern "C" void kernel_main()
 {
     Memory* memory = Memory::instance();
     memory->init();
+
+    Heap* heap = Heap::instance();
+    heap->init(memory);
 
     Serial* serial = Serial::instance();
     serial->init();
