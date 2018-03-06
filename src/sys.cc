@@ -13,7 +13,7 @@ void halt()
 
 void panic()
 {
-    printf("\n\n!!! Kernel Panic! !!!\n");
+    puts("\n\n!!! Kernel Panic! !!!\n\n");
     halt();
 }
 

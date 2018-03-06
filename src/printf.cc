@@ -13,6 +13,20 @@ void init_printf(void* data, putc_t putc)
     _vprintf_putc = putc;
 }
 
+void puts(const char* s)
+{
+    enter_critical();
+
+    if (_vprintf_putc) {
+        while (*s) {
+            _vprintf_putc(_vprintf_putc_data, *s);
+            ++s;
+        }
+    }
+
+    leave_critical();
+}
+
 struct vcprintf_specifiers_t {
     char* buf;
     unsigned base;

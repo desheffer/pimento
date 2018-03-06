@@ -10,7 +10,7 @@ void exception_handler(process_state_t* state, uint64_t index, uint64_t esr, uin
     const char* dfs = "Unknown";
     const char* level = "Unknown";
 
-    printf("\n\n!!! Kernel Exception! !!!\n\n");
+    puts("\n\n!!! Kernel Exception! !!!\n\n");
 
     switch (index & 0xF) {
         case 0b0001: type = "Synchronous"; break;
