@@ -12,8 +12,8 @@ struct process_control_block_t {
 class Scheduler
 {
   public:
-    static Scheduler* instance();
-    void init();
+    static void init();
+    static Scheduler* instance() { return _instance; }
     void schedule(process_state_t*);
     void spawn(); // temporary
   private:

@@ -3,8 +3,8 @@
 class Serial
 {
   public:
-    static Serial* instance();
-    void init();
+    static void init();
+    static Serial* instance() { return _instance; }
     static char getc();
     static void putc(void*, char);
   private:

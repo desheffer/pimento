@@ -9,35 +9,12 @@ extern uint8_t __end;
 
 Memory* Memory::_instance = 0;
 
-Memory::Memory()
-{
-    _allocSize = 0;
-    _pageCount = 0;
-    _pages = 0;
-}
-
-Memory::~Memory()
-{
-}
-
-Memory* Memory::instance()
-{
-    if (!_instance) {
-        // Create instance using placement new.
-        _instance = (Memory*) &__end;
-        new ((void*) _instance) Memory();
-    }
-    return _instance;
-}
-
-void Memory::init()
+Memory::Memory(size_t allocSize)
 {
     unsigned index;
     unsigned end;
 
-    // @TODO: get mem size from boot loader
-    _allocSize = (size_t) 0xFFFFFFFF;
-
+    _allocSize = allocSize;
     _pageCount = _allocSize / PAGE_SIZE;
 
     // Create pages without using new.
@@ -61,6 +38,22 @@ void Memory::init()
     }
 
     _firstCandidate = pageIndex(&_pages[_pageCount]);
+}
+
+Memory::~Memory()
+{
+}
+
+void Memory::init()
+{
+    assert(!_instance);
+
+    // @TODO: get mem size from boot loader
+    size_t allocSize = 0xFFFFFFFF - __end;
+
+    // Create instance using placement new.
+    _instance = (Memory*) &__end;
+    new ((void*) _instance) Memory(allocSize);
 }
 
 void* Memory::allocPage()
@@ -124,10 +117,18 @@ unsigned Memory::pageIndex(void* start) const
 
 void* alloc_page()
 {
-    return Memory::instance()->allocPage();
+    Memory* memory = Memory::instance();
+
+    assert(memory);
+
+    return memory->allocPage();
 }
 
 void free_page(void* ptr)
 {
-    Memory::instance()->freePage(ptr);
+    Memory* memory = Memory::instance();
+
+    assert(memory);
+
+    memory->freePage(ptr);
 }

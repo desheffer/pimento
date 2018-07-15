@@ -6,14 +6,14 @@
 class Heap
 {
   public:
-    static Heap* instance();
-    void init(Memory*);
+    static void init(Memory*);
+    static Heap* instance() { return _instance; }
     void* alloc(size_t);
     void free(void*);
   private:
     static Heap* _instance;
     Memory* _memory;
 
-    Heap();
+    Heap(Memory*);
     ~Heap();
 };

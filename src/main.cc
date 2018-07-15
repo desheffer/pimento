@@ -9,41 +9,35 @@
 
 extern "C" void kernel_main()
 {
-    Memory* memory = Memory::instance();
-    memory->init();
+    Memory::init();
 
-    Heap* heap = Heap::instance();
-    heap->init(memory);
+    Heap::init(Memory::instance());
 
-    Serial* serial = Serial::instance();
-    serial->init();
+    Serial::init();
     init_printf(0, Serial::putc);
 
-    printf("Memory Allocation = %u\n", memory->allocSize());
-    printf("Page Count = %u\n", memory->pageCount());
+    printf("Memory Allocation = %u\n", Memory::instance()->allocSize());
+    printf("Page Count = %u\n", Memory::instance()->pageCount());
 
     unsigned el;
     asm volatile("mrs %0, currentel" : "=r" (el));
     printf("Execution Level = %u\n", (el >> 2) & 3);
 
     printf("Interrupts: ");
-    Interrupt* interrupt = Interrupt::instance();
-    interrupt->init();
+    Interrupt::init();
     printf("OK\n");
 
     printf("Process Scheduler: ");
-    Scheduler* scheduler = Scheduler::instance();
-    scheduler->init();
+    Scheduler::init();
     printf("OK\n");
 
     printf("System Timer: ");
-    Timer* timer = Timer::instance();
-    timer->init(interrupt, scheduler);
+    Timer::init(Interrupt::instance(), Scheduler::instance());
     printf("OK\n");
 
-    scheduler->spawn();
+    Scheduler::instance()->spawn();
 
-    while (1) {
+    while (true) {
         printf("\n[proc 1]");
         Timer::wait(1000);
     }

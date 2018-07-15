@@ -6,7 +6,7 @@ void halt()
 {
     disable_interrupts();
 
-    while (1) {
+    while (true) {
         asm volatile("wfi");
     }
 }

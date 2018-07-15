@@ -5,23 +5,7 @@
 
 Timer* Timer::_instance = 0;
 
-Timer::Timer()
-{
-}
-
-Timer::~Timer()
-{
-}
-
-Timer* Timer::instance()
-{
-    if (!_instance) {
-        _instance = new Timer();
-    }
-    return _instance;
-}
-
-void Timer::init(Interrupt* interrupt, Scheduler* scheduler)
+Timer::Timer(Interrupt* interrupt, Scheduler* scheduler)
 {
     _scheduler = scheduler;
 
@@ -34,6 +18,17 @@ void Timer::init(Interrupt* interrupt, Scheduler* scheduler)
 
     *arm_timer_ctl = 0x003E00A2;
     *arm_timer_cli = 0;
+}
+
+Timer::~Timer()
+{
+}
+
+void Timer::init(Interrupt* interrupt, Scheduler* scheduler)
+{
+    assert(!_instance);
+
+    _instance = new Timer(interrupt, scheduler);
 }
 
 uint64_t Timer::counter()
@@ -62,6 +57,7 @@ void Timer::handleInterrupt(process_state_t* state)
     *arm_timer_cli = 0;
 
     assert(_scheduler);
+
     _scheduler->schedule(state);
 }
 

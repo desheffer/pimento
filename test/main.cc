@@ -8,13 +8,11 @@
 
 extern "C" void kernel_main()
 {
-    Memory* memory = Memory::instance();
-    memory->init();
+    Memory::init();
 
-    Heap* heap = Heap::instance();
-    heap->init(memory);
+    Heap::init(Memory::instance());
 
-    Serial::instance()->init();
+    Serial::init();
     init_printf(0, Serial::putc);
 
     printf("Running tests...\n");

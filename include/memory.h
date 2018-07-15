@@ -12,8 +12,8 @@ struct page_t {
 class Memory
 {
   public:
-    static Memory* instance();
-    void init();
+    static void init();
+    static Memory* instance() { return _instance; }
     void* allocPage();
     void freePage(void*);
     unsigned allocSize() const;
@@ -26,7 +26,7 @@ class Memory
     page_t* _pages;
     unsigned _firstCandidate;
 
-    Memory();
+    Memory(size_t);
     ~Memory();
     void* pageStart(unsigned) const;
     unsigned pageIndex(void*) const;

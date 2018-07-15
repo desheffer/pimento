@@ -23,8 +23,8 @@ typedef void interrupt_handler_t(void*, process_state_t*);
 class Interrupt
 {
   public:
-    static Interrupt* instance();
-    void init();
+    static void init();
+    static Interrupt* instance() { return _instance; }
     bool isPending(unsigned);
     void connect(irq_number_t, interrupt_handler_t*, void*);
     void disconnect(irq_number_t);

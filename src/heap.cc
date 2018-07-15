@@ -6,27 +6,22 @@
 
 Heap* Heap::_instance = 0;
 
-Heap::Heap()
+Heap::Heap(Memory* memory)
 {
+    _memory = memory;
 }
 
 Heap::~Heap()
 {
 }
 
-Heap* Heap::instance()
-{
-    if (!_instance) {
-        // Create instance using placement new.
-        _instance = (Heap*) alloc_page();
-        new ((void*) _instance) Heap();
-    }
-    return _instance;
-}
-
 void Heap::init(Memory* memory)
 {
-    _memory = memory;
+    assert(!_instance);
+
+    // Create instance using placement new.
+    _instance = (Heap*) alloc_page();
+    new ((void*) _instance) Heap(memory);
 }
 
 void* Heap::alloc(size_t size)

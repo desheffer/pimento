@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <mmio.h>
 #include <serial.h>
 #include <stdint.h>
@@ -6,22 +7,6 @@
 Serial* Serial::_instance = 0;
 
 Serial::Serial()
-{
-}
-
-Serial::~Serial()
-{
-}
-
-Serial* Serial::instance()
-{
-    if (!_instance) {
-        _instance = new Serial();
-    }
-    return _instance;
-}
-
-void Serial::init()
 {
     *aux_enables = 1;
     *aux_mu_ier = 0;
@@ -45,6 +30,17 @@ void Serial::init()
 
     *gppudclk0 = 0;
     *aux_mu_cntl = 3;
+}
+
+Serial::~Serial()
+{
+}
+
+void Serial::init()
+{
+    assert(!_instance);
+
+    _instance = new Serial();
 }
 
 char Serial::getc()

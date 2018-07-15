@@ -1,33 +1,16 @@
+#include <assert.h>
 #include <memory.h>
 #include <scheduler.h>
 #include <stdlib.h>
 #include <string.h>
 #include <synchronize.h>
 
-#include <stdio.h>
-#include <timer.h>
-
 Scheduler* Scheduler::_instance = 0;
 
 Scheduler::Scheduler()
 {
     _nextPid = 1;
-}
 
-Scheduler::~Scheduler()
-{
-}
-
-Scheduler* Scheduler::instance()
-{
-    if (!_instance) {
-        _instance = new Scheduler();
-    }
-    return _instance;
-}
-
-void Scheduler::init()
-{
     auto process = new process_control_block_t;
     process->pid = _nextPid++;
     strcpy(process->pname, "Init");
@@ -36,6 +19,17 @@ void Scheduler::init()
 
     _currentProcess = process;
     _processList.push_back(process);
+}
+
+Scheduler::~Scheduler()
+{
+}
+
+void Scheduler::init()
+{
+    assert(!_instance);
+
+    _instance = new Scheduler();
 }
 
 void Scheduler::schedule(process_state_t* state)
@@ -48,11 +42,14 @@ void Scheduler::schedule(process_state_t* state)
     memcpy(state, _currentProcess->state, sizeof(process_state_t));
 }
 
+#include <stdio.h>
+#include <timer.h>
+
 void myproc2()
 {
     Timer::wait(300);
 
-    while (1) {
+    while (true) {
         printf("\n[proc 2]");
 
         Timer::wait(1000);

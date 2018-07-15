@@ -10,27 +10,23 @@ Interrupt::Interrupt()
         _handlers[i] = 0;
         _handlerData[i] = 0;
     }
+
+    *irq_disable_gpu1 = 0xFFFFFFFF;
+    *irq_disable_gpu2 = 0xFFFFFFFF;
+    *irq_disable_basic = 0xFFFFFFFF;
+
+    enable_interrupts();
 }
 
 Interrupt::~Interrupt()
 {
 }
 
-Interrupt* Interrupt::instance()
-{
-    if (!_instance) {
-        _instance = new Interrupt();
-    }
-    return _instance;
-}
-
 void Interrupt::init()
 {
-    *irq_disable_gpu1 = 0xFFFFFFFF;
-    *irq_disable_gpu2 = 0xFFFFFFFF;
-    *irq_disable_basic = 0xFFFFFFFF;
+    assert(!_instance);
 
-    enable_interrupts();
+    _instance = new Interrupt();
 }
 
 bool Interrupt::isPending(unsigned num)
