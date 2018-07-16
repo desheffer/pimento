@@ -52,20 +52,20 @@ void exception_handler(process_state_t* state, uint64_t index, uint64_t esr, uin
         }
     }
 
-    printf("Exception Type (%#02x) = %s\n", index, type);
+    printf("Exception Type (%#02x) = %s\n", (unsigned) index, type);
     printf("Instruction Fault Status = %s\n", ifs);
     printf("Data Fault Status = %s, level %s\n", dfs, level);
 
     printf("\nRegisters:\n\n");
 
-    printf("   spsr = %08s %08x", state->spsr >> 32, state->spsr);
-    printf("    elr = %08x %08x", state->elr >> 32, state->elr);
-    printf("    esr = %08x %08x", esr >> 32, esr);
-    printf("    far = %08x %08x", far >> 32, far);
+    printf("   spsr = %08x %08x", (unsigned) (state->spsr >> 32), (unsigned) state->spsr);
+    printf("    elr = %08x %08x", (unsigned) (state->elr >> 32), (unsigned) state->elr);
+    printf("    esr = %08x %08x", (unsigned) (esr >> 32), (unsigned) esr);
+    printf("    far = %08x %08x", (unsigned) (far >> 32), (unsigned) far);
     printf("\n\n");
 
     for (unsigned i = 0; i < NUM_REGS; ++i) {
-        printf("  %5u = %08x %08x", i, state->x[i] >> 32, state->x[i]);
+        printf("  %5u = %08x %08x", i, (unsigned) (state->x[i] >> 32), (unsigned) state->x[i]);
         if (i % 4 == 3) {
             printf("\n");
         }
