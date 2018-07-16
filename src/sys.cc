@@ -11,12 +11,6 @@ void halt()
     }
 }
 
-void panic()
-{
-    puts("\n\n!!! Kernel Panic! !!!\n\n");
-    halt();
-}
-
 void __dso_handle()
 {
 }

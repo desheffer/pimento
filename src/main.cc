@@ -16,6 +16,14 @@ extern "C" void kernel_main()
     Serial::init();
     init_printf(0, Serial::putc);
 
+    puts(
+        "\n"
+        "[44m[97m                          [0m\n"
+        "[44m[97m     Welcome to PI-OS     [0m\n"
+        "[44m[97m                          [0m\n"
+        "\n"
+    );
+
     printf("Memory Allocation = %u\n", Memory::instance()->allocSize());
     printf("Page Count = %u\n", Memory::instance()->pageCount());
 
@@ -37,8 +45,9 @@ extern "C" void kernel_main()
 
     Scheduler::instance()->spawn();
 
+    printf("\n");
     while (true) {
-        printf("\n[proc 1]");
+        printf("#");
         Timer::wait(1000);
     }
 }

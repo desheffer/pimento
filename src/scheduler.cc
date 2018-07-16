@@ -47,12 +47,9 @@ void Scheduler::schedule(process_state_t* state)
 
 void myproc2()
 {
-    Timer::wait(300);
-
     while (true) {
-        printf("\n[proc 2]");
-
-        Timer::wait(1000);
+        printf(".");
+        Timer::wait(100);
     }
 }
 

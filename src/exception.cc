@@ -10,7 +10,13 @@ void exception_handler(process_state_t* state, uint64_t index, uint64_t esr, uin
     const char* dfs = "Unknown";
     const char* level = "Unknown";
 
-    puts("\n\n!!! Kernel Exception! !!!\n\n");
+    puts(
+        "\n"
+        "[41m[97m                          [0m\n"
+        "[41m[97m     Kernel Exception     [0m\n"
+        "[41m[97m                          [0m\n"
+        "\n"
+    );
 
     switch (index & 0xF) {
         case 0b0001: type = "Synchronous"; break;
@@ -60,20 +66,18 @@ void exception_handler(process_state_t* state, uint64_t index, uint64_t esr, uin
 
     printf("   spsr = %08x %08x", (unsigned) (state->spsr >> 32), (unsigned) state->spsr);
     printf("    elr = %08x %08x", (unsigned) (state->elr >> 32), (unsigned) state->elr);
+    printf("\n");
     printf("    esr = %08x %08x", (unsigned) (esr >> 32), (unsigned) esr);
     printf("    far = %08x %08x", (unsigned) (far >> 32), (unsigned) far);
-    printf("\n\n");
+    printf("\n");
 
     for (unsigned i = 0; i < NUM_REGS; ++i) {
-        printf("  %5u = %08x %08x", i, (unsigned) (state->x[i] >> 32), (unsigned) state->x[i]);
-        if (i % 4 == 3) {
+        if (i % 2 == 0) {
             printf("\n");
         }
+        printf("  %5u = %08x %08x", i, (unsigned) (state->x[i] >> 32), (unsigned) state->x[i]);
     }
-    printf("\n\n");
+    printf("\n");
 
-    printf("Press ENTER to step over...\n");
-    while (Serial::getc() != '\n');
-
-    state->elr += 4;
+    halt();
 }
