@@ -1,9 +1,33 @@
+#include <assert.h>
 #include <exception.h>
 #include <serial.h>
 #include <stdio.h>
 #include <sys.h>
 
 void exception_handler(process_state_t* state, uint64_t index, uint64_t esr, uint64_t far)
+{
+    if (esr >> 26 == 0b010101) {
+        // Source: https://thog.github.io/syscalls-table-aarch64/latest.html
+        switch (state->x[8]) {
+            case 0x40: // write
+                // @TODO: state->x[0] selects file descriptor
+                assert(state->x[0] == 1);
+
+                // @TODO: state->x[2] specifies length
+
+                puts((const char*) state->x[1]);
+                break;
+
+            default:
+                debug(state, index, esr, far);
+                break;
+        }
+    } else {
+        debug(state, index, esr, far);
+    }
+}
+
+void debug(process_state_t* state, uint64_t index, uint64_t esr, uint64_t far)
 {
     const char* type = "Unknown";
     const char* ifs = "Unknown";
