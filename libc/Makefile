@@ -1,24 +1,16 @@
 TOOLCHAIN ?= aarch64-none-elf
 CC        := $(TOOLCHAIN)-g++
-OBJCOPY   := $(TOOLCHAIN)-objcopy
+AR        := $(TOOLCHAIN)-ar
 
-IMG := kernel8
+LIB := libc
 
 BUILD   := build
-INCLUDE := ../kernel/include
-LIBC    := ../libc
-SRC     := ../kernel
-TEST    := .
+INCLUDE := include
+SRC     := .
 
 INCLUDES := $(wildcard $(INCLUDE)/*.h)
-INCLUDES += $(wildcard $(TEST)/*.h)
 
-OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.o, $(wildcard $(SRC)/**/*.S))
-OBJECTS += $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(wildcard $(SRC)/**/*.cc))
-OBJECTS += $(patsubst $(TEST)/%.cc, $(BUILD)/test/%.o, $(wildcard $(TEST)/*.cc))
-OBJECTS += $(LIBC)/build/libc.a
-
-OBJECTS := $(filter-out $(BUILD)/kernel/main.o, $(OBJECTS))
+OBJECTS := $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(wildcard $(SRC)/**/*.cc))
 
 BASEFLAGS := -O2 -fpic -nostdlib
 BASEFLAGS += -nostartfiles -ffreestanding -nodefaultlibs
@@ -36,31 +28,20 @@ WARNFLAGS += -Wno-pragmas -Wno-unused-but-set-parameter
 WARNFLAGS += -Wno-unused-but-set-variable -Wno-unused-result
 WARNFLAGS += -Wwrite-strings -Wdisabled-optimization -Wpointer-arith
 ASFLAGS   := -D__ASSEMBLY__
-CXXFLAGS  := -I$(TEST) -I$(INCLUDE) -I$(LIBC)/include $(BASEFLAGS) $(WARNFLAGS)
+CXXFLAGS  := -I$(INCLUDE) $(BASEFLAGS) $(WARNFLAGS)
 CXXFLAGS  += -fno-exceptions -std=gnu++11
 LDFLAGS   := $(BASEFLAGS)
 
 .PHONY: all clean
 
-all: $(BUILD)/$(IMG).img
+all: $(BUILD)/$(LIB).a
 
 clean:
 	rm -rf $(BUILD)
 
-$(BUILD)/$(IMG).img: $(BUILD)/$(IMG).elf
-	$(OBJCOPY) $(BUILD)/$(IMG).elf -O binary $@
-
-$(BUILD)/$(IMG).elf: $(OBJECTS) ../kernel/link-aarch64-elf.ld
-	$(CC) $(LDFLAGS) $(OBJECTS) -T../kernel/link-aarch64-elf.ld -lgcc -o $@
-
-$(BUILD)/%.o: $(SRC)/%.S
-	@mkdir -p $(@D)
-	$(CC) $(ASFLAGS) -c $< -o $@
+$(BUILD)/$(LIB).a: $(OBJECTS)
+	$(AR) rcs $@ $(OBJECTS)
 
 $(BUILD)/%.o: $(SRC)/%.cc $(INCLUDES)
-	@mkdir -p $(@D)
-	$(CC) $(CXXFLAGS) -c $< -o $@
-
-$(BUILD)/test/%.o: $(TEST)/%.cc $(INCLUDES)
 	@mkdir -p $(@D)
 	$(CC) $(CXXFLAGS) -c $< -o $@

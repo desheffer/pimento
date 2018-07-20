@@ -52,7 +52,7 @@ char Serial::getc()
     return r == '\r' ? '\n' : r;
 }
 
-void Serial::putc(void*, char c)
+void Serial::putc(char c)
 {
     while (!(*aux_mu_lsr & 0x20));
 

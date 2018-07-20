@@ -1,30 +1,19 @@
 #include <stdio.h>
 #include <string.h>
-#include <synchronize.h>
 
 #define BUF_MAX 13
 
-static void* _vprintf_putc_data = 0;
-static putc_t _vprintf_putc = 0;
-
-void init_printf(void* data, putc_t putc)
+void putc(void*, char c)
 {
-    _vprintf_putc_data = data;
-    _vprintf_putc = putc;
+    fwrite(&c, 1, 1, 1);
 }
 
 void puts(const char* s)
 {
-    enter_critical();
-
-    if (_vprintf_putc) {
-        while (*s) {
-            _vprintf_putc(_vprintf_putc_data, *s);
-            ++s;
-        }
+    while (*s) {
+        putc(0, *s);
+        ++s;
     }
-
-    leave_critical();
 }
 
 struct vcprintf_specifiers_t {
@@ -259,13 +248,7 @@ void vcprintf(void* data, putc_t putc, const char* format, va_list arg)
 
 void vprintf(const char* format, va_list arg)
 {
-    enter_critical();
-
-    if (_vprintf_putc) {
-        vcprintf(_vprintf_putc_data, _vprintf_putc, format, arg);
-    }
-
-    leave_critical();
+    vcprintf(0, putc, format, arg);
 }
 
 struct vsnprintf_putc_data_t {

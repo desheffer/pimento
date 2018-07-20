@@ -1,26 +1,27 @@
 #include <assert.h>
 #include <exception.h>
+#include <kstdio.h>
 #include <serial.h>
-#include <stdio.h>
 #include <sys.h>
 
 void exception_handler(process_state_t* state, uint64_t index, uint64_t esr, uint64_t far)
 {
     if (esr >> 26 == 0b010101) {
         // Source: https://thog.github.io/syscalls-table-aarch64/latest.html
-        switch (state->x[8]) {
-            case 0x40: // write
-                // @TODO: state->x[0] selects file descriptor
-                assert(state->x[0] == 1);
+        if (state->x[8] == 0x40) {
+            // write
 
-                // @TODO: state->x[2] specifies length
+            unsigned fd = state->x[0];
+            const char* s = (const char*) state->x[1];
+            size_t len = state->x[2];
 
-                puts((const char*) state->x[1]);
-                break;
+            assert(fd == 1);
 
-            default:
-                debug(state, index, esr, far);
-                break;
+            while (len--) {
+                Serial::putc(*(s--));
+            }
+        } else {
+            debug(state, index, esr, far);
         }
     } else {
         debug(state, index, esr, far);
@@ -34,7 +35,7 @@ void debug(process_state_t* state, uint64_t index, uint64_t esr, uint64_t far)
     const char* dfs = "Unknown";
     const char* level = "Unknown";
 
-    puts(
+    kputs(
         "\n"
         "[41m[97m                          [0m\n"
         "[41m[97m     Kernel Exception     [0m\n"
@@ -82,26 +83,26 @@ void debug(process_state_t* state, uint64_t index, uint64_t esr, uint64_t far)
         }
     }
 
-    printf("Exception Type (%#02x) = %s\n", (unsigned) index, type);
-    printf("Instruction Fault Status = %s\n", ifs);
-    printf("Data Fault Status = %s, level %s\n", dfs, level);
+    kprintf("Exception Type (%#02x) = %s\n", (unsigned) index, type);
+    kprintf("Instruction Fault Status = %s\n", ifs);
+    kprintf("Data Fault Status = %s, level %s\n", dfs, level);
 
-    printf("\nRegisters:\n\n");
+    kprintf("\nRegisters:\n\n");
 
-    printf("   spsr = %08x %08x", (unsigned) (state->spsr >> 32), (unsigned) state->spsr);
-    printf("    elr = %08x %08x", (unsigned) (state->elr >> 32), (unsigned) state->elr);
-    printf("\n");
-    printf("    esr = %08x %08x", (unsigned) (esr >> 32), (unsigned) esr);
-    printf("    far = %08x %08x", (unsigned) (far >> 32), (unsigned) far);
-    printf("\n");
+    kprintf("   spsr = %08x %08x", (unsigned) (state->spsr >> 32), (unsigned) state->spsr);
+    kprintf("    elr = %08x %08x", (unsigned) (state->elr >> 32), (unsigned) state->elr);
+    kprintf("\n");
+    kprintf("    esr = %08x %08x", (unsigned) (esr >> 32), (unsigned) esr);
+    kprintf("    far = %08x %08x", (unsigned) (far >> 32), (unsigned) far);
+    kprintf("\n");
 
     for (unsigned i = 0; i < NUM_REGS; ++i) {
         if (i % 2 == 0) {
-            printf("\n");
+            kprintf("\n");
         }
-        printf("  %5u = %08x %08x", i, (unsigned) (state->x[i] >> 32), (unsigned) state->x[i]);
+        kprintf("  %5u = %08x %08x", i, (unsigned) (state->x[i] >> 32), (unsigned) state->x[i]);
     }
-    printf("\n");
+    kprintf("\n");
 
     halt();
 }

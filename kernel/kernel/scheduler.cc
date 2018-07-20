@@ -42,22 +42,13 @@ void Scheduler::schedule(process_state_t* state)
     memcpy(state, _currentProcess->state, sizeof(process_state_t));
 }
 
+#include <stdio.h>
 #include <timer.h>
 
 void myproc2()
 {
     while (true) {
-        // Write to fd 1, ".", length 1.
-        asm volatile(
-            "mov x8, #64\n\t"
-            "mov x0, #1\n\t"
-            "mov x1, %0\n\t"
-            "mov x2, %1\n\t"
-            "svc #0"
-            :
-            : "r" ("."), "r" (1)
-            : "x8", "x0", "x1", "x2"
-        );
+        printf(".");
         Timer::wait(100);
     }
 }

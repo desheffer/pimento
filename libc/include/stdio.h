@@ -2,11 +2,8 @@
 
 #include <stdarg.h>
 #include <stddef.h>
-#include <stdint.h>
 
 typedef void (*putc_t)(void*, char);
-
-void init_printf(void*, putc_t);
 
 void puts(const char*);
 
@@ -19,3 +16,5 @@ void cprintf(void*, putc_t, const char*, ...) __attribute__((format(printf, 3, 4
 void printf(const char*, ...) __attribute__((format(printf, 1, 2)));
 size_t snprintf(char*, size_t, const char*, ...) __attribute__((format(printf, 3, 4)));
 size_t sprintf(char*, const char*, ...) __attribute__((format(printf, 2, 3)));
+
+void fwrite(const void*, size_t, size_t, unsigned);

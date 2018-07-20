@@ -1,5 +1,5 @@
 #include <interrupt.h>
-#include <stdio.h>
+#include <kstdio.h>
 #include <sys.h>
 
 void halt()

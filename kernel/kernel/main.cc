@@ -1,10 +1,10 @@
 #include <heap.h>
 #include <interrupt.h>
+#include <kstdio.h>
 #include <memory.h>
 #include <scheduler.h>
 #include <serial.h>
 #include <stdint.h>
-#include <stdio.h>
 #include <timer.h>
 
 extern "C" void kernel_main()
@@ -14,9 +14,8 @@ extern "C" void kernel_main()
     Heap::init(Memory::instance());
 
     Serial::init();
-    init_printf(0, Serial::putc);
 
-    puts(
+    kputs(
         "\n"
         "[44m[97m                          [0m\n"
         "[44m[97m     Welcome to PI-OS     [0m\n"
@@ -24,24 +23,24 @@ extern "C" void kernel_main()
         "\n"
     );
 
-    printf("Memory Allocation = %u\n", Memory::instance()->allocSize());
-    printf("Page Count = %u\n", Memory::instance()->pageCount());
+    kprintf("Memory Allocation = %u\n", Memory::instance()->allocSize());
+    kprintf("Page Count = %u\n", Memory::instance()->pageCount());
 
     unsigned el;
     asm volatile("mrs %0, currentel" : "=r" (el));
-    printf("Execution Level = %u\n", (el >> 2) & 3);
+    kprintf("Execution Level = %u\n", (el >> 2) & 3);
 
-    printf("Interrupts: ");
+    kprintf("Interrupts: ");
     Interrupt::init();
-    printf("OK\n");
+    kprintf("OK\n");
 
-    printf("Process Scheduler: ");
+    kprintf("Process Scheduler: ");
     Scheduler::init();
-    printf("OK\n");
+    kprintf("OK\n");
 
-    printf("System Timer: ");
+    kprintf("System Timer: ");
     Timer::init(Interrupt::instance(), Scheduler::instance());
-    printf("OK\n");
+    kprintf("OK\n");
 
     Scheduler::instance()->spawn();
 
