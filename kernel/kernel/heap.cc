@@ -8,6 +8,8 @@ Heap* Heap::_instance = 0;
 
 Heap::Heap(Memory* memory)
 {
+    assert(memory);
+
     _memory = memory;
 }
 

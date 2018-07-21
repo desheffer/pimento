@@ -10,6 +10,7 @@ Scheduler* Scheduler::_instance = 0;
 Scheduler::Scheduler()
 {
     _nextPid = 1;
+    _schedulingQueued = false;
 
     auto process = new process_control_block_t;
     process->pid = _nextPid++;
@@ -32,14 +33,25 @@ void Scheduler::init()
     _instance = new Scheduler();
 }
 
+void Scheduler::queueScheduling()
+{
+    _schedulingQueued = true;
+}
+
 void Scheduler::schedule(process_state_t* state)
 {
-    memcpy(_currentProcess->state, state, sizeof(process_state_t));
+    if (_schedulingQueued) {
+        _schedulingQueued = false;
 
-    _processQueue.push_back(_currentProcess);
-    _currentProcess = _processQueue.pop_front();
+        memcpy(_currentProcess->state, state, sizeof(process_state_t));
 
-    memcpy(state, _currentProcess->state, sizeof(process_state_t));
+        _processQueue.push_back(_currentProcess);
+        _currentProcess = _processQueue.pop_front();
+
+        memcpy(state, _currentProcess->state, sizeof(process_state_t));
+    }
+
+    eret_handler(state);
 }
 
 #include <stdio.h>
@@ -48,8 +60,8 @@ void Scheduler::schedule(process_state_t* state)
 void myproc2()
 {
     while (true) {
+        Timer::wait(1000);
         printf(".");
-        Timer::wait(100);
     }
 }
 

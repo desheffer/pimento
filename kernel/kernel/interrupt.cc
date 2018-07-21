@@ -29,7 +29,7 @@ void Interrupt::init()
     _instance = new Interrupt();
 }
 
-bool Interrupt::isPending(unsigned num)
+bool Interrupt::isPending(unsigned num) const
 {
     assert(num < NUM_IRQS);
 
@@ -62,7 +62,7 @@ void Interrupt::disconnect(irq_number_t num)
     _handlerData[num] = 0;
 }
 
-void Interrupt::enable(irq_number_t num)
+void Interrupt::enable(irq_number_t num) const
 {
     assert(num < NUM_IRQS);
 
@@ -75,7 +75,7 @@ void Interrupt::enable(irq_number_t num)
     }
 }
 
-void Interrupt::disable(irq_number_t num)
+void Interrupt::disable(irq_number_t num) const
 {
     assert(num < NUM_IRQS);
 
@@ -88,11 +88,11 @@ void Interrupt::disable(irq_number_t num)
     }
 }
 
-void Interrupt::handle(process_state_t* state)
+void Interrupt::handle() const
 {
     for (unsigned num = 0; num < NUM_IRQS; ++num) {
         if (instance()->isPending(num) && _handlers[num]) {
-            _handlers[num](_handlerData[num], state);
+            _handlers[num](_handlerData[num]);
             break;
         }
     }
@@ -106,9 +106,4 @@ void enable_interrupts()
 void disable_interrupts()
 {
     asm volatile("msr daifset, #2");
-}
-
-void irq_handler(process_state_t* state)
-{
-    Interrupt::instance()->handle(state);
 }

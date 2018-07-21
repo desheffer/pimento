@@ -26,10 +26,6 @@ extern "C" void kernel_main()
     kprintf("Memory Allocation = %u\n", Memory::instance()->allocSize());
     kprintf("Page Count = %u\n", Memory::instance()->pageCount());
 
-    unsigned el;
-    asm volatile("mrs %0, currentel" : "=r" (el));
-    kprintf("Execution Level = %u\n", (el >> 2) & 3);
-
     kprintf("Interrupts: ");
     Interrupt::init();
     kprintf("OK\n");
@@ -46,7 +42,7 @@ extern "C" void kernel_main()
 
     printf("\n");
     while (true) {
-        printf("#");
         Timer::wait(1000);
+        printf("#");
     }
 }

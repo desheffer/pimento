@@ -17,6 +17,6 @@ class Timer
 
     Timer(Interrupt*, Scheduler*);
     ~Timer();
-    void handleInterrupt(process_state_t*);
-    static void handleInterruptStub(void*, process_state_t*);
+    void handleInterrupt() const;
+    static void handleInterruptStub(void*);
 };

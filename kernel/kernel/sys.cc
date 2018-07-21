@@ -11,6 +11,19 @@ void halt()
     }
 }
 
+void panic()
+{
+    kputs(
+        "\n"
+        "[41m[97m                      [0m\n"
+        "[41m[97m     Kernel Panic     [0m\n"
+        "[41m[97m                      [0m\n"
+        "\n"
+    );
+
+    halt();
+}
+
 void __dso_handle()
 {
 }

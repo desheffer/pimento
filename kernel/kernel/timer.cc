@@ -7,6 +7,9 @@ Timer* Timer::_instance = 0;
 
 Timer::Timer(Interrupt* interrupt, Scheduler* scheduler)
 {
+    assert(interrupt);
+    assert(scheduler);
+
     _scheduler = scheduler;
 
     *arm_timer_ctl = 0x003E0000;
@@ -52,17 +55,15 @@ void Timer::wait(unsigned msecs)
     while (counter() < end);
 }
 
-void Timer::handleInterrupt(process_state_t* state)
+void Timer::handleInterrupt() const
 {
     *arm_timer_cli = 0;
 
-    assert(_scheduler);
-
-    _scheduler->schedule(state);
+    _scheduler->queueScheduling();
 }
 
-void Timer::handleInterruptStub(void* ptr, process_state_t* state)
+void Timer::handleInterruptStub(void* ptr)
 {
     Timer* timer = (Timer*) ptr;
-    timer->handleInterrupt(state);
+    timer->handleInterrupt();
 }

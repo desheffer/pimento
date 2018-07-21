@@ -59,9 +59,9 @@ loop_clear_bss:
 
     // Call kernel_main.
     bl kernel_main
+    b panic
 
 .macro save_regs
-    // Save registers.
     stp x29, x30, [sp, #-16]!
     stp x27, x28, [sp, #-16]!
     stp x25, x26, [sp, #-16]!
@@ -77,24 +77,25 @@ loop_clear_bss:
     stp x5, x6, [sp, #-16]!
     stp x3, x4, [sp, #-16]!
     stp x1, x2, [sp, #-16]!
-
-    // Save system registers.
     mrs x23, sp_el0
+    stp x23, x0, [sp, #-16]!
+.endm
+
+.macro save_state
     mrs x22, elr_el1
     mrs x21, spsr_el1
-    stp x23, x0, [sp, #-16]!
     stp x21, x22, [sp, #-16]!
 .endm
 
-.macro load_regs
-    // Load system registers.
+.macro load_state
     ldp x21, x22, [sp], #16
-    ldp x23, x0, [sp], #16
     msr spsr_el1, x21
     msr elr_el1, x22
-    msr sp_el0, x23
+.endm
 
-    // Load registers.
+.macro load_regs
+    ldp x23, x0, [sp], #16
+    msr sp_el0, x23
     ldp x1, x2, [sp], #16
     ldp x3, x4, [sp], #16
     ldp x5, x6, [sp], #16
@@ -118,113 +119,97 @@ _vector_table:
     .balign 0x80
     save_regs
     mov x0, #0x11
-    b asm_exception_handler
+    b exception_loader
 
     // IRQ
     .balign 0x80
     save_regs
     mov x0, #0x12
-    b asm_irq_handler
+    b exception_loader
 
     // FIQ
     .balign 0x80
     save_regs
     mov x0, #0x14
-    b asm_exception_handler
+    b exception_loader
 
     // SError
     .balign 0x80
     save_regs
     mov x0, #0x18
-    b asm_exception_handler
+    b exception_loader
 
     // Synchronous
     .balign 0x80
-    save_regs
-    mov x0, #0x21
-    b asm_exception_handler
+    b panic
 
     // IRQ
     .balign 0x80
-    save_regs
-    mov x0, #0x22
-    b asm_exception_handler
+    b panic
 
     // FIQ
     .balign 0x80
-    save_regs
-    mov x0, #0x24
-    b asm_exception_handler
+    b panic
 
     // SError
     .balign 0x80
-    save_regs
-    mov x0, #0x28
-    b asm_exception_handler
+    b panic
 
     // Synchronous
     .balign 0x80
     save_regs
     mov x0, #0x41
-    b asm_exception_handler
+    b exception_loader
 
     // IRQ
     .balign 0x80
     save_regs
     mov x0, #0x42
-    b asm_exception_handler
+    b exception_loader
 
     // FIQ
     .balign 0x80
     save_regs
     mov x0, #0x44
-    b asm_exception_handler
+    b exception_loader
 
     // SError
     .balign 0x80
     save_regs
     mov x0, #0x48
-    b asm_exception_handler
+    b exception_loader
 
     // Synchronous
     .balign 0x80
-    save_regs
-    mov x0, #0x81
-    b asm_exception_handler
+    b panic
 
     // IRQ
     .balign 0x80
-    save_regs
-    mov x0, #0x82
-    b asm_exception_handler
+    b panic
 
     // FIQ
     .balign 0x80
-    save_regs
-    mov x0, #0x84
-    b asm_exception_handler
+    b panic
 
     // SError
     .balign 0x80
-    save_regs
-    mov x0, #0x88
-    b asm_exception_handler
+    b panic
 
-asm_exception_handler:
-    // Call exception_handler.
+exception_loader:
+    save_state
+
     mov x1, x0
     mov x0, sp
     mrs x2, esr_el1
     mrs x3, far_el1
+
     bl exception_handler
+    b halt
 
-    load_regs
-    eret
+.globl eret_handler
+eret_handler:
+    mov sp, x0
 
-asm_irq_handler:
-    // Call irq_handler.
-    mov x0, sp
-    bl irq_handler
-
+    load_state
     load_regs
     eret

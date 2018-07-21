@@ -4,28 +4,36 @@
 #include <serial.h>
 #include <sys.h>
 
+// @TODO: move to separate class
+void service_handler(process_state_t* state)
+{
+    // Source: https://thog.github.io/syscalls-table-aarch64/latest.html
+    if (state->x[8] == 0x40) {
+        // write
+
+        unsigned fd = state->x[0];
+        const char* s = (const char*) state->x[1];
+        size_t len = state->x[2];
+
+        assert(fd == 1);
+
+        while (len--) {
+            Serial::putc(*(s--));
+        }
+    }
+}
+
 void exception_handler(process_state_t* state, uint64_t index, uint64_t esr, uint64_t far)
 {
-    if (esr >> 26 == 0b010101) {
-        // Source: https://thog.github.io/syscalls-table-aarch64/latest.html
-        if (state->x[8] == 0x40) {
-            // write
-
-            unsigned fd = state->x[0];
-            const char* s = (const char*) state->x[1];
-            size_t len = state->x[2];
-
-            assert(fd == 1);
-
-            while (len--) {
-                Serial::putc(*(s--));
-            }
-        } else {
-            debug(state, index, esr, far);
-        }
+    if (index & 0b0001 && esr >> 26 == 0b010101) {
+        service_handler(state);
+    } else if (index & 0b0010) {
+        Interrupt::instance()->handle();
     } else {
         debug(state, index, esr, far);
     }
+
+    Scheduler::instance()->schedule(state);
 }
 
 void debug(process_state_t* state, uint64_t index, uint64_t esr, uint64_t far)
@@ -43,7 +51,7 @@ void debug(process_state_t* state, uint64_t index, uint64_t esr, uint64_t far)
         "\n"
     );
 
-    switch (index & 0xF) {
+    switch (index & 0b1111) {
         case 0b0001: type = "Synchronous"; break;
         case 0b0010: type = "IRQ"; break;
         case 0b0100: type = "FIQ"; break;
