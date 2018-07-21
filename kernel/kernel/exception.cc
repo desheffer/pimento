@@ -68,11 +68,11 @@ void debug(process_state_t* state, uint64_t index, uint64_t esr, uint64_t far)
     }
 
     if (esr >> 26 == 0b100100 || esr >> 26 == 0b100101) {
-        switch (esr & 0b01100) {
-            case 0b00000: dfs = "Address size fault"; break;
-            case 0b00100: dfs = "Translation fault"; break;
-            case 0b01000: dfs = "Access flag fault"; break;
-            case 0b01100: dfs = "Permission fault"; break;
+        switch (esr >> 2 & 0b11) {
+            case 0b00: dfs = "Address size fault"; break;
+            case 0b01: dfs = "Translation fault"; break;
+            case 0b10: dfs = "Access flag fault"; break;
+            case 0b11: dfs = "Permission fault"; break;
         }
 
         switch (esr & 0b11) {
