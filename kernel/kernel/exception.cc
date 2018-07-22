@@ -1,32 +1,13 @@
 #include <assert.h>
 #include <exception.h>
 #include <kstdio.h>
-#include <serial.h>
+#include <service.h>
 #include <sys.h>
-
-// @TODO: move to separate class
-void service_handler(process_state_t* state)
-{
-    // Source: https://thog.github.io/syscalls-table-aarch64/latest.html
-    if (state->x[8] == 0x40) {
-        // write
-
-        unsigned fd = state->x[0];
-        const char* s = (const char*) state->x[1];
-        size_t len = state->x[2];
-
-        assert(fd == 1);
-
-        while (len--) {
-            Serial::putc(*(s--));
-        }
-    }
-}
 
 void exception_handler(process_state_t* state, uint64_t index, uint64_t esr, uint64_t far)
 {
     if (index & 0b0001 && esr >> 26 == 0b010101) {
-        service_handler(state);
+        Service::instance()->handle(state);
     } else if (index & 0b0010) {
         Interrupt::instance()->handle();
     } else {

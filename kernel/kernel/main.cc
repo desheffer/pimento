@@ -4,6 +4,7 @@
 #include <memory.h>
 #include <scheduler.h>
 #include <serial.h>
+#include <service.h>
 #include <stdint.h>
 #include <timer.h>
 
@@ -25,6 +26,10 @@ extern "C" void kernel_main()
 
     kprintf("Memory Allocation = %u\n", Memory::instance()->allocSize());
     kprintf("Page Count = %u\n", Memory::instance()->pageCount());
+
+    kprintf("Services: ");
+    Service::init();
+    kprintf("OK\n");
 
     kprintf("Interrupts: ");
     Interrupt::init();

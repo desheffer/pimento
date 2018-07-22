@@ -26,6 +26,12 @@ void Heap::init(Memory* memory)
     new ((void*) _instance) Heap(memory);
 }
 
+Heap* Heap::instance() {
+    assert(_instance);
+
+    return _instance;
+}
+
 void* Heap::alloc(size_t size)
 {
     (void) size;

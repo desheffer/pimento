@@ -13,7 +13,7 @@ class Memory
 {
   public:
     static void init();
-    static Memory* instance() { return _instance; }
+    static Memory* instance();
     void* allocPage();
     void freePage(void*);
     unsigned allocSize() const;

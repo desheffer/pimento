@@ -56,6 +56,12 @@ void Memory::init()
     new ((void*) _instance) Memory(allocSize);
 }
 
+Memory* Memory::instance() {
+    assert(_instance);
+
+    return _instance;
+}
+
 void* Memory::allocPage()
 {
     assert(_pages);

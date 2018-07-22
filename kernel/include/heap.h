@@ -7,7 +7,7 @@ class Heap
 {
   public:
     static void init(Memory*);
-    static Heap* instance() { return _instance; }
+    static Heap* instance();
     void* alloc(size_t);
     void free(void*);
   private:

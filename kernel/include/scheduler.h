@@ -22,7 +22,7 @@ class Scheduler
 {
   public:
     static void init();
-    static Scheduler* instance() { return _instance; }
+    static Scheduler* instance();
     void queueScheduling();
     void schedule(process_state_t*);
     void spawn(); // temporary

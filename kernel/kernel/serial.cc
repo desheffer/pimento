@@ -43,6 +43,12 @@ void Serial::init()
     _instance = new Serial();
 }
 
+Serial* Serial::instance() {
+    assert(_instance);
+
+    return _instance;
+}
+
 char Serial::getc()
 {
     while (!(*aux_mu_lsr & 0x01));

@@ -33,6 +33,12 @@ void Scheduler::init()
     _instance = new Scheduler();
 }
 
+Scheduler* Scheduler::instance() {
+    assert(_instance);
+
+    return _instance;
+}
+
 void Scheduler::queueScheduling()
 {
     _schedulingQueued = true;

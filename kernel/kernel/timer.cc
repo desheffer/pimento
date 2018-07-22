@@ -34,6 +34,12 @@ void Timer::init(Interrupt* interrupt, Scheduler* scheduler)
     _instance = new Timer(interrupt, scheduler);
 }
 
+Timer* Timer::instance() {
+    assert(_instance);
+
+    return _instance;
+}
+
 uint64_t Timer::counter()
 {
     uint64_t high;

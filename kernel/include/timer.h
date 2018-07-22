@@ -8,7 +8,7 @@ class Timer
 {
   public:
     static void init(Interrupt*, Scheduler*);
-    static Timer* instance() { return _instance; }
+    static Timer* instance();
     static uint64_t counter();
     static void wait(unsigned);
   private:

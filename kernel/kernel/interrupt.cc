@@ -29,6 +29,12 @@ void Interrupt::init()
     _instance = new Interrupt();
 }
 
+Interrupt* Interrupt::instance() {
+    assert(_instance);
+
+    return _instance;
+}
+
 bool Interrupt::isPending(unsigned num) const
 {
     assert(num < NUM_IRQS);
