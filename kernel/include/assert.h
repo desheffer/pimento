@@ -4,7 +4,10 @@
 
 #define breakpoint asm volatile("brk #0");
 
+#define STRINGIZE_DETAIL(x) #x
+#define STRINGIZE(x) STRINGIZE_DETAIL(x)
+
 #define assert(cond) if (!(cond)) { \
-    kprintf("\n\nAssertion failed (%s) at %s:%d.\n", #cond, __FILE__, __LINE__); \
+    kputs("\n\nAssertion failed (" #cond ") at " __FILE__ ":" STRINGIZE(__LINE__) ".\n"); \
     breakpoint; \
 }

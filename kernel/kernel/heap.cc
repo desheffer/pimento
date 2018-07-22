@@ -32,12 +32,8 @@ Heap* Heap::instance() {
     return _instance;
 }
 
-void* Heap::alloc(size_t size)
+void* Heap::alloc(size_t /*size*/)
 {
-    (void) size;
-
-    assert(_memory);
-
     enter_critical();
 
     void* ptr = _memory->allocPage(); // @TODO lol
@@ -49,8 +45,6 @@ void* Heap::alloc(size_t size)
 
 void Heap::free(void* ptr)
 {
-    assert(_memory);
-
     enter_critical();
 
     _memory->freePage(ptr); // @TODO lol

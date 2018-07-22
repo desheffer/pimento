@@ -88,8 +88,6 @@ void* Memory::allocPage()
 
 void Memory::freePage(void* ptr)
 {
-    assert(_pages);
-
     unsigned index = pageIndex(ptr);
 
     enter_critical();

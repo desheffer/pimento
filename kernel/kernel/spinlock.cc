@@ -30,9 +30,9 @@ void SpinLock::acquire()
 
 void SpinLock::release()
 {
-    assert(_locked);
-
     enter_critical();
+
+    assert(_locked);
 
     _locked = false;
 
