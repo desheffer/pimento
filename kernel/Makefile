@@ -32,7 +32,8 @@ WARNFLAGS += -Wno-pragmas -Wno-unused-but-set-parameter
 WARNFLAGS += -Wno-unused-but-set-variable -Wno-unused-result
 WARNFLAGS += -Wwrite-strings -Wdisabled-optimization -Wpointer-arith
 ASFLAGS   := -D__ASSEMBLY__
-CXXFLAGS  := -I$(INCLUDE) -I$(LIBC)/include $(BASEFLAGS) $(WARNFLAGS)
+CXXFLAGS  := -I$(INCLUDE) -I$(LIBC)/include
+CXXFLAGS  += $(BASEFLAGS) $(WARNFLAGS)
 CXXFLAGS  += -fno-exceptions -std=gnu++11
 LDFLAGS   := $(BASEFLAGS)
 

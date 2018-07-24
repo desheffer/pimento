@@ -1,31 +1,19 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #define BUF_MAX 13
 
-void putc(void*, char c)
-{
-    fwrite(&c, 1, 1, 1);
-}
-
-void puts(const char* s)
-{
-    while (*s) {
-        putc(0, *s);
-        ++s;
-    }
-}
-
-struct vcprintf_specifiers_t {
+typedef struct {
     char* buf;
     unsigned base;
     unsigned pad;
     unsigned width;
-    bool alt;
-    bool left_align;
-    bool uppercase;
+    unsigned alt;
+    unsigned left_align;
+    unsigned uppercase;
     char sign;
-};
+} vcprintf_specifiers_t;
 
 static void vcprintf_char(vcprintf_specifiers_t* sp, char c)
 {
@@ -66,7 +54,7 @@ static void vcprintf_uint(vcprintf_specifiers_t* sp, unsigned i)
     } while (i);
 }
 
-static void vcprintf_sp(void* data, putc_t putc, vcprintf_specifiers_t* sp)
+static void vcprintf_sp(void* data, putc_t putc_f, vcprintf_specifiers_t* sp)
 {
     const char* buf = sp->buf;
     size_t len;
@@ -78,69 +66,69 @@ static void vcprintf_sp(void* data, putc_t putc, vcprintf_specifiers_t* sp)
     }
 
     if (sp->alt && (sp->base == 8 || sp->base == 16)) {
-        putc(data, '0');
+        putc_f(data, '0');
         ++len;
     }
 
     if (sp->alt && sp->base == 16) {
-        putc(data, sp->uppercase ? 'X' : 'x');
+        putc_f(data, sp->uppercase ? 'X' : 'x');
         ++len;
     }
 
     if (sp->sign && (sp->pad || sp->left_align)) {
-        putc(data, sp->sign);
+        putc_f(data, sp->sign);
     }
 
     if (!sp->left_align) {
         while (len < sp->width) {
-            putc(data, sp->pad ? '0' : ' ');
+            putc_f(data, sp->pad ? '0' : ' ');
             ++len;
         }
     }
 
     if (sp->sign && !(sp->pad || sp->left_align)) {
-        putc(data, sp->sign);
+        putc_f(data, sp->sign);
     }
 
     while (*buf) {
-        putc(data, *buf);
+        putc_f(data, *buf);
         ++buf;
     }
 
     if (sp->left_align) {
         while (len < sp->width) {
-            putc(data, ' ');
+            putc_f(data, ' ');
             ++len;
         }
     }
 }
 
-void vcprintf(void* data, putc_t putc, const char* format, va_list arg)
+void vcprintf(void* data, putc_t putc_f, const char* format, va_list arg)
 {
-    vcprintf_specifiers_t* sp = new vcprintf_specifiers_t;
-    char* buf = new char[BUF_MAX];
+    vcprintf_specifiers_t* sp = (vcprintf_specifiers_t*) malloc(sizeof(vcprintf_specifiers_t));
+    char* buf = (char*) malloc(BUF_MAX);
 
     while (*format) {
         if (*format != '%') {
-            putc(data, *format);
+            putc_f(data, *format);
             ++format;
         } else {
             ++format;
 
             sp->buf = buf;
-            sp->alt = false;
+            sp->alt = 0;
             sp->base = 0;
-            sp->left_align = false;
+            sp->left_align = 0;
             sp->pad = 0;
             sp->sign = 0;
-            sp->uppercase = false;
+            sp->uppercase = 0;
             sp->width = 0;
 
             // Flags
             while (*format) {
                 switch (*format) {
                     case '-':
-                        sp->left_align = true;
+                        sp->left_align = 1;
                         sp->pad = 0;
                         ++format;
                         continue;
@@ -150,11 +138,11 @@ void vcprintf(void* data, putc_t putc, const char* format, va_list arg)
                         continue;
                     case '0':
                         sp->pad = 1;
-                        sp->left_align = false;
+                        sp->left_align = 0;
                         ++format;
                         continue;
                     case '#':
-                        sp->alt = true;
+                        sp->alt = 1;
                         ++format;
                         continue;
                 }
@@ -223,12 +211,12 @@ void vcprintf(void* data, putc_t putc, const char* format, va_list arg)
                     case 'X':
                         // Signed hexadecimal uppercase
                         sp->base = 16;
-                        sp->uppercase = true;
+                        sp->uppercase = 1;
                         vcprintf_uint(sp, va_arg(arg, unsigned));
                         break;
                     case '%':
                         // Literal
-                        putc(data, *format);
+                        putc_f(data, *format);
                         ++format;
                         continue;
                     default:
@@ -237,95 +225,20 @@ void vcprintf(void* data, putc_t putc, const char* format, va_list arg)
                 }
                 ++format;
 
-                vcprintf_sp(data, putc, sp);
+                vcprintf_sp(data, putc_f, sp);
             }
         }
     }
 
-    delete sp;
-    delete[] buf;
+    free(sp);
+    free(buf);
 }
 
-void vprintf(const char* format, va_list arg)
-{
-    vcprintf(0, putc, format, arg);
-}
-
-struct vsnprintf_putc_data_t {
-    char* dest;
-    size_t num_chars;
-    size_t max_chars;
-};
-
-static void vsnprintf_putc(void* data, char c)
-{
-    vsnprintf_putc_data_t* putc_data = (vsnprintf_putc_data_t*) data;
-
-    if (putc_data->num_chars < putc_data->max_chars) {
-        putc_data->dest[putc_data->num_chars++] = c;
-    }
-}
-
-size_t vsnprintf(char* s, size_t max, const char* format, va_list arg)
-{
-    vsnprintf_putc_data_t* putc_data = new vsnprintf_putc_data_t;
-    putc_data->dest = s;
-    putc_data->num_chars = 0;
-    putc_data->max_chars = max;
-
-    vcprintf(putc_data, &vsnprintf_putc, format, arg);
-
-    putc_data->dest[putc_data->num_chars] = 0;
-
-    unsigned num_chars = putc_data->num_chars;
-    delete putc_data;
-
-    return num_chars;
-}
-
-size_t vsprintf(char* s, const char* format, va_list arg)
-{
-    return vsnprintf(s, UINT32_MAX, format, arg);
-}
-
-void cprintf(void* data, putc_t putc, const char* format, ...)
+void cprintf(void* data, putc_t putc_f, const char* format, ...)
 {
     va_list args;
 
     va_start(args, format);
-    vcprintf(data, putc, format, args);
+    vcprintf(data, putc_f, format, args);
     va_end(args);
-}
-
-void printf(const char* format, ...)
-{
-    va_list args;
-
-    va_start(args, format);
-    vprintf(format, args);
-    va_end(args);
-}
-
-size_t snprintf(char* s, size_t size, const char* format, ...)
-{
-    va_list args;
-    size_t retval;
-
-    va_start(args, format);
-    retval = vsnprintf(s, size, format, args);
-    va_end(args);
-
-    return retval;
-}
-
-size_t sprintf(char* s, const char* format, ...)
-{
-    va_list args;
-    size_t retval;
-
-    va_start(args, format);
-    retval = vsprintf(s, format, args);
-    va_end(args);
-
-    return retval;
 }

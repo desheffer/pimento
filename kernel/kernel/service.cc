@@ -37,8 +37,10 @@ void Service::handle(process_state_t* state)
 
         assert(fd == 1);
 
+        state->x[0] = 0;
         while (len--) {
-            Serial::putc(*(s--));
+            Serial::putc(*(s++));
+            ++state->x[0];
         }
     }
 }

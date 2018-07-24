@@ -2,7 +2,19 @@
 
 #include <stddef.h>
 
-void* malloc(size_t);
-void free(void*);
+#ifdef __cplusplus
+extern "C" {
+#endif
+    void free(void*);
+    void* malloc(size_t);
+#ifdef __cplusplus
+}
+#endif
 
+#ifdef __cplusplus
+void operator delete(void*);
+void operator delete[](void*);
+void* operator new(size_t);
+void* operator new[](size_t);
 void* operator new(size_t, void*);
+#endif

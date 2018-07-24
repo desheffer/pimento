@@ -2,21 +2,9 @@
 #include <stdio.h>
 #include <synchronize.h>
 
-void kputc(void*, char c)
+static void kputc(void*, char c)
 {
     Serial::putc(c);
-}
-
-void kputs(const char* s)
-{
-    enter_critical();
-
-    while (*s) {
-        kputc(0, *s);
-        ++s;
-    }
-
-    leave_critical();
 }
 
 void kvprintf(const char* format, va_list arg)

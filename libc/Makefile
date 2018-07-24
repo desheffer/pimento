@@ -1,4 +1,5 @@
 TOOLCHAIN ?= aarch64-none-elf
+GCC       := $(TOOLCHAIN)-gcc
 CC        := $(TOOLCHAIN)-g++
 AR        := $(TOOLCHAIN)-ar
 
@@ -10,7 +11,8 @@ SRC     := .
 
 INCLUDES := $(wildcard $(INCLUDE)/*.h)
 
-OBJECTS := $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(wildcard $(SRC)/**/*.cc))
+OBJECTS := $(patsubst $(SRC)/%.c, $(BUILD)/%.o, $(wildcard $(SRC)/**/*.c))
+OBJECTS += $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(wildcard $(SRC)/**/*.cc))
 
 BASEFLAGS := -O2 -fpic -nostdlib
 BASEFLAGS += -nostartfiles -ffreestanding -nodefaultlibs
@@ -27,9 +29,9 @@ WARNFLAGS += -Wno-sign-compare -Wswitch -Wsystem-headers
 WARNFLAGS += -Wno-pragmas -Wno-unused-but-set-parameter
 WARNFLAGS += -Wno-unused-but-set-variable -Wno-unused-result
 WARNFLAGS += -Wwrite-strings -Wdisabled-optimization -Wpointer-arith
-ASFLAGS   := -D__ASSEMBLY__
-CXXFLAGS  := -I$(INCLUDE) $(BASEFLAGS) $(WARNFLAGS)
-CXXFLAGS  += -fno-exceptions -std=gnu++11
+CFLAGS    := -I$(INCLUDE)
+CFLAGS    += $(BASEFLAGS) $(WARNFLAGS)
+CXXFLAGS  := $(CFLAGS) -fno-exceptions -std=gnu++11
 LDFLAGS   := $(BASEFLAGS)
 
 .PHONY: all clean
@@ -41,6 +43,10 @@ clean:
 
 $(BUILD)/$(LIB).a: $(OBJECTS)
 	$(AR) rcs $@ $(OBJECTS)
+
+$(BUILD)/%.o: $(SRC)/%.c $(INCLUDES)
+	@mkdir -p $(@D)
+	$(GCC) $(CFLAGS) -c $< -o $@
 
 $(BUILD)/%.o: $(SRC)/%.cc $(INCLUDES)
 	@mkdir -p $(@D)
