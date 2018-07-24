@@ -15,10 +15,6 @@ _start:
     cmp x4, #4
     beq enter_el1
 
-    // Set EL1 stack pointer.
-    mov x4, 0x8000
-    msr sp_el1, x4
-
     // Disable coprocessor traps.
     mov x4, #0x33FF
     msr cptr_el2, x4
@@ -34,7 +30,11 @@ _start:
     adr x4, _vector_table
     msr vbar_el1, x4
 
-    // Change execution level to EL1.
+    // Set EL0 stack pointer.
+    mov x4, 0x80000
+    msr sp_el0, x4
+
+    // Change execution level to EL1t.
     mov x4, #0x3C4
     msr spsr_el2, x4
     adr x4, enter_el1
@@ -42,10 +42,6 @@ _start:
     eret
 
 enter_el1:
-    // Set up the stack.
-    adr x4, _start
-    mov sp, x4
-
     // Clear out bss.
     adr x4, __bss_start
     adr x5, __bss_end
@@ -79,21 +75,15 @@ loop_clear_bss:
     stp x1, x2, [sp, #-16]!
     mrs x23, sp_el0
     stp x23, x0, [sp, #-16]!
-.endm
-
-.macro save_state
     mrs x22, elr_el1
     mrs x21, spsr_el1
     stp x21, x22, [sp, #-16]!
 .endm
 
-.macro load_state
+.macro load_regs
     ldp x21, x22, [sp], #16
     msr spsr_el1, x21
     msr elr_el1, x22
-.endm
-
-.macro load_regs
     ldp x23, x0, [sp], #16
     msr sp_el0, x23
     ldp x1, x2, [sp], #16
@@ -196,8 +186,6 @@ _vector_table:
     b panic
 
 exception_loader:
-    save_state
-
     mov x1, x0
     mov x0, sp
     mrs x2, esr_el1
@@ -210,6 +198,5 @@ exception_loader:
 eret_handler:
     mov sp, x0
 
-    load_state
     load_regs
     eret

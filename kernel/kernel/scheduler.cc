@@ -20,6 +20,14 @@ Scheduler::Scheduler()
 
     _currentProcess = process;
     _processList.push_back(process);
+
+    asm volatile(
+        "msr spsel, 1\n\t"
+        "mov sp, %0\n\t"
+        "msr spsel, 0"
+        :
+        : "r" (_currentProcess->state + 1)
+    );
 }
 
 Scheduler::~Scheduler()
@@ -44,20 +52,16 @@ void Scheduler::queueScheduling()
     _schedulingQueued = true;
 }
 
-void Scheduler::schedule(process_state_t* state)
+void Scheduler::schedule()
 {
     if (_schedulingQueued) {
         _schedulingQueued = false;
 
-        memcpy(_currentProcess->state, state, sizeof(process_state_t));
-
         _processQueue.push_back(_currentProcess);
         _currentProcess = _processQueue.pop_front();
-
-        memcpy(state, _currentProcess->state, sizeof(process_state_t));
     }
 
-    eret_handler(state);
+    eret_handler(_currentProcess->state);
 }
 
 #include <stdio.h>
@@ -67,7 +71,7 @@ void myproc2()
 {
     while (true) {
         Timer::wait(1000);
-        printf(".");
+        puts(".");
     }
 }
 
@@ -80,7 +84,8 @@ void Scheduler::spawn()
     strcpy(process->pname, "myproc2");
 
     process->state = new process_state_t;
-    process->state->spsr = 0x304;
+    // process->state->spsr = 0x304; // EL1t
+    process->state->spsr = 0x300; // EL0t
     process->state->elr = (uint64_t) &myproc2;
     process->state->sp = (uint64_t) alloc_page() + PAGE_SIZE;
 

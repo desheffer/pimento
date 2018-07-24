@@ -24,7 +24,7 @@ class Scheduler
     static void init();
     static Scheduler* instance();
     void queueScheduling();
-    void schedule(process_state_t*);
+    void schedule();
     void spawn(); // temporary
   private:
     static Scheduler* _instance;
@@ -38,4 +38,4 @@ class Scheduler
     ~Scheduler();
 };
 
-extern "C" void eret_handler(process_state_t*);
+extern "C" void eret_handler(const process_state_t*);

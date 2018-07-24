@@ -14,7 +14,7 @@ void exception_handler(process_state_t* state, uint64_t index, uint64_t esr, uin
         debug(state, index, esr, far);
     }
 
-    Scheduler::instance()->schedule(state);
+    Scheduler::instance()->schedule();
 }
 
 void debug(process_state_t* state, uint64_t index, uint64_t esr, uint64_t far)
