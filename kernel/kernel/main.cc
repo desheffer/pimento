@@ -8,6 +8,8 @@
 #include <stdint.h>
 #include <timer.h>
 
+extern "C" void* _binary____shell_build_shell_img_start;
+
 extern "C" void kernel_main()
 {
     Memory::init();
@@ -43,9 +45,10 @@ extern "C" void kernel_main()
     Timer::init(Interrupt::instance(), Scheduler::instance());
     kprintf("OK\n");
 
-    Scheduler::instance()->spawn();
-
     printf("\n");
+
+    Scheduler::instance()->createProcess("shell", &_binary____shell_build_shell_img_start);
+
     while (true) {
         Timer::wait(1000);
         printf("#");

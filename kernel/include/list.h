@@ -141,7 +141,7 @@ T List<T>::pop_front()
     _front = listItem->next();
 
     if (_front) {
-        _front->setNext(0);
+        _front->setPrev(0);
     } else {
         _back = 0;
     }

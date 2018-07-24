@@ -53,6 +53,22 @@ void test_list()
     list.push_back(1);
     list.push_back(2);
     list.push_back(3);
+    list.pop_front();
+    list.push_back(1);
+    assert(list.size() == 3);
+
+    list = List<unsigned>();
+    list.push_front(1);
+    list.push_front(2);
+    list.push_front(3);
+    list.pop_back();
+    list.push_front(1);
+    assert(list.size() == 3);
+
+    list = List<unsigned>();
+    list.push_back(1);
+    list.push_back(2);
+    list.push_back(3);
     assert(list.begin() == list.begin());
     assert(list.begin() != list.end());
     ListIterator<unsigned> iter = list.begin();

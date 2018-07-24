@@ -47,6 +47,26 @@ Scheduler* Scheduler::instance() {
     return _instance;
 }
 
+void Scheduler::createProcess(const char* pname, const void* elr)
+{
+    enter_critical();
+
+    auto process = new process_control_block_t;
+    process->pid = _nextPid++;
+    strncpy(process->pname, pname, 32);
+    process->pname[31] = '\0';
+
+    process->state = new process_state_t;
+    process->state->spsr = 0x300;
+    process->state->elr = (uint64_t) elr;
+    process->state->sp = (uint64_t) alloc_page() + PAGE_SIZE;
+
+    _processList.push_back(process);
+    _processQueue.push_back(process);
+
+    leave_critical();
+}
+
 void Scheduler::queueScheduling()
 {
     _schedulingQueued = true;
@@ -62,35 +82,4 @@ void Scheduler::schedule()
     }
 
     eret_handler(_currentProcess->state);
-}
-
-#include <stdio.h>
-#include <timer.h>
-
-void myproc2()
-{
-    while (true) {
-        Timer::wait(1000);
-        puts(".");
-    }
-}
-
-void Scheduler::spawn()
-{
-    enter_critical();
-
-    auto process = new process_control_block_t;
-    process->pid = _nextPid++;
-    strcpy(process->pname, "myproc2");
-
-    process->state = new process_state_t;
-    // process->state->spsr = 0x304; // EL1t
-    process->state->spsr = 0x300; // EL0t
-    process->state->elr = (uint64_t) &myproc2;
-    process->state->sp = (uint64_t) alloc_page() + PAGE_SIZE;
-
-    _processList.push_back(process);
-    _processQueue.push_back(process);
-
-    leave_critical();
 }

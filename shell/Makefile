@@ -3,7 +3,7 @@ CC        := $(TOOLCHAIN)-g++
 OBJCOPY   := $(TOOLCHAIN)-objcopy
 OBJDUMP   := $(TOOLCHAIN)-objdump
 
-IMG := kernel8
+IMG := shell
 
 BUILD   := build
 INCLUDE := include
@@ -15,7 +15,6 @@ INCLUDES := $(wildcard $(INCLUDE)/*.h)
 OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.o, $(wildcard $(SRC)/**/*.S))
 OBJECTS += $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(wildcard $(SRC)/**/*.cc))
 OBJECTS += $(LIBC)/build/libc.a
-OBJECTS += $(BUILD)/shell.bin
 
 BASEFLAGS := -O2 -fpic -nostdlib
 BASEFLAGS += -nostartfiles -ffreestanding -nodefaultlibs
@@ -59,6 +58,3 @@ $(BUILD)/%.o: $(SRC)/%.S
 $(BUILD)/%.o: $(SRC)/%.cc $(INCLUDES)
 	@mkdir -p $(@D)
 	$(CC) $(CXXFLAGS) -c $< -o $@
-
-$(BUILD)/%.bin: ../*/build/%.img
-	$(OBJCOPY) --input binary --output elf64-littleaarch64 --binary-architecture aarch64 $< $@

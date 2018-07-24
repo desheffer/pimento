@@ -23,9 +23,9 @@ class Scheduler
   public:
     static void init();
     static Scheduler* instance();
+    void createProcess(const char*, const void*);
     void queueScheduling();
     void schedule();
-    void spawn(); // temporary
   private:
     static Scheduler* _instance;
     List<process_control_block_t*> _processList;
