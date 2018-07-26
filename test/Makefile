@@ -35,8 +35,9 @@ WARNFLAGS += -Wno-sign-compare -Wswitch -Wsystem-headers
 WARNFLAGS += -Wno-pragmas -Wno-unused-but-set-parameter
 WARNFLAGS += -Wno-unused-but-set-variable -Wno-unused-result
 WARNFLAGS += -Wwrite-strings -Wdisabled-optimization -Wpointer-arith
-ASFLAGS   := -D__ASSEMBLY__
-CXXFLAGS  := -I$(TEST) -I$(INCLUDE) -I$(LIBC)/include $(BASEFLAGS) $(WARNFLAGS)
+INCFLAGS  := -I$(TEST) -I$(INCLUDE) -I$(LIBC)/include
+ASFLAGS   := $(INCFLAGS) -D__ASSEMBLY__
+CXXFLAGS  := $(BASEFLAGS) $(WARNFLAGS) $(INCFLAGS)
 CXXFLAGS  += -fno-exceptions -std=gnu++11
 LDFLAGS   := $(BASEFLAGS)
 

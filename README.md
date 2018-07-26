@@ -7,7 +7,7 @@ This project has been heavily guided by the following resources:
 - https://github.com/dwelch67/raspberrypi-three
 - https://github.com/rsta2/circle64
 - https://jsandler18.github.io/
-- https://wiki.osdev.org/Main_Page
+- https://github.com/s-matyukevich/raspberry-pi-os
 - https://static.docs.arm.com/ddi0487/ca/DDI0487C_a_armv8_arm.pdf
 
 ## Getting Started

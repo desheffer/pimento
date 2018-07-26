@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <interrupt.h>
 #include <mmio.h>
+#include <scheduler.h>
 
 Interrupt* Interrupt::_instance = 0;
 
@@ -112,4 +113,11 @@ void enable_interrupts()
 void disable_interrupts()
 {
     asm volatile("msr daifset, #2");
+}
+
+process_state_t* irq_handler(process_state_t* state)
+{
+    Interrupt::instance()->handle();
+
+    return Scheduler::instance()->schedule(state);
 }

@@ -12,22 +12,8 @@ Scheduler::Scheduler()
     _nextPid = 1;
     _schedulingQueued = false;
 
-    auto process = new process_control_block_t;
-    process->pid = _nextPid++;
-    strcpy(process->pname, "Init");
-
-    process->state = new process_state_t;
-
-    _currentProcess = process;
-    _processList.push_back(process);
-
-    asm volatile(
-        "msr spsel, 1\n\t"
-        "mov sp, %0\n\t"
-        "msr spsel, 0"
-        :
-        : "r" (_currentProcess->state + 1)
-    );
+    createProcess("Init", 0);
+    _currentProcess = _processQueue.pop_front();
 }
 
 Scheduler::~Scheduler()
@@ -47,7 +33,7 @@ Scheduler* Scheduler::instance() {
     return _instance;
 }
 
-void Scheduler::createProcess(const char* pname, const void* elr)
+void Scheduler::createProcess(const char* pname, const void* lr)
 {
     enter_critical();
 
@@ -56,10 +42,13 @@ void Scheduler::createProcess(const char* pname, const void* elr)
     strncpy(process->pname, pname, 32);
     process->pname[31] = '\0';
 
-    process->state = new process_state_t;
+    process->stackBegin = alloc_page();
+    process->stackEnd = (char*) process->stackBegin + PAGE_SIZE;
+
+    // @TODO: Allow stack to extend beyond one page.
+    process->state = (process_state_t*) process->stackEnd - 1;
     process->state->spsr = 0x300;
-    process->state->elr = (uint64_t) elr;
-    process->state->sp = (uint64_t) alloc_page() + PAGE_SIZE;
+    process->state->lr = (uint64_t) lr;
 
     _processList.push_back(process);
     _processQueue.push_back(process);
@@ -72,8 +61,10 @@ void Scheduler::queueScheduling()
     _schedulingQueued = true;
 }
 
-void Scheduler::schedule()
+process_state_t* Scheduler::schedule(process_state_t* state)
 {
+    _currentProcess->state = state;
+
     if (_schedulingQueued) {
         _schedulingQueued = false;
 
@@ -81,5 +72,5 @@ void Scheduler::schedule()
         _currentProcess = _processQueue.pop_front();
     }
 
-    eret_handler(_currentProcess->state);
+    return _currentProcess->state;
 }

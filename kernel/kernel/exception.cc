@@ -1,25 +1,41 @@
 #include <assert.h>
 #include <exception.h>
 #include <kstdio.h>
-#include <service.h>
 #include <sys.h>
 
-void exception_handler(process_state_t* state, uint64_t index, uint64_t esr, uint64_t far)
+#include <serial.h>
+int64_t exception_handler(process_state_t* state, uint64_t esr, uint64_t far)
 {
-    if (index & 0b0001 && esr >> 26 == 0b010101) {
-        Service::instance()->handle(state);
-    } else if (index & 0b0010) {
-        Interrupt::instance()->handle();
+    if (esr >> 26 == 0b010101) {
+        if (state->x[8] == 0x40) {
+            // write
+
+            unsigned fd = state->x[0];
+            const char* s = (const char*) state->x[1];
+            size_t len = state->x[2];
+            size_t ret = 0;
+
+            assert(fd == 1);
+
+            while (len--) {
+                Serial::putc(*(s++));
+                ++ret;
+            }
+
+            state->x[0] = ret;
+            return ret;
+        } else {
+            debug(state, esr, far);
+        }
     } else {
-        debug(state, index, esr, far);
+        debug(state, esr, far);
     }
 
-    Scheduler::instance()->schedule();
+    return -1;
 }
 
-void debug(process_state_t* state, uint64_t index, uint64_t esr, uint64_t far)
+void debug(process_state_t* state, uint64_t esr, uint64_t far)
 {
-    const char* type = "Unknown";
     const char* ifs = "Unknown";
     const char* dfs = "Unknown";
     const char* level = "Unknown";
@@ -31,13 +47,6 @@ void debug(process_state_t* state, uint64_t index, uint64_t esr, uint64_t far)
         "[41m[97m                          [0m\n"
         "\n"
     );
-
-    switch (index & 0b1111) {
-        case 0b0001: type = "Synchronous"; break;
-        case 0b0010: type = "IRQ"; break;
-        case 0b0100: type = "FIQ"; break;
-        case 0b1000: type = "SError"; break;
-    }
 
     switch (esr >> 26) {
         case 0b000000: ifs = "Unknown reason"; break;
@@ -72,14 +81,13 @@ void debug(process_state_t* state, uint64_t index, uint64_t esr, uint64_t far)
         }
     }
 
-    kprintf("Exception Type (%#02x) = %s\n", (unsigned) index, type);
     kprintf("Instruction Fault Status = %s\n", ifs);
     kprintf("Data Fault Status = %s, level %s\n", dfs, level);
 
     kprintf("\nRegisters:\n\n");
 
     kprintf("   spsr = %08x %08x", (unsigned) (state->spsr >> 32), (unsigned) state->spsr);
-    kprintf("    elr = %08x %08x", (unsigned) (state->elr >> 32), (unsigned) state->elr);
+    kprintf("     lr = %08x %08x", (unsigned) (state->lr >> 32), (unsigned) state->lr);
     kprintf("\n");
     kprintf("    esr = %08x %08x", (unsigned) (esr >> 32), (unsigned) esr);
     kprintf("    far = %08x %08x", (unsigned) (far >> 32), (unsigned) far);

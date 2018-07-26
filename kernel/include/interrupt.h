@@ -1,5 +1,6 @@
 #pragma once
 
+#include <process.h>
 #include <stdint.h>
 
 #define NUM_IRQS 72
@@ -35,3 +36,4 @@ class Interrupt
 
 extern "C" void enable_interrupts();
 extern "C" void disable_interrupts();
+extern "C" process_state_t* irq_handler(process_state_t* state);

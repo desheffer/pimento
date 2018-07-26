@@ -4,7 +4,6 @@
 #include <memory.h>
 #include <scheduler.h>
 #include <serial.h>
-#include <service.h>
 #include <stdint.h>
 #include <timer.h>
 
@@ -29,10 +28,6 @@ extern "C" void kernel_main()
     kprintf("Memory Allocation = %u\n", Memory::instance()->allocSize());
     kprintf("Page Count = %u\n", Memory::instance()->pageCount());
 
-    kprintf("Services: ");
-    Service::init();
-    kprintf("OK\n");
-
     kprintf("Interrupts: ");
     Interrupt::init();
     kprintf("OK\n");
@@ -45,7 +40,7 @@ extern "C" void kernel_main()
     Timer::init(Interrupt::instance(), Scheduler::instance());
     kprintf("OK\n");
 
-    printf("\n");
+    kprintf("\n");
 
     Scheduler::instance()->createProcess("shell", &_binary____shell_build_shell_img_start);
 

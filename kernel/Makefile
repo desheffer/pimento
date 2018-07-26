@@ -32,9 +32,9 @@ WARNFLAGS += -Wno-sign-compare -Wswitch -Wsystem-headers
 WARNFLAGS += -Wno-pragmas -Wno-unused-but-set-parameter
 WARNFLAGS += -Wno-unused-but-set-variable -Wno-unused-result
 WARNFLAGS += -Wwrite-strings -Wdisabled-optimization -Wpointer-arith
-ASFLAGS   := -D__ASSEMBLY__
-CXXFLAGS  := -I$(INCLUDE) -I$(LIBC)/include
-CXXFLAGS  += $(BASEFLAGS) $(WARNFLAGS)
+INCFLAGS  := -I$(INCLUDE) -I$(LIBC)/include
+ASFLAGS   := $(INCFLAGS) -D__ASSEMBLY__
+CXXFLAGS  := $(BASEFLAGS) $(WARNFLAGS) $(INCFLAGS)
 CXXFLAGS  += -fno-exceptions -std=gnu++11
 LDFLAGS   := $(BASEFLAGS)
 
@@ -52,7 +52,7 @@ $(BUILD)/$(IMG).img: $(BUILD)/$(IMG).elf
 $(BUILD)/$(IMG).elf: $(OBJECTS) link-aarch64-elf.ld
 	$(CC) $(LDFLAGS) $(OBJECTS) -Tlink-aarch64-elf.ld -lgcc -o $@
 
-$(BUILD)/%.o: $(SRC)/%.S
+$(BUILD)/%.o: $(SRC)/%.S $(INCLUDES)
 	@mkdir -p $(@D)
 	$(CC) $(ASFLAGS) -c $< -o $@
 
