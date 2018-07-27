@@ -1,9 +1,9 @@
 #include <heap.h>
 #include <kstdio.h>
 #include <memory.h>
+#include <panic.h>
 #include <serial.h>
 #include <stdint.h>
-#include <sys.h>
 #include <test.h>
 
 extern "C" void kernel_main()

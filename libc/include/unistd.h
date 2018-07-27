@@ -4,6 +4,8 @@
 
 typedef size_t ssize_t;
 
+#define SYS_WRITE 0
+
 #ifdef __cplusplus
 extern "C" {
 #endif

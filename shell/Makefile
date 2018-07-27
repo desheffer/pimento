@@ -12,8 +12,8 @@ SRC     := .
 
 INCLUDES := $(wildcard $(INCLUDE)/*.h)
 
-OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.o, $(wildcard $(SRC)/**/*.S))
-OBJECTS += $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(wildcard $(SRC)/**/*.cc))
+OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.o, $(wildcard $(SRC)/*/*.S))
+OBJECTS += $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(wildcard $(SRC)/*/*.cc))
 OBJECTS += $(LIBC)/build/libc.a
 
 BASEFLAGS := -O2 -fpic -nostdlib

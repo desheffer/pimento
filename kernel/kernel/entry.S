@@ -55,51 +55,48 @@
     add sp, sp, #PROCESS_STATE_SIZE
 .endm
 
-.globl _vector_table
+.globl vector_table
 .balign 0x800
-_vector_table:
+vector_table:
     // EL1t:
-    vector el1t_sync    // Synchronous
-    vector el1t_irq     // IRQ
-    vector panic        // FIQ
-    vector panic        // SError
+    vector invalid_handler  // Synchronous
+    vector el1t_irq         // IRQ
+    vector invalid_handler  // FIQ
+    vector invalid_handler  // SError
 
     // EL1h:
-    vector panic        // Synchronous
-    vector panic        // IRQ
-    vector panic        // FIQ
-    vector panic        // SError
+    vector invalid_handler  // Synchronous
+    vector invalid_handler  // IRQ
+    vector invalid_handler  // FIQ
+    vector invalid_handler  // SError
 
     // EL0:
-    vector el0_sync     // Synchronous
-    vector el0_irq      // IRQ
-    vector panic        // FIQ
-    vector panic        // SError
+    vector el0_sync         // Synchronous
+    vector el0_irq          // IRQ
+    vector invalid_handler  // FIQ
+    vector invalid_handler  // SError
 
     // EL0 32-bit:
-    vector panic        // Synchronous
-    vector panic        // IRQ
-    vector panic        // FIQ
-    vector panic        // SError
+    vector invalid_handler  // Synchronous
+    vector invalid_handler  // IRQ
+    vector invalid_handler  // FIQ
+    vector invalid_handler  // SError
 
 el0_sync:
     msr spsel, 0
     save_regs
-    mov x0, sp
-    mrs x1, esr_el1 // @XXX
-    mrs x2, far_el1 // @XXX
-    bl exception_handler
-    str x0, [sp, #PROCESS_STATE_X0]
-    load_regs
-    eret
-
-el1t_sync:
-    msr spsel, 0
-    save_regs
-    mov x0, sp
-    mrs x1, esr_el1 // @XXX
-    mrs x2, far_el1 // @XXX
-    bl exception_handler
+    mrs x21, esr_el1
+    lsr x22, x21, #ESR_ELx_EC_SHIFT
+    cmp x22, #ESR_ELx_EC_SVC64
+    beq el0_svc
+    b invalid_handler
+el0_svc:
+    cmp x8, #SYSCALL_COUNT
+    bge invalid_handler
+    adr x23, syscall_table
+    ldr x24, [x23, x8, lsl #3]
+    blr x24
+el0_done:
     str x0, [sp, #PROCESS_STATE_X0]
     load_regs
     eret
@@ -122,3 +119,11 @@ el1t_irq:
     load_regs
     eret
 
+invalid_handler:
+    msr spsel, 0
+    save_regs
+    mov x0, sp
+    mrs x1, esr_el1
+    mrs x2, far_el1
+    bl debug_process_state
+    b halt

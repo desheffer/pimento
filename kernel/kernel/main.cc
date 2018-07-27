@@ -46,6 +46,6 @@ extern "C" void kernel_main()
 
     while (true) {
         Timer::wait(1000);
-        printf("#");
+        kprintf("#");
     }
 }

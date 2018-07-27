@@ -27,7 +27,7 @@ _start:
     msr hcr_el2, x4
 
     // Set up exception handlers.
-    adr x4, _vector_table
+    adr x4, vector_table
     msr vbar_el1, x4
 
     // Set EL0 stack pointer.

@@ -1,40 +1,30 @@
-#include <assert.h>
-#include <exception.h>
+#include <interrupt.h>
 #include <kstdio.h>
-#include <sys.h>
+#include <panic.h>
 
-#include <serial.h>
-int64_t exception_handler(process_state_t* state, uint64_t esr, uint64_t far)
+void halt()
 {
-    if (esr >> 26 == 0b010101) {
-        if (state->x[8] == 0x40) {
-            // write
+    disable_interrupts();
 
-            unsigned fd = state->x[0];
-            const char* s = (const char*) state->x[1];
-            size_t len = state->x[2];
-            size_t ret = 0;
-
-            assert(fd == 1);
-
-            while (len--) {
-                Serial::putc(*(s++));
-                ++ret;
-            }
-
-            state->x[0] = ret;
-            return ret;
-        } else {
-            debug(state, esr, far);
-        }
-    } else {
-        debug(state, esr, far);
+    while (true) {
+        asm volatile("wfi");
     }
-
-    return -1;
 }
 
-void debug(process_state_t* state, uint64_t esr, uint64_t far)
+void panic()
+{
+    kputs(
+        "\n"
+        "[41m[97m                      [0m\n"
+        "[41m[97m     Kernel Panic     [0m\n"
+        "[41m[97m                      [0m\n"
+        "\n"
+    );
+
+    halt();
+}
+
+void debug_process_state(process_state_t* state, uint64_t esr, uint64_t far)
 {
     const char* ifs = "Unknown";
     const char* dfs = "Unknown";

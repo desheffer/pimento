@@ -1,33 +1,22 @@
-#include <interrupt.h>
-#include <kstdio.h>
-#include <sys.h>
+#include <assert.h>
+#include <panic.h>
+#include <serial.h>
+#include <unistd.h>
 
-void halt()
+size_t sys_write(unsigned fd, const char* s, size_t len)
 {
-    disable_interrupts();
+    size_t ret = 0;
 
-    while (true) {
-        asm volatile("wfi");
+    assert(fd == 1);
+
+    while (len--) {
+        Serial::putc(*(s++));
+        ++ret;
     }
+
+    return ret;
 }
 
-void panic()
-{
-    kputs(
-        "\n"
-        "[41m[97m                      [0m\n"
-        "[41m[97m     Kernel Panic     [0m\n"
-        "[41m[97m                      [0m\n"
-        "\n"
-    );
-
-    halt();
-}
-
-void __dso_handle()
-{
-}
-
-void __cxa_atexit(void*, void (*)(void*), void*)
-{
-}
+void* syscall_table[] = {
+    (void*) sys_write,
+};
