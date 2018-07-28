@@ -105,16 +105,6 @@ void Interrupt::handle() const
     }
 }
 
-void enable_interrupts()
-{
-    asm volatile("msr daifclr, #2");
-}
-
-void disable_interrupts()
-{
-    asm volatile("msr daifset, #2");
-}
-
 process_state_t* irq_handler(process_state_t* state)
 {
     Interrupt::instance()->handle();

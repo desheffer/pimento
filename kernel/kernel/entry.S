@@ -85,6 +85,7 @@ vector_table:
 el0_sync:
     msr spsel, 0
     save_regs
+    bl enable_interrupts
     mrs x21, esr_el1
     lsr x22, x21, #ESR_ELx_EC_SHIFT
     cmp x22, #ESR_ELx_EC_SVC64
@@ -98,6 +99,7 @@ el0_svc:
     blr x24
 el0_done:
     str x0, [sp, #PROCESS_STATE_X0]
+    bl disable_interrupts
     load_regs
     eret
 
@@ -127,3 +129,13 @@ invalid_handler:
     mrs x2, far_el1
     bl debug_process_state
     b halt
+
+.globl enable_interrupts
+enable_interrupts:
+    msr daifclr, #2
+    ret
+
+.globl disable_interrupts
+disable_interrupts:
+    msr daifset, #2
+    ret
