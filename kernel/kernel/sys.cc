@@ -3,14 +3,30 @@
 #include <serial.h>
 #include <unistd.h>
 
-size_t sys_write(unsigned fd, const char* s, size_t len)
+ssize_t sys_read(int fd, void* buf, size_t count)
 {
-    size_t ret = 0;
+    char* cbuf = (char*) buf;
+    ssize_t ret = 0;
+
+    assert(fd == 0);
+
+    while (count--) {
+        *(cbuf++) = Serial::getc();
+        ++ret;
+    }
+
+    return ret;
+}
+
+ssize_t sys_write(int fd, const void* buf, size_t count)
+{
+    const char* cbuf = (const char*) buf;
+    ssize_t ret = 0;
 
     assert(fd == 1);
 
-    while (len--) {
-        Serial::putc(*(s++));
+    while (count--) {
+        Serial::putc(*(cbuf++));
         ++ret;
     }
 
@@ -18,5 +34,6 @@ size_t sys_write(unsigned fd, const char* s, size_t len)
 }
 
 void* syscall_table[] = {
+    (void*) sys_read,
     (void*) sys_write,
 };

@@ -2,10 +2,10 @@
 
 void* memset(void* dest, int value, size_t num)
 {
-    char* d = (char*) dest;
+    char* cdest = (char*) dest;
 
     while (num--) {
-        *(d++) = (unsigned char) value;
+        *(cdest++) = (unsigned char) value;
     }
 
     return dest;

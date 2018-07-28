@@ -4,5 +4,8 @@ extern "C" int main()
 {
     puts("$ ");
 
-    while (true);
+    while (true) {
+        char c = getchar();
+        printf("%c", c);
+    }
 }

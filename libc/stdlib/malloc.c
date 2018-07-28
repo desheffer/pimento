@@ -8,8 +8,8 @@ void* malloc(size_t size)
     void* ret = (void*) _next;
 
     // @TODO
-    _next += size;
-    _next = _next + (_next % 0x80);
+    _next += size + 0x80;
+    _next = _next - (_next % 0x80);
 
     return ret;
 }

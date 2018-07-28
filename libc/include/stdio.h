@@ -9,7 +9,9 @@ typedef void (*putc_t)(void*, char);
 extern "C" {
 #endif
     void cprintf(void*, putc_t, const char*, ...) __attribute__((format(printf, 3, 4)));
+    int getchar();
     void printf(const char*, ...) __attribute__((format(printf, 1, 2)));
+    void putc(const char);
     void puts(const char*);
     size_t snprintf(char*, size_t, const char*, ...) __attribute__((format(printf, 3, 4)));
     size_t sprintf(char*, const char*, ...) __attribute__((format(printf, 2, 3)));

@@ -2,14 +2,14 @@
 
 char* strncpy(char* dest, const char* src, size_t num)
 {
-    char* d = dest;
-    const char* s = src;
+    char* cdest = dest;
+    const char* csrc = src;
 
     while (num--) {
-        if (*s == '\0') {
-            *(d++) = '\0';
+        if (*csrc == '\0') {
+            *(cdest++) = '\0';
         } else {
-            *(d++) = *(s++);
+            *(cdest++) = *(csrc++);
         }
     }
 
