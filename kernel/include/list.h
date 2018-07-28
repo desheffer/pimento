@@ -47,6 +47,7 @@ class List
     T pop_back();
     T pop_front();
     unsigned size() const;
+    void remove(T);
     ListIterator<T> begin() const { return ListIterator<T>(_front); }
     ListIterator<T> end() const { return ListIterator<T>(0); }
   private:
@@ -160,4 +161,30 @@ unsigned List<T>::size() const
     }
 
     return count;
+}
+
+template <class T>
+void List<T>::remove(T item)
+{
+    auto listItem = _front;
+
+    // for (auto listItem = _front; listItem != _back; listItem = listItem->next()) {
+    while (listItem) {
+        auto next = listItem->next();
+
+        if (listItem->item() == item) {
+            if (listItem == _front) {
+                pop_front();
+            } else if (listItem == _back) {
+                pop_back();
+            } else {
+                listItem->prev()->setNext(listItem->next());
+                listItem->next()->setPrev(listItem->prev());
+
+                delete listItem;
+            }
+        }
+
+        listItem = next;
+    }
 }

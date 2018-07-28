@@ -1,7 +1,17 @@
 #include <assert.h>
 #include <panic.h>
+#include <scheduler.h>
 #include <serial.h>
 #include <unistd.h>
+
+void sys_exit(int /*status*/)
+{
+    Scheduler::instance()->stopProcess();
+
+    while (true) {
+        asm volatile("wfi");
+    }
+}
 
 ssize_t sys_read(int fd, void* buf, size_t count)
 {
@@ -34,6 +44,7 @@ ssize_t sys_write(int fd, const void* buf, size_t count)
 }
 
 void* syscall_table[] = {
+    (void*) sys_exit,
     (void*) sys_read,
     (void*) sys_write,
 };

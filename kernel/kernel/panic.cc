@@ -2,15 +2,6 @@
 #include <kstdio.h>
 #include <panic.h>
 
-void halt()
-{
-    disable_interrupts();
-
-    while (true) {
-        asm volatile("wfi");
-    }
-}
-
 void panic()
 {
     kputs(
@@ -24,7 +15,7 @@ void panic()
     halt();
 }
 
-void debug_process_state(process_state_t* state, uint64_t esr, uint64_t far)
+void debug_process_regs(process_regs_t* state, uint64_t esr, uint64_t far)
 {
     const char* ifs = "Unknown";
     const char* dfs = "Unknown";

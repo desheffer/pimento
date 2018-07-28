@@ -5,6 +5,7 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+    void exit(int status);
     void free(void*);
     void* malloc(size_t);
 #ifdef __cplusplus

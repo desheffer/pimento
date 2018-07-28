@@ -6,7 +6,7 @@
 .endm
 
 .macro save_regs
-    sub sp, sp, #PROCESS_STATE_SIZE
+    sub sp, sp, #PROCESS_REGS_SIZE
 
     stp x0, x1, [sp, #16 * 0]
     stp x2, x3, [sp, #16 * 1]
@@ -52,7 +52,7 @@
     ldp x28, x29, [sp, #16 * 14]
     ldr x30, [sp, #16 * 15]
 
-    add sp, sp, #PROCESS_STATE_SIZE
+    add sp, sp, #PROCESS_REGS_SIZE
 .endm
 
 .globl vector_table
@@ -98,7 +98,7 @@ el0_svc:
     ldr x24, [x23, x8, lsl #3]
     blr x24
 el0_done:
-    str x0, [sp, #PROCESS_STATE_X0]
+    str x0, [sp, #PROCESS_REGS_X0]
     bl disable_interrupts
     load_regs
     eret
@@ -127,7 +127,7 @@ invalid_handler:
     mov x0, sp
     mrs x1, esr_el1
     mrs x2, far_el1
-    bl debug_process_state
+    bl debug_process_regs
     b halt
 
 .globl enable_interrupts

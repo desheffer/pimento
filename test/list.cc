@@ -77,4 +77,18 @@ void test_list()
     assert(*(++iter) == 3);
     iter++;
     assert(iter == list.end());
+
+    list = List<unsigned>();
+    list.push_back(1);
+    list.push_back(2);
+    list.push_back(3);
+    assert(list.size() == 3);
+    list.remove(2);
+    assert(list.size() == 2);
+    list.remove(0);
+    assert(list.size() == 2);
+    list.remove(1);
+    assert(list.size() == 1);
+    list.remove(3);
+    assert(list.size() == 0);
 }

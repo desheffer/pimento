@@ -2,6 +2,7 @@
 #include <interrupt.h>
 #include <kstdio.h>
 #include <memory.h>
+#include <panic.h>
 #include <scheduler.h>
 #include <serial.h>
 #include <stdint.h>
@@ -44,8 +45,10 @@ extern "C" void kernel_main()
 
     Scheduler::instance()->createProcess("shell", &_binary____shell_build_shell_img_start);
 
-    while (true) {
-        Timer::wait(1000);
-        kprintf("#");
+    while (Scheduler::instance()->processCount() > 1) {
+        asm volatile("wfi");
     }
+
+    kprintf("\nWill now halt.\n");
+    halt();
 }

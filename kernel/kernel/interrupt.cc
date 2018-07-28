@@ -105,7 +105,7 @@ void Interrupt::handle() const
     }
 }
 
-process_state_t* irq_handler(process_state_t* state)
+process_regs_t* irq_handler(process_regs_t* state)
 {
     Interrupt::instance()->handle();
 

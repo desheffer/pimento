@@ -4,15 +4,15 @@
 _start:
     // Isolate core 0.
     mrs x4, mpidr_el1
-    and x4, x4, #3
+    and x4, x4, #0x3
     cbnz x4, halt
 
     // Get current EL.
     mrs x4, currentel
-    and x4, x4, #12
+    and x4, x4, #0xC
 
     // Skip if we are already in EL1.
-    cmp x4, #4
+    cmp x4, #0x4
     beq enter_el1
 
     // Disable coprocessor traps.
@@ -34,14 +34,17 @@ _start:
     mov x4, 0x80000
     msr sp_el0, x4
 
-    // Change execution level to EL1t.
-    mov x4, #0x3C4
+    // Change execution level to EL1h.
+    mov x4, #0x3C5
     msr spsr_el2, x4
     adr x4, enter_el1
     msr elr_el2, x4
     eret
 
 enter_el1:
+    // Switch to EL1t.
+    msr spsel, 0
+
     // Clear out bss.
     adr x4, __bss_start
     adr x5, __bss_end
@@ -53,6 +56,11 @@ loop_clear_bss:
     cmp x4, x5
     blo loop_clear_bss
 
-    // Call kernel_main.
     bl kernel_main
-    b panic
+
+.globl halt
+halt:
+    bl disable_interrupts
+loop_halt:
+    wfi
+    b loop_halt

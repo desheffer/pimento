@@ -9,8 +9,10 @@ class Scheduler
     static void init();
     static Scheduler* instance();
     void createProcess(const char*, const void*);
+    void stopProcess();
     void queueScheduling();
-    process_state_t* schedule(process_state_t*);
+    process_regs_t* schedule(process_regs_t*);
+    unsigned processCount() const;
   private:
     static Scheduler* _instance;
     List<process_control_block_t*> _processList;

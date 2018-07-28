@@ -14,6 +14,7 @@ Scheduler::Scheduler()
 
     createProcess("Init", 0);
     _currentProcess = _processQueue.pop_front();
+    _currentProcess->state = running;
 }
 
 Scheduler::~Scheduler()
@@ -39,6 +40,7 @@ void Scheduler::createProcess(const char* pname, const void* lr)
 
     auto process = new process_control_block_t;
     process->pid = _nextPid++;
+    process->state = created;
     strncpy(process->pname, pname, 32);
     process->pname[31] = '\0';
 
@@ -46,12 +48,21 @@ void Scheduler::createProcess(const char* pname, const void* lr)
     process->stackEnd = (char*) process->stackBegin + PAGE_SIZE;
 
     // @TODO: Allow stack to extend beyond one page.
-    process->state = (process_state_t*) process->stackEnd - 1;
-    process->state->spsr = 0x300;
-    process->state->lr = (uint64_t) lr;
+    process->regs = (process_regs_t*) process->stackEnd - 1;
+    process->regs->spsr = 0x300;
+    process->regs->lr = (uint64_t) lr;
 
     _processList.push_back(process);
     _processQueue.push_back(process);
+
+    leave_critical();
+}
+
+void Scheduler::stopProcess()
+{
+    enter_critical();
+
+    _currentProcess->state = stopping;
 
     leave_critical();
 }
@@ -61,16 +72,30 @@ void Scheduler::queueScheduling()
     _schedulingQueued = true;
 }
 
-process_state_t* Scheduler::schedule(process_state_t* state)
+process_regs_t* Scheduler::schedule(process_regs_t* regs)
 {
-    _currentProcess->state = state;
+    _currentProcess->regs = regs;
 
     if (_schedulingQueued) {
         _schedulingQueued = false;
 
-        _processQueue.push_back(_currentProcess);
+        if (_currentProcess->state == running) {
+            _currentProcess->state = sleeping;
+            _processQueue.push_back(_currentProcess);
+        } else if (_currentProcess->state == stopping) {
+            _processList.remove(_currentProcess);
+            delete _currentProcess;
+        }
+
         _currentProcess = _processQueue.pop_front();
     }
 
-    return _currentProcess->state;
+    _currentProcess->state = running;
+
+    return _currentProcess->regs;
+}
+
+unsigned Scheduler::processCount() const
+{
+    return _processList.size();
 }
