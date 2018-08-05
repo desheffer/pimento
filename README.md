@@ -12,13 +12,12 @@ This project has been heavily guided by the following resources:
 
 ## Getting Started
 
-This code is designed to run on a Raspberry Pi 3. Be aware that older versions
-of the Pi are likely to experience compatibility issues.
+This code is designed to run on a Raspberry Pi 3 Model B. Be aware that other
+versions of the Pi may experience compatibility issues.
 
 Before you can build the project, you will need the GCC `aarch64-none-elf`
-toolchain. You can download it using your package manager. If it's not
-available there, you can build it using [this
-script](contrib/build-aarch64-toolchain.sh).
+toolchain. You can download it using your package manager or use the
+`docker.sh` script in this repository.
 
 Build the project by running `make`. This will generate a file called
 `build/kernel8.img`. Copy this file to the SD card of your Pi, replacing the
