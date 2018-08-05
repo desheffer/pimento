@@ -1,12 +1,9 @@
 #pragma once
 
 #include <stddef.h>
+#include <sys/syscall.h>
 
 typedef size_t ssize_t;
-
-#define SYS_EXIT 0
-#define SYS_READ 1
-#define SYS_WRITE 2
 
 #ifdef __cplusplus
 extern "C" {

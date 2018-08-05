@@ -3,7 +3,7 @@
 
 static void vprintf_putc(void* data __attribute__((unused)), const char c)
 {
-    write(1, &c, 1);
+    write(STDOUT_FILENO, &c, 1);
 }
 
 void vprintf(const char* format, va_list arg)

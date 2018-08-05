@@ -54,6 +54,7 @@ char Serial::getc()
     while (!(*aux_mu_lsr & 0x01));
 
     char r = *aux_mu_io;
+    putc(r);
 
     return r == '\r' ? '\n' : r;
 }

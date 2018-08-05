@@ -6,7 +6,7 @@ IMG := kernel8
 
 BUILD   := build
 INCLUDE := ../kernel/include
-LIBC    := ../libc
+LIBC    := ../libc/build
 SRC     := ../kernel
 TEST    := .
 
@@ -16,7 +16,7 @@ INCLUDES += $(wildcard $(TEST)/*.h)
 OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.o, $(wildcard $(SRC)/*/*.S))
 OBJECTS += $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(wildcard $(SRC)/*/*.cc))
 OBJECTS += $(patsubst $(TEST)/%.cc, $(BUILD)/test/%.o, $(wildcard $(TEST)/*.cc))
-OBJECTS += $(LIBC)/build/libc.a
+OBJECTS += $(LIBC)/libc.a
 
 OBJECTS := $(filter-out $(BUILD)/kernel/main.o, $(OBJECTS))
 
@@ -35,7 +35,7 @@ WARNFLAGS += -Wno-sign-compare -Wswitch -Wsystem-headers
 WARNFLAGS += -Wno-pragmas -Wno-unused-but-set-parameter
 WARNFLAGS += -Wno-unused-but-set-variable -Wno-unused-result
 WARNFLAGS += -Wwrite-strings -Wdisabled-optimization -Wpointer-arith
-INCFLAGS  := -I$(TEST) -I$(INCLUDE) -I$(LIBC)/include
+INCFLAGS  := -I$(TEST) -I$(INCLUDE) -I$(LIBC)/../include
 ASFLAGS   := $(INCFLAGS) -D__ASSEMBLY__
 CXXFLAGS  := $(BASEFLAGS) $(WARNFLAGS) $(INCFLAGS)
 CXXFLAGS  += -fno-exceptions -std=gnu++11

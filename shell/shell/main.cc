@@ -4,31 +4,20 @@
 
 extern "C" int main()
 {
+    printf("[Shell]\n\n");
+
     char* cmd = (char*) malloc(1024);
 
     while (true) {
-        puts("$ ");
+        printf("$ ");
+        fgets(cmd, 1024, stdin);
 
-        unsigned idx = 0;
-
-        while (idx < 1023) {
-            cmd[idx] = getchar();
-            putc(cmd[idx]);
-
-            if (cmd[idx] == '\n') {
-                break;
-            }
-
-            ++idx;
-        }
-        cmd[idx] = '\0';
-
-        if (strlen(cmd) == 0) {
+        if (strcmp("\n", cmd) == 0) {
             continue;
-        } else if (strcmp("exit", cmd) == 0) {
+        } else if (strcmp("exit\n", cmd) == 0) {
             break;
         } else {
-            printf("Unknown command: %s\n\n", cmd);
+            printf("Unknown command: %s\n", cmd);
         }
     }
 

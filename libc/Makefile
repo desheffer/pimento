@@ -10,8 +10,10 @@ INCLUDE := include
 SRC     := .
 
 INCLUDES := $(wildcard $(INCLUDE)/*.h)
+INCLUDES += $(wildcard $(INCLUDE)/*/*.h)
 
-OBJECTS := $(patsubst $(SRC)/%.c, $(BUILD)/%.o, $(wildcard $(SRC)/*/*.c))
+OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.o, $(wildcard $(SRC)/*/*.S))
+OBJECTS += $(patsubst $(SRC)/%.c, $(BUILD)/%.o, $(wildcard $(SRC)/*/*.c))
 OBJECTS += $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(wildcard $(SRC)/*/*.cc))
 
 BASEFLAGS := -O2 -fpic -nostdlib
@@ -30,6 +32,7 @@ WARNFLAGS += -Wno-pragmas -Wno-unused-but-set-parameter
 WARNFLAGS += -Wno-unused-but-set-variable -Wno-unused-result
 WARNFLAGS += -Wwrite-strings -Wdisabled-optimization -Wpointer-arith
 INCFLAGS  := -I$(INCLUDE)
+ASFLAGS   := $(INCFLAGS) -D__ASSEMBLY__
 CFLAGS    := $(BASEFLAGS) $(WARNFLAGS) $(INCFLAGS)
 CXXFLAGS  := $(CFLAGS) -fno-exceptions -std=gnu++11
 LDFLAGS   := $(BASEFLAGS)
@@ -43,6 +46,10 @@ clean:
 
 $(BUILD)/$(LIB).a: $(OBJECTS)
 	$(AR) rcs $@ $(OBJECTS)
+
+$(BUILD)/%.o: $(SRC)/%.S $(INCLUDES)
+	@mkdir -p $(@D)
+	$(CC) $(ASFLAGS) -c $< -o $@
 
 $(BUILD)/%.o: $(SRC)/%.c $(INCLUDES)
 	@mkdir -p $(@D)

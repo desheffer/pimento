@@ -7,14 +7,13 @@ IMG := shell
 
 BUILD   := build
 INCLUDE := include
-LIBC    := ../libc
+LIBC    := ../libc/build
 SRC     := .
 
 INCLUDES := $(wildcard $(INCLUDE)/*.h)
 
-OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.o, $(wildcard $(SRC)/*/*.S))
-OBJECTS += $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(wildcard $(SRC)/*/*.cc))
-OBJECTS += $(LIBC)/build/libc.a
+OBJECTS := $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(wildcard $(SRC)/*/*.cc))
+OBJECTS += $(LIBC)/libc.a
 
 BASEFLAGS := -O2 -fpic -nostdlib
 BASEFLAGS += -nostartfiles -ffreestanding -nodefaultlibs
@@ -31,8 +30,7 @@ WARNFLAGS += -Wno-sign-compare -Wswitch -Wsystem-headers
 WARNFLAGS += -Wno-pragmas -Wno-unused-but-set-parameter
 WARNFLAGS += -Wno-unused-but-set-variable -Wno-unused-result
 WARNFLAGS += -Wwrite-strings -Wdisabled-optimization -Wpointer-arith
-INCFLAGS  := -I$(INCLUDE) -I$(LIBC)/include
-ASFLAGS   := $(INCFLAGS) -D__ASSEMBLY__
+INCFLAGS  := -I$(INCLUDE) -I$(LIBC)/../include
 CXXFLAGS  := $(BASEFLAGS) $(WARNFLAGS) $(INCFLAGS)
 CXXFLAGS  += -fno-exceptions -std=gnu++11
 LDFLAGS   := $(BASEFLAGS)
@@ -50,10 +48,6 @@ $(BUILD)/$(IMG).img: $(BUILD)/$(IMG).elf
 
 $(BUILD)/$(IMG).elf: $(OBJECTS) link-aarch64-elf.ld
 	$(CC) $(LDFLAGS) $(OBJECTS) -Tlink-aarch64-elf.ld -lgcc -o $@
-
-$(BUILD)/%.o: $(SRC)/%.S
-	@mkdir -p $(@D)
-	$(CC) $(ASFLAGS) -c $< -o $@
 
 $(BUILD)/%.o: $(SRC)/%.cc $(INCLUDES)
 	@mkdir -p $(@D)

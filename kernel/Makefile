@@ -7,14 +7,14 @@ IMG := kernel8
 
 BUILD   := build
 INCLUDE := include
-LIBC    := ../libc
+LIBC    := ../libc/build
 SRC     := .
 
 INCLUDES := $(wildcard $(INCLUDE)/*.h)
 
 OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.o, $(wildcard $(SRC)/*/*.S))
 OBJECTS += $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(wildcard $(SRC)/*/*.cc))
-OBJECTS += $(LIBC)/build/libc.a
+OBJECTS += $(LIBC)/libc.a
 OBJECTS += $(BUILD)/shell.bin
 
 BASEFLAGS := -O2 -fpic -nostdlib
@@ -32,7 +32,7 @@ WARNFLAGS += -Wno-sign-compare -Wswitch -Wsystem-headers
 WARNFLAGS += -Wno-pragmas -Wno-unused-but-set-parameter
 WARNFLAGS += -Wno-unused-but-set-variable -Wno-unused-result
 WARNFLAGS += -Wwrite-strings -Wdisabled-optimization -Wpointer-arith
-INCFLAGS  := -I$(INCLUDE) -I$(LIBC)/include
+INCFLAGS  := -I$(INCLUDE) -I$(LIBC)/../include
 ASFLAGS   := $(INCFLAGS) -D__ASSEMBLY__
 CXXFLAGS  := $(BASEFLAGS) $(WARNFLAGS) $(INCFLAGS)
 CXXFLAGS  += -fno-exceptions -std=gnu++11
