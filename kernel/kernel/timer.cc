@@ -34,10 +34,10 @@ void Timer::init(Interrupt* interrupt, Scheduler* scheduler)
     _instance = new Timer(interrupt, scheduler);
 }
 
-uint64_t Timer::counter()
+long unsigned Timer::counter()
 {
-    uint64_t high;
-    uint64_t low;
+    unsigned high;
+    unsigned low;
 
     // Loop in case the timer rolls over.
     do {
@@ -45,14 +45,7 @@ uint64_t Timer::counter()
         low = *system_timer_clo;
     } while (high != *system_timer_chi);
 
-    return (high << 32) | low;
-}
-
-void Timer::wait(unsigned msecs)
-{
-    uint64_t end = counter() + ((uint64_t) msecs) * 1000;
-
-    while (counter() < end);
+    return (long unsigned) high << 32 | low;
 }
 
 void Timer::handleInterrupt() const

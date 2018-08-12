@@ -5,7 +5,7 @@
 void test_printf()
 {
     char buf[1024];
-    uint32_t len;
+    unsigned len;
 
     len = sprintf(buf, "hello");
     assert(strcmp("hello", buf) == 0);

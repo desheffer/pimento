@@ -1,7 +1,6 @@
 #include <assert.h>
 #include <mmio.h>
 #include <serial.h>
-#include <stdint.h>
 
 Serial::Serial()
 {
@@ -22,7 +21,7 @@ void Serial::init()
     *aux_mu_iir = 0xC6;
     *aux_mu_baud = 270;
 
-    uint32_t r = *gpfsel1;
+    unsigned r = *gpfsel1;
     r &= ~((7 << 12) | (7 << 15));
     r |= (2 << 12) | (2 << 15);
     *gpfsel1 = r;

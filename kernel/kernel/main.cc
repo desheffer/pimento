@@ -3,7 +3,6 @@
 #include <memory.h>
 #include <scheduler.h>
 #include <serial.h>
-#include <stdint.h>
 #include <system.h>
 #include <timer.h>
 

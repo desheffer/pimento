@@ -1,14 +1,12 @@
 #pragma once
 
-#include <stdint.h>
-
 #define NUM_REGS 31
 
 struct process_regs_t {
-    volatile uint64_t x[NUM_REGS];
-    volatile uint64_t :64;
-    volatile uint64_t spsr;
-    volatile uint64_t lr;
+    long unsigned x[NUM_REGS];
+    long unsigned :64;
+    long unsigned spsr;
+    long unsigned lr;
 };
 
 enum process_state_t {

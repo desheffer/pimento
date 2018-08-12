@@ -1,7 +1,6 @@
 #pragma once
 
 #include <process.h>
-#include <stdint.h>
 
 #define NUM_IRQS 72
 

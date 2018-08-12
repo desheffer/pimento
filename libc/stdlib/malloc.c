@@ -1,7 +1,6 @@
 #include <stdlib.h>
-#include <stdint.h>
 
-static uint64_t _next = 0x12345678;
+static long unsigned _next = 0x12345678;
 
 void* malloc(size_t size)
 {

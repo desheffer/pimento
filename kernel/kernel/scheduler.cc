@@ -44,7 +44,7 @@ void Scheduler::createProcess(const char* pname, const void* lr)
     // @TODO: Allow stack to extend beyond one page.
     process->regs = (process_regs_t*) process->stackEnd - 1;
     process->regs->spsr = 0x300;
-    process->regs->lr = (uint64_t) lr;
+    process->regs->lr = (long unsigned) lr;
 
     _processList.push_back(process);
     _processQueue.push_back(process);

@@ -6,12 +6,12 @@
 
 typedef struct {
     char* buf;
-    unsigned base;
-    unsigned pad;
-    unsigned width;
     unsigned alt;
+    unsigned base;
     unsigned left_align;
+    unsigned pad;
     unsigned uppercase;
+    unsigned width;
     char sign;
 } vcprintf_specifiers_t;
 
@@ -180,7 +180,7 @@ void vcprintf(void* data, putc_t putc_f, const char* format, va_list arg)
                 switch (*format) {
                     case 'c':
                         // Character
-                        vcprintf_char(sp, (char) va_arg(arg, unsigned));
+                        vcprintf_char(sp, (char) va_arg(arg, int));
                         break;
                     case 'd':
                     case 'i':
@@ -203,13 +203,12 @@ void vcprintf(void* data, putc_t putc_f, const char* format, va_list arg)
                         vcprintf_uint(sp, va_arg(arg, unsigned));
                         break;
                     case 'x':
-                    case 'p':
-                        // Unsigned hexadecimal uppercase
+                        // Unsigned hexadecimal lowercase
                         sp->base = 16;
                         vcprintf_uint(sp, va_arg(arg, unsigned));
                         break;
                     case 'X':
-                        // Signed hexadecimal uppercase
+                        // Unsigned hexadecimal uppercase
                         sp->base = 16;
                         sp->uppercase = 1;
                         vcprintf_uint(sp, va_arg(arg, unsigned));

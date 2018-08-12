@@ -17,7 +17,7 @@ void panic()
     halt();
 }
 
-void debug_process_regs(process_regs_t* state, uint64_t esr, uint64_t far)
+void debug_process_regs(process_regs_t* state, long unsigned esr, long unsigned far)
 {
     if (_in_debug_process_regs) {
         panic();

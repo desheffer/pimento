@@ -2,15 +2,13 @@
 
 #include <interrupt.h>
 #include <scheduler.h>
-#include <stdint.h>
 
 class Timer
 {
   public:
     static void init(Interrupt*, Scheduler*);
     static inline Timer* instance() { return _instance; }
-    static uint64_t counter();
-    static void wait(unsigned);
+    static long unsigned counter();
   private:
     static Timer* _instance;
     Scheduler* _scheduler;

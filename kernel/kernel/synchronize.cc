@@ -7,7 +7,7 @@ static bool _reenable_interrupts;
 
 void enter_critical()
 {
-    uint64_t daif;
+    unsigned daif;
     asm volatile ("mrs %0, daif" : "=r" (daif));
 
     disable_interrupts();
