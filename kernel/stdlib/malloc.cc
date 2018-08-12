@@ -1,7 +1,8 @@
-#include <heap.h>
+#include <memory.h>
 #include <stdlib.h>
 
-void* malloc(size_t size)
+void* malloc(size_t /*size*/)
 {
-    return Heap::instance()->alloc(size);
+    // @TODO
+    return Memory::instance()->allocPage();
 }

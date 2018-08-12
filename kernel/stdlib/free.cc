@@ -1,7 +1,8 @@
-#include <heap.h>
+#include <memory.h>
 #include <stdlib.h>
 
 void free(void* ptr)
 {
-    return Heap::instance()->free(ptr);
+    // @TODO
+    Memory::instance()->freePage(ptr);
 }

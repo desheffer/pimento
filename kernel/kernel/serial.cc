@@ -2,11 +2,16 @@
 #include <mmio.h>
 #include <serial.h>
 #include <stdint.h>
-#include <timer.h>
-
-Serial* Serial::_instance = 0;
 
 Serial::Serial()
+{
+}
+
+Serial::~Serial()
+{
+}
+
+void Serial::init()
 {
     *aux_enables = 1;
     *aux_mu_ier = 0;
@@ -23,30 +28,17 @@ Serial::Serial()
     *gpfsel1 = r;
 
     *gppud = 0;
-    Timer::wait(1);
+    for (unsigned i = 150; i > 0; --i) {
+        asm volatile("nop");
+    }
 
     *gppudclk0 = (1 << 14) | (1 << 15);
-    Timer::wait(1);
+    for (unsigned i = 150; i > 0; --i) {
+        asm volatile("nop");
+    }
 
     *gppudclk0 = 0;
     *aux_mu_cntl = 3;
-}
-
-Serial::~Serial()
-{
-}
-
-void Serial::init()
-{
-    assert(!_instance);
-
-    _instance = new Serial();
-}
-
-Serial* Serial::instance() {
-    assert(_instance);
-
-    return _instance;
 }
 
 char Serial::getc()

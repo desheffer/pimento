@@ -5,39 +5,32 @@
 #include <string.h>
 #include <synchronize.h>
 
-extern uint8_t __end;
-
 Memory* Memory::_instance = 0;
 
-Memory::Memory(size_t allocSize)
-{
-    unsigned index;
-    unsigned end;
+static char _reserved[sizeof(Memory)];
 
-    _allocSize = allocSize;
-    _pageCount = _allocSize / PAGE_SIZE;
+extern void* __heap_start;
+
+Memory::Memory(void* allocStart, void* allocEnd, size_t pageSize)
+{
+    assert(0 < (long unsigned) allocStart);
+    assert((long unsigned) allocStart < (long unsigned) allocEnd + PAGE_SIZE);
+
+    _pageSize = pageSize;
+    _allocStart = (void*) ((((long unsigned) allocStart + _pageSize - 1) / _pageSize) * _pageSize);
+    _pageCount = ((char*) allocEnd - (char*) _allocStart) / _pageSize;
 
     // Create pages without using new.
-    _pages = (page_t*) (this + 1);
+    _pages = (page_t*) _allocStart;
 
-    for (index = 0; index < _pageCount; ++index) {
-        _pages[index].allocated = false;
+    for (unsigned i = 0; i < _pageCount; ++i) {
+        _pages[i].allocated = false;
     }
 
-    // Reserve the location of everything allocated so far.
-    end = pageIndex(&_pages[_pageCount] - 1);
-    for (index = 0; index <= end; ++index) {
-        _pages[index].allocated = true;
-    }
+    char* pagesEnd = (char*) &_pages[_pageCount] - 1;
+    reserveRange(_pages, pagesEnd);
 
-    // Reserve the location of peripheral memory.
-    index = pageIndex((void*) peripheral_start);
-    end = pageIndex((void*) peripheral_end);
-    for (; index <= end; ++index) {
-        _pages[index].allocated = true;
-    }
-
-    _firstCandidate = pageIndex(&_pages[_pageCount]);
+    _lastIndex = pageIndex(pagesEnd);
 }
 
 Memory::~Memory()
@@ -49,39 +42,50 @@ void Memory::init()
     assert(!_instance);
 
     // @TODO: get mem size from boot loader
-    size_t allocSize = 0xFFFFFFFF - __end;
+    void* allocStart = &__heap_start;
+    void* allocEnd = (void*) 0xFFFFFFFF;
 
     // Create instance using placement new.
-    _instance = (Memory*) &__end;
-    new ((void*) _instance) Memory(allocSize);
+    _instance = (Memory*) _reserved;
+    new (_instance) Memory(allocStart, allocEnd, PAGE_SIZE);
+
+    // Reserve the location of peripheral memory.
+    _instance->reserveRange((void*) peripheral_start, (void*) peripheral_end);
 }
 
-Memory* Memory::instance() {
-    assert(_instance);
+void Memory::reserveRange(void* reserveStart, void* reserveEnd)
+{
+    assert((long unsigned) reserveStart < (long unsigned) reserveEnd + PAGE_SIZE);
 
-    return _instance;
+    unsigned index = pageIndex(reserveStart);
+    unsigned pageEnd = pageIndex(reserveEnd);
+
+    for (; index <= pageEnd; ++index) {
+        _pages[index].allocated = true;
+    }
 }
 
 void* Memory::allocPage()
 {
-    assert(_pages);
+    void* ptr = 0;
 
     enter_critical();
 
-    // @TODO: maintain a list of unallocated pages
-    unsigned index = _firstCandidate;
-    while (_pages[index].allocated) {
-        ++index;
+    unsigned index = _lastIndex;
+    do {
+        index = (index + 1) % _pageCount;
+    } while (_pages[index].allocated && index != _lastIndex);
+
+    if (!_pages[index].allocated) {
+        _pages[index].allocated = true;
+        ptr = pageStart(index);
     }
-
-    assert(!_pages[index].allocated);
-
-    _pages[index].allocated = true;
 
     leave_critical();
 
-    void* ptr = pageStart(index);
-    memset(ptr, 0, PAGE_SIZE);
+    if (ptr) {
+        memset(ptr, 0, _pageSize);
+    }
 
     return ptr;
 }
@@ -99,40 +103,22 @@ void Memory::freePage(void* ptr)
     leave_critical();
 }
 
-unsigned Memory::allocSize() const
-{
-    return _allocSize;
-}
-
 unsigned Memory::pageCount() const
 {
     return _pageCount;
 }
 
+size_t Memory::pageSize() const
+{
+    return _pageSize;
+}
+
+int Memory::pageIndex(void* start) const
+{
+    return ((char*) start - (char*) _allocStart) / _pageSize;
+}
+
 void* Memory::pageStart(unsigned index) const
 {
-    return ((uint8_t*) 0) + index * PAGE_SIZE;
-}
-
-unsigned Memory::pageIndex(void* start) const
-{
-    return ((size_t) start) / PAGE_SIZE;
-}
-
-void* alloc_page()
-{
-    Memory* memory = Memory::instance();
-
-    assert(memory);
-
-    return memory->allocPage();
-}
-
-void free_page(void* ptr)
-{
-    Memory* memory = Memory::instance();
-
-    assert(memory);
-
-    memory->freePage(ptr);
+    return (char*) _allocStart + index * _pageSize;
 }

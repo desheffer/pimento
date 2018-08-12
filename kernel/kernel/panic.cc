@@ -2,6 +2,8 @@
 #include <kstdio.h>
 #include <panic.h>
 
+static bool _in_debug_process_regs = false;
+
 void panic()
 {
     kputs(
@@ -17,6 +19,12 @@ void panic()
 
 void debug_process_regs(process_regs_t* state, uint64_t esr, uint64_t far)
 {
+    if (_in_debug_process_regs) {
+        panic();
+    }
+
+    _in_debug_process_regs = true;
+
     const char* ifs = "Unknown";
     const char* dfs = "Unknown";
     const char* level = "Unknown";

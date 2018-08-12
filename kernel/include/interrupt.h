@@ -17,7 +17,7 @@ class Interrupt
 {
   public:
     static void init();
-    static Interrupt* instance();
+    static inline Interrupt* instance() { return _instance; }
     bool isPending(unsigned) const;
     void connect(irq_number_t, interrupt_handler_t*, void*);
     void disconnect(irq_number_t);

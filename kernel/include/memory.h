@@ -13,24 +13,23 @@ class Memory
 {
   public:
     static void init();
-    static Memory* instance();
+    static inline Memory* instance() { return _instance; }
+    void reserveRange(void*, void*);
     void* allocPage();
     void freePage(void*);
-    unsigned allocSize() const;
     unsigned pageCount() const;
+    size_t pageSize() const;
 
   private:
     static Memory* _instance;
-    size_t _allocSize;
+    void* _allocStart;
+    size_t _pageSize;
     unsigned _pageCount;
     page_t* _pages;
-    unsigned _firstCandidate;
+    unsigned _lastIndex;
 
-    Memory(size_t);
+    Memory(void*, void*, size_t);
     ~Memory();
+    int pageIndex(void*) const;
     void* pageStart(unsigned) const;
-    unsigned pageIndex(void*) const;
 };
-
-void* alloc_page();
-void free_page(void*);

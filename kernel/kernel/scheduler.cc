@@ -28,12 +28,6 @@ void Scheduler::init()
     _instance = new Scheduler();
 }
 
-Scheduler* Scheduler::instance() {
-    assert(_instance);
-
-    return _instance;
-}
-
 void Scheduler::createProcess(const char* pname, const void* lr)
 {
     enter_critical();
@@ -44,7 +38,7 @@ void Scheduler::createProcess(const char* pname, const void* lr)
     strncpy(process->pname, pname, 32);
     process->pname[31] = '\0';
 
-    process->stackBegin = alloc_page();
+    process->stackBegin = Memory::instance()->allocPage();
     process->stackEnd = (char*) process->stackBegin + PAGE_SIZE;
 
     // @TODO: Allow stack to extend beyond one page.

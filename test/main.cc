@@ -1,4 +1,3 @@
-#include <heap.h>
 #include <kstdio.h>
 #include <memory.h>
 #include <panic.h>
@@ -8,11 +7,9 @@
 
 extern "C" void kernel_main()
 {
-    Memory::init();
-
-    Heap::init(Memory::instance());
-
     Serial::init();
+
+    Memory::init();
 
     kprintf("Running tests...\n");
     test_list();

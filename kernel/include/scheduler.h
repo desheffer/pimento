@@ -7,7 +7,7 @@ class Scheduler
 {
   public:
     static void init();
-    static Scheduler* instance();
+    static inline Scheduler* instance() { return _instance; }
     void createProcess(const char*, const void*);
     void stopProcess();
     void queueScheduling();
