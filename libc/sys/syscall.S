@@ -7,6 +7,5 @@ _syscall:
     mov x3, x4
     mov x4, x5
     mov x5, x6
-    mov x6, x7
     svc #0
     ret

@@ -5,5 +5,3 @@
 
 #define ESR_ELx_EC_SHIFT 26
 #define ESR_ELx_EC_SVC64 0b010101
-
-#define SYSCALL_COUNT 292

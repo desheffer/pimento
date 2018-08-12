@@ -6,7 +6,7 @@
 
 extern long _syscall(long, long, long, long, long, long, long);
 
-#define SYSCALL(n,a,b,c,d,e,f) _syscall(__NR_##n, (long)(a), (long)(b), (long)(c), (long)(d), (long)(e), (long)(f));
+#define SYSCALL(n,a,b,c,d,e,f) _syscall(__NR_ ## n, (long)(a), (long)(b), (long)(c), (long)(d), (long)(e), (long)(f));
 
 #define SYSCALL0(n) SYSCALL(n,0,0,0,0,0,0)
 #define SYSCALL1(n,a) SYSCALL(n,a,0,0,0,0,0)
