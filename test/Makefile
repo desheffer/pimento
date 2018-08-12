@@ -10,12 +10,12 @@ LIBC    := ../libc/build
 SRC     := ../kernel
 TEST    := .
 
-INCLUDES := $(wildcard $(INCLUDE)/*.h)
-INCLUDES += $(wildcard $(TEST)/*.h)
+INCLUDES := $(shell find $(INCLUDE) -name '*.h')
+INCLUDES += $(shell find $(TEST) -name '*.h')
 
-OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.o, $(wildcard $(SRC)/*/*.S))
-OBJECTS += $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(wildcard $(SRC)/*/*.cc))
-OBJECTS += $(patsubst $(TEST)/%.cc, $(BUILD)/test/%.o, $(wildcard $(TEST)/*.cc))
+OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.o, $(shell find $(SRC) -name '*.S'))
+OBJECTS += $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(shell find $(SRC) -name '*.cc'))
+OBJECTS += $(patsubst $(TEST)/%.cc, $(BUILD)/test/%.o, $(shell find $(TEST) -name '*.cc'))
 OBJECTS += $(LIBC)/libc.a
 
 OBJECTS := $(filter-out $(BUILD)/kernel/main.o, $(OBJECTS))

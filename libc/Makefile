@@ -9,12 +9,11 @@ BUILD   := build
 INCLUDE := include
 SRC     := .
 
-INCLUDES := $(wildcard $(INCLUDE)/*.h)
-INCLUDES += $(wildcard $(INCLUDE)/*/*.h)
+INCLUDES := $(shell find $(INCLUDE) -name '*.h')
 
-OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.o, $(wildcard $(SRC)/*/*.S))
-OBJECTS += $(patsubst $(SRC)/%.c, $(BUILD)/%.o, $(wildcard $(SRC)/*/*.c))
-OBJECTS += $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(wildcard $(SRC)/*/*.cc))
+OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.o, $(shell find $(SRC) -name '*.S'))
+OBJECTS += $(patsubst $(SRC)/%.c, $(BUILD)/%.o, $(shell find $(SRC) -name '*.c'))
+OBJECTS += $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(shell find $(SRC) -name '*.cc'))
 
 BASEFLAGS := -O2 -fpic -nostdlib
 BASEFLAGS += -nostartfiles -ffreestanding -nodefaultlibs

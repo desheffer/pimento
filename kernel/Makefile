@@ -10,10 +10,10 @@ INCLUDE := include
 LIBC    := ../libc/build
 SRC     := .
 
-INCLUDES := $(wildcard $(INCLUDE)/*.h)
+INCLUDES := $(shell find $(INCLUDE) -name '*.h')
 
-OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.o, $(wildcard $(SRC)/*/*.S))
-OBJECTS += $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(wildcard $(SRC)/*/*.cc))
+OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.o, $(shell find $(SRC) -name '*.S'))
+OBJECTS += $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(shell find $(SRC) -name '*.cc'))
 OBJECTS += $(LIBC)/libc.a
 OBJECTS += $(BUILD)/shell.bin
 
