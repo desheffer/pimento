@@ -45,9 +45,14 @@ char Serial::getc()
     while (!(*aux_mu_lsr & 0x01));
 
     char r = *aux_mu_io;
+
+    if (r == '\r') {
+        r = '\n';
+    }
+
     putc(r);
 
-    return r == '\r' ? '\n' : r;
+    return r;
 }
 
 void Serial::putc(char c)
