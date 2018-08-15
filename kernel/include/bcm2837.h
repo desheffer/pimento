@@ -91,6 +91,8 @@
 #define aux_spi1_io             MEM(0x3F2150D0, 32)     // SPI 2 Data
 #define aux_spi1_peek           MEM(0x3F2150D4, 16)     // SPI 2 Peek
 
+#define core_timers_control     MEM(0x40000000, 32)     // Control register
+#define core_timers_prescaler   MEM(0x40000008, 32)     // Core timer prescaler
 #define core0_timers_cntl       MEM(0x40000040, 32)     // Core 0 Timers Interrupt control
 #define core1_timers_cntl       MEM(0x40000044, 32)     // Core 1 Timers Interrupt control
 #define core2_timers_cntl       MEM(0x40000048, 32)     // Core 2 Timers Interrupt control

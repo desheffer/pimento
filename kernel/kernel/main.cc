@@ -18,9 +18,9 @@ extern "C" void kernel_main()
 
     Interrupt::init();
 
-    Scheduler::init();
+    Timer::init(Interrupt::instance());
 
-    Timer::init(Interrupt::instance(), Scheduler::instance());
+    Scheduler::init(Timer::instance());
 
     kputs(
         "\n"

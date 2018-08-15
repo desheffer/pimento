@@ -7,8 +7,12 @@
 
 Scheduler* Scheduler::_instance = 0;
 
-Scheduler::Scheduler()
+Scheduler::Scheduler(Timer* timer)
 {
+    assert(timer);
+
+    _timer = timer;
+
     _nextPid = 1;
     _schedulingQueued = false;
 
@@ -21,11 +25,14 @@ Scheduler::~Scheduler()
 {
 }
 
-void Scheduler::init()
+void Scheduler::init(Timer* timer)
 {
     assert(!_instance);
 
-    _instance = new Scheduler();
+    _instance = new Scheduler(timer);
+
+    timer->connect((interrupt_handler_t*) tick, _instance);
+    tick(_instance);
 }
 
 void Scheduler::createProcess(const char* pname, const void* lr)
@@ -52,18 +59,9 @@ void Scheduler::createProcess(const char* pname, const void* lr)
     leave_critical();
 }
 
-void Scheduler::stopProcess()
+unsigned Scheduler::processCount() const
 {
-    enter_critical();
-
-    _currentProcess->state = stopping;
-
-    leave_critical();
-}
-
-void Scheduler::queueScheduling()
-{
-    _schedulingQueued = true;
+    return _processList.size();
 }
 
 process_regs_t* Scheduler::schedule(process_regs_t* regs)
@@ -89,7 +87,17 @@ process_regs_t* Scheduler::schedule(process_regs_t* regs)
     return _currentProcess->regs;
 }
 
-unsigned Scheduler::processCount() const
+void Scheduler::stopProcess()
 {
-    return _processList.size();
+    enter_critical();
+
+    _currentProcess->state = stopping;
+
+    leave_critical();
+}
+
+void Scheduler::tick(Scheduler* scheduler)
+{
+    scheduler->_schedulingQueued = true;
+    scheduler->_timer->reset();
 }

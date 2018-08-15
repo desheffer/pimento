@@ -11,12 +11,6 @@ Interrupt::Interrupt()
         _handlers[i] = 0;
         _handlerData[i] = 0;
     }
-
-    *irq_disable_gpu1 = 0xFFFFFFFF;
-    *irq_disable_gpu2 = 0xFFFFFFFF;
-    *irq_disable_basic = 0xFFFFFFFF;
-
-    enable_interrupts();
 }
 
 Interrupt::~Interrupt()
@@ -28,19 +22,15 @@ void Interrupt::init()
     assert(!_instance);
 
     _instance = new Interrupt();
+
+    enable_interrupts();
 }
 
 bool Interrupt::isPending(unsigned num) const
 {
     assert(num < NUM_IRQS);
 
-    if (num < 32) {
-        return *irq_pending_gpu1 & (1 << (num - 0));
-    } else if (num < 64) {
-        return *irq_pending_gpu2 & (1 << (num - 32));
-    } else {
-        return *irq_pending_basic & (1 << (num - 64));
-    }
+    return *core0_irq & (1 << num);
 }
 
 void Interrupt::connect(irq_number_t num, interrupt_handler_t* handler, void* handlerData)
@@ -67,26 +57,14 @@ void Interrupt::enable(irq_number_t num) const
 {
     assert(num < NUM_IRQS);
 
-    if (num < 32) {
-        *irq_enable_gpu1 |= (1 << (num - 0));
-    } else if (num < 64) {
-        *irq_enable_gpu2 |= (1 << (num - 32));
-    } else {
-        *irq_enable_basic |= (1 << (num - 64));
-    }
+    *core0_timers_cntl |= (1 << num);
 }
 
 void Interrupt::disable(irq_number_t num) const
 {
     assert(num < NUM_IRQS);
 
-    if (num < 32) {
-        *irq_enable_gpu1 ^= (1 << (num - 0));
-    } else if (num < 64) {
-        *irq_enable_gpu2 ^= (1 << (num - 32));
-    } else {
-        *irq_enable_basic ^= (1 << (num - 64));
-    }
+    *core0_timers_cntl ^= (1 << num);
 }
 
 void Interrupt::handle() const

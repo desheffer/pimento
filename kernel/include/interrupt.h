@@ -2,12 +2,19 @@
 
 #include <process.h>
 
-#define NUM_IRQS 72
+#define NUM_IRQS 10
 
 enum irq_number_t {
-    system_timer_1 = 1,
-    usb_controler  = 9,
-    arm_timer      = 64,
+    local_irq_cntpsirq  = 0,
+    local_irq_cntpnsirq = 1,
+    local_irq_cnthpirq  = 2,
+    local_irq_cntvirq   = 3,
+    local_irq_mailbox0  = 4,
+    local_irq_mailbox1  = 5,
+    local_irq_mailbox2  = 6,
+    local_irq_mailbox3  = 7,
+    local_irq_gpu_fast  = 8,
+    local_irq_pmu_fast  = 9,
 };
 
 typedef void interrupt_handler_t(void*);
