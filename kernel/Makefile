@@ -1,5 +1,5 @@
 TOOLCHAIN ?= aarch64-none-elf
-CC        := $(TOOLCHAIN)-g++
+CC        := $(TOOLCHAIN)-gcc
 OBJCOPY   := $(TOOLCHAIN)-objcopy
 OBJDUMP   := $(TOOLCHAIN)-objdump
 
@@ -13,7 +13,7 @@ SRC     := .
 INCLUDES := $(shell find $(INCLUDE) -name '*.h')
 
 OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.o, $(shell find $(SRC) -name '*.S'))
-OBJECTS += $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(shell find $(SRC) -name '*.cc'))
+OBJECTS += $(patsubst $(SRC)/%.c, $(BUILD)/%.o, $(shell find $(SRC) -name '*.c'))
 OBJECTS += $(LIBC)/libc.a
 OBJECTS += $(BUILD)/shell.bin
 
@@ -34,8 +34,7 @@ WARNFLAGS += -Wno-unused-but-set-variable -Wno-unused-result
 WARNFLAGS += -Wwrite-strings -Wdisabled-optimization -Wpointer-arith
 INCFLAGS  := -I$(INCLUDE) -I$(LIBC)/../include
 ASFLAGS   := $(INCFLAGS) -D__ASSEMBLY__
-CXXFLAGS  := $(BASEFLAGS) $(WARNFLAGS) $(INCFLAGS)
-CXXFLAGS  += -fno-exceptions -std=gnu++11
+CFLAGS    := $(BASEFLAGS) $(WARNFLAGS) $(INCFLAGS)
 LDFLAGS   := $(BASEFLAGS)
 
 .PHONY: all clean
@@ -56,9 +55,9 @@ $(BUILD)/%.o: $(SRC)/%.S $(INCLUDES)
 	@mkdir -p $(@D)
 	$(CC) $(ASFLAGS) -c $< -o $@
 
-$(BUILD)/%.o: $(SRC)/%.cc $(INCLUDES)
+$(BUILD)/%.o: $(SRC)/%.c $(INCLUDES)
 	@mkdir -p $(@D)
-	$(CC) $(CXXFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD)/%.bin: ../*/build/%.img
 	$(OBJCOPY) --input binary --output elf64-littleaarch64 --binary-architecture aarch64 $< $@

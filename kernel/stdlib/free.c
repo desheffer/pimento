@@ -4,5 +4,5 @@
 void free(void* ptr)
 {
     // @TODO
-    Memory::instance()->freePage(ptr);
+    free_page(ptr);
 }

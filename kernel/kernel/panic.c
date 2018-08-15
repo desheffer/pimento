@@ -2,20 +2,7 @@
 #include <kstdio.h>
 #include <panic.h>
 
-static bool _in_debug_process_regs = false;
-
-void panic()
-{
-    kputs(
-        "\n"
-        "[41m[97m                      [0m\n"
-        "[41m[97m     Kernel Panic     [0m\n"
-        "[41m[97m                      [0m\n"
-        "\n"
-    );
-
-    halt();
-}
+static int _in_debug_process_regs = 0;
 
 void debug_process_regs(process_regs_t* state, long unsigned esr, long unsigned far)
 {
@@ -23,7 +10,7 @@ void debug_process_regs(process_regs_t* state, long unsigned esr, long unsigned 
         panic();
     }
 
-    _in_debug_process_regs = true;
+    _in_debug_process_regs = 1;
 
     const char* ifs = "Unknown";
     const char* dfs = "Unknown";
@@ -89,6 +76,19 @@ void debug_process_regs(process_regs_t* state, long unsigned esr, long unsigned 
         kprintf("  %5u = %08x %08x", i, (unsigned) (state->x[i] >> 32), (unsigned) state->x[i]);
     }
     kprintf("\n");
+
+    halt();
+}
+
+void panic()
+{
+    kputs(
+        "\n"
+        "[41m[97m                      [0m\n"
+        "[41m[97m     Kernel Panic     [0m\n"
+        "[41m[97m                      [0m\n"
+        "\n"
+    );
 
     halt();
 }

@@ -2,9 +2,11 @@
 #include <stdio.h>
 #include <synchronize.h>
 
-static void kputc(void*, char c)
+void kputc(void* data, char c)
 {
-    Serial::putc(c);
+    (void) data;
+
+    serial_putc(c);
 }
 
 void kvprintf(const char* format, va_list arg)

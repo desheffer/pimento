@@ -10,7 +10,7 @@ ssize_t do_write(int fd, const void* buf, size_t count)
     assert(fd == 1);
 
     while (count--) {
-        Serial::putc(*(cbuf++));
+        serial_putc(*(cbuf++));
         ++ret;
     }
 

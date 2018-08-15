@@ -3,14 +3,10 @@
 #include <limits.h>
 #include <timer.h>
 
-Timer* Timer::_instance = 0;
+static unsigned _quantum;
 
-Timer::Timer(Interrupt* interrupt)
+void timer_init()
 {
-    assert(interrupt);
-
-    _interrupt = interrupt;
-
     unsigned freq;
     asm volatile("mrs %0, cntfrq_el0" : "=r" (freq));
     _quantum = freq / HZ;
@@ -22,28 +18,17 @@ Timer::Timer(Interrupt* interrupt)
     *core_timers_prescaler = 0x80000000;
 }
 
-Timer::~Timer()
+void timer_connect(interrupt_handler_t* handler, void* handler_data)
 {
+    interrupt_connect(local_irq_cntpnsirq, handler, handler_data);
 }
 
-void Timer::init(Interrupt* interrupt)
+void timer_disconnect()
 {
-    assert(!_instance);
-
-    _instance = new Timer(interrupt);
+    interrupt_disconnect(local_irq_cntpnsirq);
 }
 
-void Timer::connect(interrupt_handler_t* handler, void* handlerData)
-{
-    _interrupt->connect(local_irq_cntpnsirq, handler, handlerData);
-}
-
-void Timer::disconnect()
-{
-    _interrupt->disconnect(local_irq_cntpnsirq);
-}
-
-void Timer::reset() const
+void timer_reset()
 {
     // Set down-count timer.
     asm volatile("msr cntp_tval_el0, %0" :: "r" (_quantum));
@@ -52,7 +37,7 @@ void Timer::reset() const
     asm volatile("msr cntp_ctl_el0, %0" :: "r" (1));
 }
 
-long unsigned Timer::counter()
+long unsigned timer_counter()
 {
     long unsigned count;
 

@@ -1,5 +1,5 @@
 TOOLCHAIN ?= aarch64-none-elf
-CC        := $(TOOLCHAIN)-g++
+CC        := $(TOOLCHAIN)-gcc
 OBJCOPY   := $(TOOLCHAIN)-objcopy
 
 IMG := kernel8
@@ -14,8 +14,8 @@ INCLUDES := $(shell find $(INCLUDE) -name '*.h')
 INCLUDES += $(shell find $(TEST) -name '*.h')
 
 OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.o, $(shell find $(SRC) -name '*.S'))
-OBJECTS += $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(shell find $(SRC) -name '*.cc'))
-OBJECTS += $(patsubst $(TEST)/%.cc, $(BUILD)/test/%.o, $(shell find $(TEST) -name '*.cc'))
+OBJECTS += $(patsubst $(SRC)/%.c, $(BUILD)/%.o, $(shell find $(SRC) -name '*.c'))
+OBJECTS += $(patsubst $(TEST)/%.c, $(BUILD)/test/%.o, $(shell find $(TEST) -name '*.c'))
 OBJECTS += $(LIBC)/libc.a
 
 OBJECTS := $(filter-out $(BUILD)/kernel/main.o, $(OBJECTS))
@@ -37,8 +37,7 @@ WARNFLAGS += -Wno-unused-but-set-variable -Wno-unused-result
 WARNFLAGS += -Wwrite-strings -Wdisabled-optimization -Wpointer-arith
 INCFLAGS  := -I$(TEST) -I$(INCLUDE) -I$(LIBC)/../include
 ASFLAGS   := $(INCFLAGS) -D__ASSEMBLY__
-CXXFLAGS  := $(BASEFLAGS) $(WARNFLAGS) $(INCFLAGS)
-CXXFLAGS  += -fno-exceptions -std=gnu++11
+CFLAGS    := $(BASEFLAGS) $(WARNFLAGS) $(INCFLAGS)
 LDFLAGS   := $(BASEFLAGS)
 
 .PHONY: all clean
@@ -58,10 +57,10 @@ $(BUILD)/%.o: $(SRC)/%.S
 	@mkdir -p $(@D)
 	$(CC) $(ASFLAGS) -c $< -o $@
 
-$(BUILD)/%.o: $(SRC)/%.cc $(INCLUDES)
+$(BUILD)/%.o: $(SRC)/%.c $(INCLUDES)
 	@mkdir -p $(@D)
-	$(CC) $(CXXFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD)/test/%.o: $(TEST)/%.cc $(INCLUDES)
+$(BUILD)/test/%.o: $(TEST)/%.c $(INCLUDES)
 	@mkdir -p $(@D)
-	$(CC) $(CXXFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@

@@ -4,7 +4,7 @@
 #define __NR_write 64
 #define __NR_exit 93
 
-extern long _syscall(long, long, long, long, long, long, long);
+long _syscall(long, long, long, long, long, long, long);
 
 #define SYSCALL(n,a,b,c,d,e,f) _syscall(__NR_ ## n, (long)(a), (long)(b), (long)(c), (long)(d), (long)(e), (long)(f));
 

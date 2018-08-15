@@ -2,13 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern "C" int main()
+int main()
 {
     printf("[Shell]\n\n");
 
     char* cmd = (char*) malloc(1024);
 
-    while (true) {
+    while (1) {
         printf("$ ");
         fgets(cmd, 1024, stdin);
 

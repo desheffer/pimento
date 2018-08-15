@@ -1,6 +1,5 @@
 TOOLCHAIN ?= aarch64-none-elf
-GCC       := $(TOOLCHAIN)-gcc
-CC        := $(TOOLCHAIN)-g++
+CC        := $(TOOLCHAIN)-gcc
 AR        := $(TOOLCHAIN)-ar
 
 LIB := libc
@@ -33,7 +32,6 @@ WARNFLAGS += -Wwrite-strings -Wdisabled-optimization -Wpointer-arith
 INCFLAGS  := -I$(INCLUDE)
 ASFLAGS   := $(INCFLAGS) -D__ASSEMBLY__
 CFLAGS    := $(BASEFLAGS) $(WARNFLAGS) $(INCFLAGS)
-CXXFLAGS  := $(CFLAGS) -fno-exceptions -std=gnu++11
 LDFLAGS   := $(BASEFLAGS)
 
 .PHONY: all clean
@@ -52,8 +50,4 @@ $(BUILD)/%.o: $(SRC)/%.S $(INCLUDES)
 
 $(BUILD)/%.o: $(SRC)/%.c $(INCLUDES)
 	@mkdir -p $(@D)
-	$(GCC) $(CFLAGS) -c $< -o $@
-
-$(BUILD)/%.o: $(SRC)/%.cc $(INCLUDES)
-	@mkdir -p $(@D)
-	$(CC) $(CXXFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@

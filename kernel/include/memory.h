@@ -4,31 +4,16 @@
 
 #define PAGE_SIZE 4096
 
-struct page_t {
-    bool allocated: 1;
-};
+extern void* __heap_start;
 
-class Memory
-{
-  public:
-    static void init();
-    static inline Memory* instance() { return _instance; }
-    void reserveRange(void*, void*);
-    void* allocPage();
-    void freePage(void*);
-    unsigned pageCount() const;
-    size_t pageSize() const;
+typedef struct {
+    unsigned allocated: 1;
+} page_t;
 
-  private:
-    static Memory* _instance;
-    void* _allocStart;
-    size_t _pageSize;
-    unsigned _pageCount;
-    page_t* _pages;
-    unsigned _lastIndex;
+void memory_init();
+unsigned memory_page_count();
+size_t memory_page_size();
+void memory_reserve_range(void*, void*);
 
-    Memory(void*, void*, size_t);
-    ~Memory();
-    int pageIndex(void*) const;
-    void* pageStart(unsigned) const;
-};
+void* alloc_page();
+void free_page(void*);

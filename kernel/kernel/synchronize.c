@@ -3,7 +3,7 @@
 #include <synchronize.h>
 
 static unsigned _critical_level = 0;
-static bool _reenable_interrupts;
+static unsigned _daif = 0;
 
 void enter_critical()
 {
@@ -13,7 +13,7 @@ void enter_critical()
     disable_interrupts();
 
     if (_critical_level++ == 0) {
-        _reenable_interrupts = !(daif & 0x80);
+        _daif = daif;
     }
 }
 
@@ -21,7 +21,7 @@ void leave_critical()
 {
     assert(_critical_level > 0);
 
-    if (--_critical_level == 0 && _reenable_interrupts) {
+    if (--_critical_level == 0 && !(_daif & 0x80)) {
         enable_interrupts();
     }
 }

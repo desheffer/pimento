@@ -2,15 +2,7 @@
 #include <bcm2837.h>
 #include <serial.h>
 
-Serial::Serial()
-{
-}
-
-Serial::~Serial()
-{
-}
-
-void Serial::init()
+void serial_init()
 {
     *aux_enables = 1;
     *aux_mu_ier = 0;
@@ -40,7 +32,7 @@ void Serial::init()
     *aux_mu_cntl = 3;
 }
 
-char Serial::getc()
+char serial_getc()
 {
     while (!(*aux_mu_lsr & 0x01));
 
@@ -50,12 +42,12 @@ char Serial::getc()
         r = '\n';
     }
 
-    putc(r);
+    serial_putc(r);
 
     return r;
 }
 
-void Serial::putc(char c)
+void serial_putc(char c)
 {
     while (!(*aux_mu_lsr & 0x20));
 

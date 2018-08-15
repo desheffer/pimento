@@ -4,11 +4,10 @@
 #include <serial.h>
 #include <test.h>
 
-extern "C" void kernel_main()
+void kernel_main()
 {
-    Serial::init();
-
-    Memory::init();
+    serial_init();
+    memory_init();
 
     kprintf("Running tests...\n");
     test_list();

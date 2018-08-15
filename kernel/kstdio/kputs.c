@@ -7,7 +7,7 @@ void kputs(const char* s)
     enter_critical();
 
     while (*s) {
-        Serial::putc(*s);
+        serial_putc(*s);
         ++s;
     }
 

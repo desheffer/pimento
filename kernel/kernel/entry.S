@@ -110,7 +110,7 @@ el0_irq:
     msr spsel, 0
     save_regs
     mov x0, sp
-    bl irq_handler
+    bl interrupt_handler
     mov sp, x0
     load_regs
     eret
@@ -119,7 +119,7 @@ el1t_irq:
     msr spsel, 0
     save_regs
     mov x0, sp
-    bl irq_handler
+    bl interrupt_handler
     mov sp, x0
     load_regs
     eret

@@ -1,5 +1,5 @@
 TOOLCHAIN ?= aarch64-none-elf
-CC        := $(TOOLCHAIN)-g++
+CC        := $(TOOLCHAIN)-gcc
 OBJCOPY   := $(TOOLCHAIN)-objcopy
 OBJDUMP   := $(TOOLCHAIN)-objdump
 
@@ -12,7 +12,7 @@ SRC     := .
 
 INCLUDES := $(shell find $(INCLUDE) -name '*.h')
 
-OBJECTS += $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(shell find $(SRC) -name '*.cc'))
+OBJECTS += $(patsubst $(SRC)/%.c, $(BUILD)/%.o, $(shell find $(SRC) -name '*.c'))
 OBJECTS += $(LIBC)/libc.a
 
 BASEFLAGS := -O2 -fpic -nostdlib
@@ -31,8 +31,7 @@ WARNFLAGS += -Wno-pragmas -Wno-unused-but-set-parameter
 WARNFLAGS += -Wno-unused-but-set-variable -Wno-unused-result
 WARNFLAGS += -Wwrite-strings -Wdisabled-optimization -Wpointer-arith
 INCFLAGS  := -I$(INCLUDE) -I$(LIBC)/../include
-CXXFLAGS  := $(BASEFLAGS) $(WARNFLAGS) $(INCFLAGS)
-CXXFLAGS  += -fno-exceptions -std=gnu++11
+CFLAGS    := $(BASEFLAGS) $(WARNFLAGS) $(INCFLAGS)
 LDFLAGS   := $(BASEFLAGS)
 
 .PHONY: all clean
@@ -49,6 +48,6 @@ $(BUILD)/$(IMG).img: $(BUILD)/$(IMG).elf
 $(BUILD)/$(IMG).elf: $(OBJECTS) link-aarch64-elf.ld
 	$(CC) $(LDFLAGS) $(OBJECTS) -Tlink-aarch64-elf.ld -lgcc -o $@
 
-$(BUILD)/%.o: $(SRC)/%.cc $(INCLUDES)
+$(BUILD)/%.o: $(SRC)/%.c $(INCLUDES)
 	@mkdir -p $(@D)
-	$(CC) $(CXXFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
