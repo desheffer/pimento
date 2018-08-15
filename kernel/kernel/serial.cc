@@ -1,5 +1,5 @@
 #include <assert.h>
-#include <mmio.h>
+#include <bcm2837.h>
 #include <serial.h>
 
 Serial::Serial()

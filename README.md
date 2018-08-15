@@ -9,6 +9,7 @@ This project has been heavily guided by the following resources:
 - https://jsandler18.github.io/
 - https://github.com/s-matyukevich/raspberry-pi-os
 - https://static.docs.arm.com/ddi0487/ca/DDI0487C_a_armv8_arm.pdf
+- https://www.raspberrypi.org/documentation/hardware/raspberrypi/
 
 ## Getting Started
 

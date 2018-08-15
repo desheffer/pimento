@@ -1,6 +1,6 @@
 #include <assert.h>
+#include <bcm2837.h>
 #include <limits.h>
-#include <mmio.h>
 #include <timer.h>
 
 Timer* Timer::_instance = 0;

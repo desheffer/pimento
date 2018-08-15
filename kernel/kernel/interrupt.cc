@@ -1,6 +1,6 @@
 #include <assert.h>
+#include <bcm2837.h>
 #include <interrupt.h>
-#include <mmio.h>
 #include <scheduler.h>
 
 Interrupt* Interrupt::_instance = 0;

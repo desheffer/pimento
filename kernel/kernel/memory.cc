@@ -1,6 +1,6 @@
 #include <assert.h>
+#include <bcm2837.h>
 #include <memory.h>
-#include <mmio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <synchronize.h>
