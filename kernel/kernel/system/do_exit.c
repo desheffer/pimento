@@ -5,7 +5,8 @@ void do_exit(int status)
 {
     (void) status;
 
-    scheduler_stop_process();
+    unsigned pid = scheduler_current_pid();
+    process_stop(pid);
 
     while (1) {
         asm volatile("wfi");

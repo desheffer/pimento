@@ -3,7 +3,7 @@
 #include <limits.h>
 #include <timer.h>
 
-static unsigned _quantum;
+static unsigned _quantum = 0;
 
 void timer_init()
 {
@@ -30,6 +30,8 @@ void timer_disconnect()
 
 void timer_reset()
 {
+    assert(_quantum > 0);
+
     // Set down-count timer.
     asm volatile("msr cntp_tval_el0, %0" :: "r" (_quantum));
 

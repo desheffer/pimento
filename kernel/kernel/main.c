@@ -1,12 +1,13 @@
 #include <interrupt.h>
 #include <kstdio.h>
 #include <memory.h>
+#include <process.h>
 #include <scheduler.h>
 #include <serial.h>
 #include <system.h>
 #include <timer.h>
 
-extern void* _binary____shell_build_shell_img_start;
+extern char _binary____shell_build_shell_img_start;
 
 void kernel_main()
 {
@@ -16,6 +17,7 @@ void kernel_main()
     interrupt_init();
     timer_init();
     scheduler_init();
+    process_init();
 
     kputs(
         "\n"
@@ -29,9 +31,9 @@ void kernel_main()
     kprintf("Page Count = %u\n", memory_page_count());
     kputs("\n");
 
-    scheduler_create_process("shell", &_binary____shell_build_shell_img_start);
+    process_create("shell", &_binary____shell_build_shell_img_start);
 
-    while (scheduler_process_count() > 1) {
+    while (process_count() > 1) {
         asm volatile("wfi");
     }
 

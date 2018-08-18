@@ -5,10 +5,10 @@
 #include <string.h>
 #include <synchronize.h>
 
-static void* _alloc_start;
-static unsigned _page_count;
-static page_t* _pages;
-static unsigned _last_index;
+static void* _alloc_start = 0;
+static unsigned _page_count = 0;
+static page_t* _pages = 0;
+static unsigned _last_index = 0;
 
 static int memory_page_index(void* start)
 {
@@ -25,7 +25,7 @@ void memory_init()
     _alloc_start = &__heap_start;
 
     // @TODO: Get from hardware.
-    void* _alloc_end = (void*) 0xFFFFFFFF;
+    void* _alloc_end = (void*) 0x40000000;
 
     _page_count = ((char*) _alloc_end - (char*) _alloc_start) / PAGE_SIZE;
 

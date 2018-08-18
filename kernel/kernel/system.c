@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <system.h>
 
-static syscall_t* _calls[SYSCALL_COUNT];
+static syscall_t* _calls[SYSCALL_COUNT] = {0};
 
 void system_init()
 {

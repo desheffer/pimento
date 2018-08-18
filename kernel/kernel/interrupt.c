@@ -3,8 +3,8 @@
 #include <interrupt.h>
 #include <scheduler.h>
 
-static interrupt_handler_t* _handlers[NUM_IRQS];
-static void* _handlers_data[NUM_IRQS];
+static interrupt_handler_t* _handlers[NUM_IRQS] = {0};
+static void* _handlers_data[NUM_IRQS] = {0};
 
 static void interrupt_disable(irq_number_t num)
 {
@@ -66,5 +66,5 @@ process_regs_t* interrupt_handler(process_regs_t* state)
         }
     }
 
-    return scheduler_schedule(state);
+    return scheduler_next(state);
 }

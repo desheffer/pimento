@@ -24,3 +24,10 @@ typedef struct {
     void* stack_end;
     process_regs_t* regs;
 } process_control_block_t;
+
+void process_init();
+unsigned process_count();
+unsigned process_create(const char*, const void*);
+void process_destroy(unsigned);
+process_control_block_t* process_lookup(unsigned);
+void process_stop(unsigned);
