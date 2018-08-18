@@ -4,18 +4,19 @@ OBJCOPY   := $(TOOLCHAIN)-objcopy
 
 IMG := kernel8
 
-BUILD   := build
-INCLUDE := ../kernel/include
-LIBC    := ../libc/build
-SRC     := ../kernel
-TEST    := .
+BUILD        := build
+INCLUDE      := ../kernel/include
+LIBC         := ../libc/build
+SRC          := ../kernel
+TEST_SRC     := .
+TEST_INCLUDE := include
 
 INCLUDES := $(shell find $(INCLUDE) -name '*.h')
-INCLUDES += $(shell find $(TEST) -name '*.h')
+INCLUDES += $(shell find $(TEST_INCLUDE) -name '*.h')
 
 OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.o, $(shell find $(SRC) -name '*.S'))
 OBJECTS += $(patsubst $(SRC)/%.c, $(BUILD)/%.o, $(shell find $(SRC) -name '*.c'))
-OBJECTS += $(patsubst $(TEST)/%.c, $(BUILD)/test/%.o, $(shell find $(TEST) -name '*.c'))
+OBJECTS += $(patsubst $(TEST_SRC)/%.c, $(BUILD)/test/%.o, $(shell find $(TEST_SRC) -name '*.c'))
 OBJECTS += $(LIBC)/libc.a
 
 OBJECTS := $(filter-out $(BUILD)/kernel/main.o, $(OBJECTS))
@@ -35,7 +36,7 @@ WARNFLAGS += -Wno-sign-compare -Wswitch -Wsystem-headers
 WARNFLAGS += -Wno-pragmas -Wno-unused-but-set-parameter
 WARNFLAGS += -Wno-unused-but-set-variable -Wno-unused-result
 WARNFLAGS += -Wwrite-strings -Wdisabled-optimization -Wpointer-arith
-INCFLAGS  := -I$(TEST) -I$(INCLUDE) -I$(LIBC)/../include
+INCFLAGS  := -I$(TEST_INCLUDE) -I$(INCLUDE) -I$(LIBC)/../include
 ASFLAGS   := $(INCFLAGS) -D__ASSEMBLY__
 CFLAGS    := $(BASEFLAGS) $(WARNFLAGS) $(INCFLAGS)
 LDFLAGS   := $(BASEFLAGS)
@@ -61,6 +62,6 @@ $(BUILD)/%.o: $(SRC)/%.c $(INCLUDES)
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD)/test/%.o: $(TEST)/%.c $(INCLUDES)
+$(BUILD)/test/%.o: $(TEST_SRC)/%.c $(INCLUDES)
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
