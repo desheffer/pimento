@@ -2,17 +2,20 @@
 #include <serial.h>
 #include <system.h>
 
-ssize_t do_read(int fd, void* buf, size_t count)
+void do_read(process_regs_t* regs)
 {
-    char* cbuf = (char*) buf;
+    int fd = (int) regs->x[0];
+    char* buf = (char*) regs->x[1];
+    size_t count = (size_t) regs->x[2];
+
     ssize_t ret = 0;
 
     assert(fd == 0);
 
     while (count--) {
-        *(cbuf++) = serial_getc();
+        *(buf++) = serial_getc();
         ++ret;
     }
 
-    return ret;
+    regs->x[0] = ret;
 }

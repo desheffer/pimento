@@ -2,17 +2,20 @@
 #include <serial.h>
 #include <system.h>
 
-ssize_t do_write(int fd, const void* buf, size_t count)
+void do_write(process_regs_t* regs)
 {
-    const char* cbuf = (const char*) buf;
+    int fd = (int) regs->x[0];
+    char* buf = (char*) regs->x[1];
+    size_t count = (size_t) regs->x[2];
+
     ssize_t ret = 0;
 
     assert(fd == 1);
 
     while (count--) {
-        serial_putc(*(cbuf++));
+        serial_putc(*(buf++));
         ++ret;
     }
 
-    return ret;
+    regs->x[0] = ret;
 }

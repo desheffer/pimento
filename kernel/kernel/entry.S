@@ -92,16 +92,10 @@ el0_sync:
     beq el0_svc
     b invalid_handler
 el0_svc:
-    mov x6, x5
-    mov x5, x4
-    mov x4, x3
-    mov x3, x2
-    mov x2, x1
-    mov x1, x0
     mov x0, x8
+    mov x1, sp
     bl system_handler
 el0_done:
-    str x0, [sp, #PROCESS_REGS_X0]
     bl disable_interrupts
     load_regs
     eret
