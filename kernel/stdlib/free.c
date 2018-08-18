@@ -3,6 +3,6 @@
 
 void free(void* ptr)
 {
-    // @TODO
+    // @TODO: Free the appropriate size.
     free_page(ptr);
 }

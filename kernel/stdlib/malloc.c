@@ -1,10 +1,11 @@
+#include <assert.h>
 #include <memory.h>
 #include <stdlib.h>
 
 void* malloc(size_t size)
 {
-    (void) size;
+    assert(size <= PAGE_SIZE);
 
-    // @TODO
+    // @TODO: Allocate the appropriate size.
     return alloc_page();
 }

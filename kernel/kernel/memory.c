@@ -60,13 +60,11 @@ size_t memory_page_size()
 
 void memory_reserve_range(void* start, void* end)
 {
-    assert((long unsigned) start < (long unsigned) end + PAGE_SIZE);
-
     unsigned index = memory_page_index(start);
     unsigned pageEnd = memory_page_index(end);
 
-    for (; index <= pageEnd; ++index) {
-        _pages[index].allocated = 1;
+    while (index <= pageEnd) {
+        _pages[index++].allocated = 1;
     }
 }
 

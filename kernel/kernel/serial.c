@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <bcm2837.h>
 #include <serial.h>
 
