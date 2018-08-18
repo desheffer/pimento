@@ -7,7 +7,7 @@
 #include <system.h>
 #include <timer.h>
 
-extern char _binary____shell_build_shell_img_start;
+extern char __shell_start;
 
 void kernel_main()
 {
@@ -31,7 +31,7 @@ void kernel_main()
     kprintf("Page Count = %u\n", memory_page_count());
     kputs("\n");
 
-    process_create("shell", &_binary____shell_build_shell_img_start);
+    process_create("shell", &__shell_start);
 
     while (process_count() > 1) {
         asm volatile("wfi");

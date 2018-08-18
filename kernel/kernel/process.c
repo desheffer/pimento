@@ -7,7 +7,7 @@
 #include <string.h>
 #include <synchronize.h>
 
-static unsigned _next_pid;
+static unsigned _next_pid = 1;
 static list_t* _process_list = 0;
 
 static unsigned process_create_init()
@@ -33,8 +33,6 @@ void process_init()
     _process_list = malloc(sizeof(list_t));
     _process_list->front = 0;
     _process_list->back = 0;
-
-    _next_pid = 1;
 
     process_create_init();
     scheduler_start();
