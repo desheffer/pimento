@@ -91,8 +91,10 @@
 #define aux_spi1_io             MEM(0x3F2150D0, 32)     // SPI 2 Data
 #define aux_spi1_peek           MEM(0x3F2150D4, 16)     // SPI 2 Peek
 
-#define core_timers_control     MEM(0x40000000, 32)     // Control register
-#define core_timers_prescaler   MEM(0x40000008, 32)     // Core timer prescaler
+#define peripheral_end          MEM(0x40000000,  8)     // Peripheral End
+
+#define core_timers_control     MEM(0x40000000, 32)     // Control Register
+#define core_timers_prescaler   MEM(0x40000008, 32)     // Core Timer Prescaler
 #define core0_timers_cntl       MEM(0x40000040, 32)     // Core 0 Timers Interrupt control
 #define core1_timers_cntl       MEM(0x40000044, 32)     // Core 1 Timers Interrupt control
 #define core2_timers_cntl       MEM(0x40000048, 32)     // Core 2 Timers Interrupt control
@@ -141,5 +143,3 @@
 #define core3_mbox1_rw          MEM(0x400000F4, 32)     // Core 3 Mailbox 1 Read & Write-high-to-clear
 #define core3_mbox2_rw          MEM(0x400000F8, 32)     // Core 3 Mailbox 2 Read & Write-high-to-clear
 #define core3_mbox3_rw          MEM(0x400000FC, 32)     // Core 3 Mailbox 3 Read & Write-high-to-clear
-
-#define peripheral_end          MEM(0x400000FC,  8)     // Peripheral End

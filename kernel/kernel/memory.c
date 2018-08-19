@@ -61,9 +61,9 @@ size_t memory_page_size()
 void memory_reserve_range(void* start, void* end)
 {
     unsigned index = memory_page_index(start);
-    unsigned pageEnd = memory_page_index(end);
+    unsigned page_end = memory_page_index(end);
 
-    while (index <= pageEnd) {
+    while (index <= page_end && index < _page_count) {
         _pages[index++].allocated = 1;
     }
 }

@@ -37,12 +37,12 @@ void interrupt_init()
     enable_interrupts();
 }
 
-void interrupt_connect(irq_number_t num, interrupt_handler_t* handler, void* handlerData)
+void interrupt_connect(irq_number_t num, interrupt_handler_t* handler, void* handler_data)
 {
     assert(num < NUM_IRQS);
 
     _handlers[num] = handler;
-    _handlers_data[num] = handlerData;
+    _handlers_data[num] = handler_data;
 
     interrupt_enable(num);
 }
