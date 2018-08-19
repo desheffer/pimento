@@ -24,12 +24,8 @@ void kernel_main()
         "[44m[97m                          [0m\n"
         "[44m[97m     Welcome to PI-OS     [0m\n"
         "[44m[97m                          [0m\n"
-        "\n"
+        "\n\n"
     );
-
-    kprintf("Page Size  = %u\n", (unsigned) memory_page_size());
-    kprintf("Page Count = %u\n", memory_page_count());
-    kputs("\n");
 
     process_create("shell", &__shell_start);
 

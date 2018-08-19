@@ -7,32 +7,10 @@ _start:
     and x4, x4, #0x3
     cbnz x4, halt
 
-    // Get current EL.
-    mrs x4, currentel
-    and x4, x4, #0xC
-
-    // Skip if we are already in EL1.
-    cmp x4, #0x4
-    beq enter_el1
-
-    // Disable coprocessor traps.
-    mov x4, #0x33FF
-    msr cptr_el2, x4
-    msr hstr_el2, xzr
-    mov x4, #(3 << 20)
-    msr cpacr_el1, x4
-
-    // Enable A64 in EL1.
-    mov x4, #(1 << 31)
+    // Enable AArch64 in EL1.
+    mrs x4, hcr_el2
+    orr x4, x4, #(0x1 << 31)
     msr hcr_el2, x4
-
-    // Set up exception handlers.
-    adr x4, vector_table
-    msr vbar_el1, x4
-
-    // Set EL0 stack pointer.
-    mov x4, 0x80000
-    msr sp_el0, x4
 
     // Change execution level to EL1h.
     mov x4, #0x3C5
@@ -45,14 +23,25 @@ enter_el1:
     // Switch to EL1t.
     msr spsel, 0
 
-    // Clear out bss.
-    adr x4, __bss_start
-    adr x5, __bss_end
-loop_clear_bss:
-    // Store zero at x4.
-    stp xzr, xzr, [x4], #16
+    // Set stack pointer.
+    ldr x4, =__start
+    mov sp, x4
 
-    // Loop until bss_end.
+    // Do not trap SIMD/FP.
+    mov x4, #(0x3 << 20)
+    msr cpacr_el1, x4
+
+    // Set up exception handlers.
+    ldr x4, =vector_table
+    msr vbar_el1, x4
+
+    // Get the range of BSS.
+    ldr x4, =__bss_start
+    ldr x5, =__bss_end
+
+loop_clear_bss:
+    // Zero out BSS.
+    stp xzr, xzr, [x4], #16
     cmp x4, x5
     blo loop_clear_bss
 
