@@ -12,10 +12,10 @@ void timer_init()
     _quantum = freq / HZ;
 
     // Use Crystal clock and increment by 1.
-    *core_timers_control = 0;
+    *CORE_TIMERS_CONTROL = 0;
 
     // Set timer prescaler 1:1 (timer freq = 2^31 / prescaler * input).
-    *core_timers_prescaler = 0x80000000;
+    *CORE_TIMERS_PRESCALER = 0x80000000;
 }
 
 void timer_connect(interrupt_handler_t* handler, void* handler_data)

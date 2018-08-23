@@ -10,21 +10,21 @@ static void interrupt_disable(irq_number_t num)
 {
     assert(num < NUM_IRQS);
 
-    *core0_timers_cntl ^= (1 << num);
+    *CORE0_TIMERS_CNTL ^= (1 << num);
 }
 
 static void interrupt_enable(irq_number_t num)
 {
     assert(num < NUM_IRQS);
 
-    *core0_timers_cntl |= (1 << num);
+    *CORE0_TIMERS_CNTL |= (1 << num);
 }
 
 static int interrupt_pending(unsigned num)
 {
     assert(num < NUM_IRQS);
 
-    return *core0_irq & (1 << num);
+    return *CORE0_IRQ & (1 << num);
 }
 
 void interrupt_init()

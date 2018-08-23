@@ -43,7 +43,7 @@ void memory_init()
     memory_reserve_range(_pages, pages_end);
 
     // Reserve the location of peripheral memory.
-    memory_reserve_range((void*) peripheral_start, (void*) peripheral_end);
+    memory_reserve_range((void*) PERIPHERAL_START, (void*) PERIPHERAL_END);
 
     _last_index = memory_page_index(pages_end);
 }
