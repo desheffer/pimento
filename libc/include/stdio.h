@@ -29,7 +29,7 @@ extern "C" {
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
 
-// @TODO
+// @TODO: Provide proper constants.
 #define stdin ((FILE*) 0)
 #define stdout ((FILE*) 0)
 #define stderr ((FILE*) 0)

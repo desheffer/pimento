@@ -2,5 +2,5 @@
 
 void free(void* ptr __attribute__((unused)))
 {
-    // @TODO
+    // @TODO: Allocate proper memory.
 }

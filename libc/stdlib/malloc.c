@@ -6,7 +6,7 @@ void* malloc(size_t size)
 {
     void* ret = (void*) _next;
 
-    // @TODO
+    // @TODO: Allocate proper memory.
     _next += size + 0x80;
     _next = _next - (_next % 0x80);
 
