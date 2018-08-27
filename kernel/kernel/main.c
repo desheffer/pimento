@@ -27,7 +27,8 @@ void kernel_main()
         "\n\n"
     );
 
-    process_create("shell", &__shell_start);
+    // @TODO: Re-enable shell process.
+    /* process_create("shell", &__shell_start); */
 
     while (process_count() > 1) {
         asm volatile("wfi");

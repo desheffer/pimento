@@ -5,63 +5,93 @@
 #include <string.h>
 #include <synchronize.h>
 
-static void* _alloc_start = 0;
+extern char __end;
+static void* _heap_start = &__end;
+
 static unsigned _page_count = 0;
 static page_t* _pages = 0;
 static unsigned _last_index = 0;
 
-static int memory_page_index(void* start)
+static void* virt_to_phys(void* ptr)
 {
-    return ((char*) start - (char*) _alloc_start) / PAGE_SIZE;
+    return (void*) ((long unsigned) ptr & ~VA_START);
 }
 
-static void* memory_page_start(unsigned index)
+static void* phys_to_virt(void* ptr)
 {
-    return (char*) _alloc_start + index * PAGE_SIZE;
+    return (void*) ((long unsigned) ptr | VA_START);
+}
+
+void memory_init_kernel_table()
+{
+    va_table* tables = (va_table*) virt_to_phys(_heap_start);
+
+    // Reserve space for the tables.
+    _heap_start = (char*) _heap_start + 2 * sizeof(va_table);
+
+    // Zero out the tables.
+    for (unsigned i = 0; i < 2; ++i) {
+        for (unsigned j = 0; j < VA_TABLE_LENGTH; ++j) {
+            tables[i][j] = 0;
+        }
+    }
+
+    tables[0][0] = (long unsigned) &tables[1] |
+        PT_TABLE |
+        PT_AF;
+
+    // @TODO: Use separate pages for code, data, etc.
+    tables[1][0] = (long unsigned) 0x0 |
+        PT_BLOCK |
+        PT_AF |
+        PT_ATTR(MT_DEVICE_nGnRnE);
+
+    tables[1][1] = (long unsigned) 0x40000000 |
+        PT_BLOCK |
+        PT_AF |
+        PT_ATTR(MT_DEVICE_nGnRnE);
+
+    // Set the translation table for user space (temporary).
+    asm volatile("msr ttbr0_el1, %0" :: "r" (tables));
+
+    // Set the translation table for kernel space.
+    asm volatile("msr ttbr1_el1, %0" :: "r" (tables));
+}
+
+static int page_index(void* start)
+{
+    return ((char*) start - (char*) 0) / PAGE_SIZE;
+}
+
+static void* page_start(unsigned index)
+{
+    return (char*) 0 + index * PAGE_SIZE;
 }
 
 void memory_init()
 {
-    _alloc_start = &__heap_start;
-
     // @TODO: Get from hardware.
-    void* _alloc_end = (void*) 0x40000000;
+    void* alloc_end = (void*) 0x3F000000;
 
-    _page_count = ((char*) _alloc_end - (char*) _alloc_start) / PAGE_SIZE;
-
-    // Round up to the start of the next full page.
-    _alloc_start = (void*) ((((long unsigned) _alloc_start + PAGE_SIZE - 1) / PAGE_SIZE) * PAGE_SIZE);
+    _page_count = ((char*) alloc_end - (char*) 0) / PAGE_SIZE;
 
     // Create pages without using malloc.
-    _pages = (page_t*) _alloc_start;
+    _pages = (page_t*) _heap_start;
 
     for (unsigned i = 0; i < _page_count; ++i) {
         _pages[i].allocated = 0;
     }
 
-    char* pages_end = (char*) &_pages[_page_count] - 1;
-    memory_reserve_range(_pages, pages_end);
+    void* pages_end = virt_to_phys((char*) &_pages[_page_count] - 1);
+    memory_reserve_range(0, pages_end);
 
-    // Reserve the location of peripheral memory.
-    memory_reserve_range((void*) PERIPHERAL_START, (void*) PERIPHERAL_END);
-
-    _last_index = memory_page_index(pages_end);
-}
-
-unsigned memory_page_count()
-{
-    return _page_count;
-}
-
-size_t memory_page_size()
-{
-    return PAGE_SIZE;
+    _last_index = page_index(pages_end);
 }
 
 void memory_reserve_range(void* start, void* end)
 {
-    unsigned index = memory_page_index(start);
-    unsigned page_end = memory_page_index(end);
+    unsigned index = page_index(start);
+    unsigned page_end = page_index(end);
 
     while (index <= page_end && index < _page_count) {
         _pages[index++].allocated = 1;
@@ -81,12 +111,13 @@ void* alloc_page()
 
     if (!_pages[index].allocated) {
         _pages[index].allocated = 1;
-        ptr = memory_page_start(index);
+        ptr = page_start(index);
     }
 
     leave_critical();
 
     if (ptr) {
+        ptr = phys_to_virt(ptr);
         memset(ptr, 0, PAGE_SIZE);
     }
 
@@ -95,7 +126,8 @@ void* alloc_page()
 
 void free_page(void* ptr)
 {
-    unsigned index = memory_page_index(ptr);
+    ptr = virt_to_phys(ptr);
+    unsigned index = page_index(ptr);
 
     enter_critical();
 

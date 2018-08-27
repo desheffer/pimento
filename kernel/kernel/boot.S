@@ -1,16 +1,19 @@
+#include <memory.h>
+
 .section ".text.boot"
 
 .globl _start
 _start:
     // Isolate core 0.
     mrs x4, mpidr_el1
-    and x4, x4, #0x3
+    and x4, x4, #0b11
     cbnz x4, halt
 
     // Enable AArch64 in EL1.
     mrs x4, hcr_el2
-    orr x4, x4, #(0x1 << 31)
+    orr x4, x4, #(0b1 << 31)
     msr hcr_el2, x4
+    isb
 
     // Change execution level to EL1h.
     mov x4, #0x3C5
@@ -23,17 +26,37 @@ enter_el1:
     // Switch to EL1t.
     msr spsel, 0
 
+    // Do not trap SIMD/FP.
+    mov x4, #(0b11 << 20)
+    msr cpacr_el1, x4
+
+    // Set up memory attributes.
+    ldr x4, =MAIR_EL1
+    msr mair_el1, x4
+
+    // Set TTBR0 and TTBR1.
+    bl memory_init_kernel_table
+
+    // Set TCR.
+    ldr x4, =TCR_EL1
+    msr tcr_el1, x4
+    isb
+
+    // Enable MMU.
+    mrs x4, sctlr_el1
+    orr x4, x4, #0b1
+    msr sctlr_el1, x4
+    isb
+
+    // Jump to kernel virtual memory.
+    adr x4, post_enable_mmu
+    orr x4, x4, #VA_START
+    br x4
+
+post_enable_mmu:
     // Set stack pointer.
     ldr x4, =__start
     mov sp, x4
-
-    // Do not trap SIMD/FP.
-    mov x4, #(0x3 << 20)
-    msr cpacr_el1, x4
-
-    // Set up exception handlers.
-    ldr x4, =vector_table
-    msr vbar_el1, x4
 
     // Get the range of BSS.
     ldr x4, =__bss_start
@@ -44,6 +67,11 @@ loop_clear_bss:
     stp xzr, xzr, [x4], #16
     cmp x4, x5
     blo loop_clear_bss
+
+    // Set up exception vectors.
+    ldr x4, =vector_table
+    msr vbar_el1, x4
+    isb
 
     bl kernel_main
 

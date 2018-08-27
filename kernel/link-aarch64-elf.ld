@@ -2,7 +2,7 @@ ENTRY(_start)
 
 SECTIONS
 {
-    . = 0x80000;
+    . = 0xFFFF000000080000;
     __start = .;
 
     __text_start = .;
@@ -41,7 +41,8 @@ SECTIONS
     . = ALIGN(4096);
     __bss_end = .;
 
-    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
-
+    __end = .;
     __heap_start = .;
+
+    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }

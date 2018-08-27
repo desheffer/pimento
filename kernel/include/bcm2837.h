@@ -1,8 +1,9 @@
 #pragma once
 
+#include <memory.h>
 #include <stdint.h>
 
-#define MEM(address, size) ((volatile uint ## size ## _t*) address)
+#define MEM(address, size) ((volatile uint ## size ## _t*) ((address) | VA_START))
 
 #define PERIPHERAL_START        MEM(0x3F000000,  8)     // Peripheral Start
 
