@@ -31,13 +31,14 @@
     )
 
 #define PT_BLOCK (0b01UL <<  0) // Block descriptor
-#define PT_TABLE (0b11UL <<  0) // Page descriptor
+#define PT_TABLE (0b11UL <<  0) // Table descriptor
+#define PT_PAGE  (0b11UL <<  0) // Page descriptor
 #define PT_USER  (0b1UL  <<  6) // Unprivileged
 #define PT_RO    (0b1UL  <<  7) // Read-Only
 #define PT_OSH   (0b10UL <<  8) // Outer Shareable
 #define PT_ISH   (0b11UL <<  8) // Inner Shareable
 #define PT_AF    (0b1UL  << 10) // Access flag
-#define PT_XN    (0b1UL  << 54) // Execute-never
+#define PT_XN    (0b11UL << 53) // Execute-never
 
 #define PT_ATTR(n) ((n) << 2)
 
@@ -57,5 +58,16 @@ void memory_reserve_range(void*, void*);
 
 void* alloc_page();
 void free_page(void*);
+
+extern char __start;
+extern char __text_start;
+extern char __text_end;
+extern char __rodata_start;
+extern char __rodata_end;
+extern char __data_start;
+extern char __data_end;
+extern char __bss_start;
+extern char __bss_end;
+extern char __end;
 
 #endif

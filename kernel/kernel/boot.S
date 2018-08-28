@@ -6,7 +6,7 @@
 _start:
     // Isolate core 0.
     mrs x4, mpidr_el1
-    and x4, x4, #0b11
+    and x4, x4, #(0b11 << 0)
     cbnz x4, halt
 
     // Enable AArch64 in EL1.
@@ -26,6 +26,10 @@ enter_el1:
     // Switch to EL1t.
     msr spsel, 0
 
+    // Set up stack pointer.
+    adr x4, _start
+    mov sp, x4
+
     // Do not trap SIMD/FP.
     mov x4, #(0b11 << 20)
     msr cpacr_el1, x4
@@ -44,18 +48,20 @@ enter_el1:
 
     // Enable MMU.
     mrs x4, sctlr_el1
-    orr x4, x4, #0b1
+    orr x4, x4, #(0b1 << 0)
     msr sctlr_el1, x4
     isb
 
-    // Jump to kernel virtual memory.
+    // Jump to virtual memory.
     adr x4, post_enable_mmu
     orr x4, x4, #VA_START
     br x4
 
 post_enable_mmu:
-    // Set stack pointer.
+    // Move stack pointer to virtual memory.
     ldr x4, =__start
+    ldr x5, =VA_START
+    orr x4, x4, x5
     mov sp, x4
 
     // Get the range of BSS.

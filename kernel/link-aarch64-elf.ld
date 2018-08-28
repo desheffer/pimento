@@ -20,13 +20,6 @@ SECTIONS
     . = ALIGN(4096);
     __rodata_end = .;
 
-    __shell_start = .;
-    .shell : {
-        */shell.bin(.data)
-    }
-    . = ALIGN(4096);
-    __shell_end = .;
-
     __data_start = .;
     .data : {
         *(.data)
@@ -42,7 +35,6 @@ SECTIONS
     __bss_end = .;
 
     __end = .;
-    __heap_start = .;
 
     /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }

@@ -34,7 +34,7 @@ SECTIONS
     . = ALIGN(4096);
     __bss_end = .;
 
-    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
+    __end = .;
 
-    __heap_start = .;
+    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
 }
