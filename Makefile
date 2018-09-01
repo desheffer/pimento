@@ -1,4 +1,4 @@
-.PHONY: default % run test
+.PHONY: default % run test watch
 
 default: all
 
@@ -7,6 +7,9 @@ run: all
 
 test: all
 	qemu-system-aarch64 -M raspi3 -kernel test/build/kernel8.img -serial null -serial stdio
+
+watch:
+	find -regex '.*\(\.c\|\.h\|\.ld\|\.S\|Makefile\)' | entr -c make
 
 %:
 	$(MAKE) -C libc $@
