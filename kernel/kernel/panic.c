@@ -1,10 +1,11 @@
+#include <entry.h>
 #include <interrupt.h>
 #include <kstdio.h>
 #include <panic.h>
 
 static int _in_debug_process_regs = 0;
 
-void debug_process_regs(process_regs_t* state, long unsigned esr, long unsigned far)
+void debug_process_regs(process_regs_t* state, long unsigned reason, long unsigned esr, long unsigned far)
 {
     if (_in_debug_process_regs) {
         panic();
@@ -12,9 +13,9 @@ void debug_process_regs(process_regs_t* state, long unsigned esr, long unsigned 
 
     _in_debug_process_regs = 1;
 
-    const char* ifs = "Unknown";
-    const char* dfs = "Unknown";
-    const char* level = "Unknown";
+    const char* type = "Unknown";
+    const char* ec = "Unknown";
+    const char* fs = "Unknown";
 
     kputs(
         "\n"
@@ -24,56 +25,66 @@ void debug_process_regs(process_regs_t* state, long unsigned esr, long unsigned 
         "\n"
     );
 
-    switch (esr >> 26) {
-        case 0b000000: ifs = "Unknown reason"; break;
-        case 0b000001: ifs = "Trapped WFI or WFE instruction"; break;
-        case 0b001110: ifs = "Illegal Execution state"; break;
-        case 0b010101: ifs = "SVC instruction"; break;
-        case 0b100000: ifs = "Instruction Abort, lower level"; break;
-        case 0b100001: ifs = "Instruction Abort, same level"; break;
-        case 0b100010: ifs = "PC alignment fault"; break;
-        case 0b100100: ifs = "Data Abort, lower level"; break;
-        case 0b100101: ifs = "Data Abort, same level"; break;
-        case 0b100110: ifs = "SP alignment fault"; break;
-        case 0b101100: ifs = "Trapped floating-point"; break;
-        case 0b110000: ifs = "Breakpoint, lower level"; break;
-        case 0b110001: ifs = "Breakpoint, same level"; break;
-        case 0b111100: ifs = "Breakpoint instruction"; break;
+    switch (reason) {
+        case BAD_SYNC:  type = "Synchronous"; break;
+        case BAD_IRQ:   type = "IRQ"; break;
+        case BAD_FIQ:   type = "FIQ"; break;
+        case BAD_ERROR: type = "SError"; break;
     }
 
-    if (esr >> 26 == 0b100100 || esr >> 26 == 0b100101) {
-        switch (esr >> 2 & 0b11) {
-            case 0b00: dfs = "Address size fault"; break;
-            case 0b01: dfs = "Translation fault"; break;
-            case 0b10: dfs = "Access flag fault"; break;
-            case 0b11: dfs = "Permission fault"; break;
-        }
+    switch (ESR_ELx_EC(esr)) {
+        case ESR_ELx_EC_ILL:      ec = "Illegal Execution state"; break;
+        case ESR_ELx_EC_SVC64:    ec = "SVC instruction"; break;
+        case ESR_ELx_EC_IABT_LOW: ec = "Instruction Abort, lower level"; break;
+        case ESR_ELx_EC_IABT_CUR: ec = "Instruction Abort, same level"; break;
+        case ESR_ELx_EC_PC_ALIGN: ec = "PC alignment fault"; break;
+        case ESR_ELx_EC_DABT_LOW: ec = "Data Abort, lower level"; break;
+        case ESR_ELx_EC_DABT_CUR: ec = "Data Abort, same level"; break;
+        case ESR_ELx_EC_SP_ALIGN: ec = "SP alignment fault"; break;
+        case ESR_ELx_EC_BRK64:    ec = "Breakpoint instruction"; break;
+    }
 
-        switch (esr & 0b11) {
-            case 0b00: level = "0"; break;
-            case 0b01: level = "1"; break;
-            case 0b10: level = "2"; break;
-            case 0b11: level = "3"; break;
+    if (ESR_ELx_EC(esr) == ESR_ELx_EC_IABT_LOW
+        || ESR_ELx_EC(esr) == ESR_ELx_EC_IABT_CUR
+        || ESR_ELx_EC(esr) == ESR_ELx_EC_DABT_LOW
+        || ESR_ELx_EC(esr) == ESR_ELx_EC_DABT_CUR
+    ) {
+        switch (ESR_ELx_xFSC(esr)) {
+            case ESR_ELx_xFSC_ASF_0: fs = "Address size fault, level 0"; break;
+            case ESR_ELx_xFSC_ASF_1: fs = "Address size fault, level 1"; break;
+            case ESR_ELx_xFSC_ASF_2: fs = "Address size fault, level 2"; break;
+            case ESR_ELx_xFSC_ASF_3: fs = "Address size fault, level 3"; break;
+            case ESR_ELx_xFSC_TF_0:  fs = "Translation fault, level 0"; break;
+            case ESR_ELx_xFSC_TF_1:  fs = "Translation fault, level 1"; break;
+            case ESR_ELx_xFSC_TF_2:  fs = "Translation fault, level 2"; break;
+            case ESR_ELx_xFSC_TF_3:  fs = "Translation fault, level 3"; break;
+            case ESR_ELx_xFSC_AFF_1: fs = "Access flag fault, level 1"; break;
+            case ESR_ELx_xFSC_AFF_2: fs = "Access flag fault, level 2"; break;
+            case ESR_ELx_xFSC_AFF_3: fs = "Access flag fault, level 3"; break;
+            case ESR_ELx_xFSC_PF_1:  fs = "Permission fault, level 1"; break;
+            case ESR_ELx_xFSC_PF_2:  fs = "Permission fault, level 2"; break;
+            case ESR_ELx_xFSC_PF_3:  fs = "Permission fault, level 3"; break;
         }
     }
 
-    kprintf("Instruction Fault Status = %s\n", ifs);
-    kprintf("Data Fault Status = %s, level %s\n", dfs, level);
+    kprintf("Type = %s\n", type);
+    kprintf("Class = %s (%#04x)\n", ec, (unsigned) ESR_ELx_EC(esr));
+    kprintf("Fault Status = %s (%#04x)\n", fs, (unsigned) ESR_ELx_xFSC(esr));
 
     kprintf("\nRegisters:\n\n");
 
-    kprintf("   spsr = %08x %08x", (unsigned) (state->spsr >> 32), (unsigned) state->spsr);
-    kprintf("     lr = %08x %08x", (unsigned) (state->lr >> 32), (unsigned) state->lr);
+    kprintf("   spsr = %08x%08x", (unsigned) (state->spsr >> 32), (unsigned) state->spsr);
+    kprintf("   lr   = %08x%08x", (unsigned) (state->lr >> 32), (unsigned) state->lr);
     kprintf("\n");
-    kprintf("    esr = %08x %08x", (unsigned) (esr >> 32), (unsigned) esr);
-    kprintf("    far = %08x %08x", (unsigned) (far >> 32), (unsigned) far);
+    kprintf("   esr  = %08x%08x", (unsigned) (esr >> 32), (unsigned) esr);
+    kprintf("   far  = %08x%08x", (unsigned) (far >> 32), (unsigned) far);
     kprintf("\n");
 
     for (unsigned i = 0; i < NUM_REGS; ++i) {
         if (i % 2 == 0) {
             kprintf("\n");
         }
-        kprintf("  %5u = %08x %08x", i, (unsigned) (state->x[i] >> 32), (unsigned) state->x[i]);
+        kprintf("   x%-2u  = %08x%08x", i, (unsigned) (state->x[i] >> 32), (unsigned) state->x[i]);
     }
     kprintf("\n");
 

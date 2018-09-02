@@ -5,6 +5,29 @@
     b \label
 .endm
 
+.globl vector_table
+.balign 0x800
+vector_table:
+    vector el1_sync_invalid     // Synchronous EL1t
+    vector el1_irq              // IRQ EL1t
+    vector el1_fiq_invalid      // FIQ EL1t
+    vector el1_error_invalid    // SError EL1t
+
+    vector el1_sync_invalid     // Synchronous EL1h
+    vector el1_irq_invalid      // IRQ EL1h
+    vector el1_fiq_invalid      // FIQ EL1h
+    vector el1_error_invalid    // SError EL1h
+
+    vector el0_sync             // Synchronous 64-bit EL0
+    vector el0_irq              // IRQ 64-bit EL0
+    vector el0_fiq_invalid      // FIQ 64-bit EL0
+    vector el0_error_invalid    // SError 64-bit EL0
+
+    vector el0_sync_invalid     // Synchronous 32-bit EL0
+    vector el0_irq_invalid      // IRQ 32-bit EL0
+    vector el0_fiq_invalid      // FIQ 32-bit EL0
+    vector el0_error_invalid    // SError 32-bit EL0
+
 .macro save_regs
     sub sp, sp, #PROCESS_REGS_SIZE
 
@@ -55,47 +78,31 @@
     add sp, sp, #PROCESS_REGS_SIZE
 .endm
 
-.globl vector_table
-.balign 0x800
-vector_table:
-    // EL1t:
-    vector invalid_handler  // Synchronous
-    vector el1t_irq         // IRQ
-    vector invalid_handler  // FIQ
-    vector invalid_handler  // SError
-
-    // EL1h:
-    vector invalid_handler  // Synchronous
-    vector invalid_handler  // IRQ
-    vector invalid_handler  // FIQ
-    vector invalid_handler  // SError
-
-    // EL0:
-    vector el0_sync         // Synchronous
-    vector el0_irq          // IRQ
-    vector invalid_handler  // FIQ
-    vector invalid_handler  // SError
-
-    // EL0 32-bit:
-    vector invalid_handler  // Synchronous
-    vector invalid_handler  // IRQ
-    vector invalid_handler  // FIQ
-    vector invalid_handler  // SError
+el1_irq:
+    msr spsel, 0
+    save_regs
+    mov x0, sp
+    bl interrupt_handler
+    mov sp, x0
+    load_regs
+    eret
 
 el0_sync:
     msr spsel, 0
     save_regs
     bl enable_interrupts
     mrs x21, esr_el1
-    lsr x22, x21, #ESR_ELx_EC_SHIFT
-    cmp x22, #ESR_ELx_EC_SVC64
-    beq el0_svc
-    b invalid_handler
-el0_svc:
+    and x21, x21, #ESR_ELx_EC_MASK
+    lsr x21, x21, #ESR_ELx_EC_SHIFT
+    cmp x21, #ESR_ELx_EC_SVC64
+    beq el0_sync_svc
+    bl debug_process_regs
+    b el0_sync_done
+el0_sync_svc:
     mov x0, x8
     mov x1, sp
     bl system_handler
-el0_done:
+el0_sync_done:
     bl disable_interrupts
     load_regs
     eret
@@ -109,23 +116,40 @@ el0_irq:
     load_regs
     eret
 
-el1t_irq:
+.macro inv_entry reason
     msr spsel, 0
     save_regs
     mov x0, sp
-    bl interrupt_handler
-    mov sp, x0
-    load_regs
-    eret
-
-invalid_handler:
-    msr spsel, 0
-    save_regs
-    mov x0, sp
-    mrs x1, esr_el1
-    mrs x2, far_el1
+    mov x1, \reason
+    mrs x2, esr_el1
+    mrs x3, far_el1
     bl debug_process_regs
-    b halt
+    eret
+.endm
+
+el1_sync_invalid:
+    inv_entry #BAD_SYNC
+
+el1_irq_invalid:
+    inv_entry #BAD_IRQ
+
+el1_fiq_invalid:
+    inv_entry #BAD_FIQ
+
+el1_error_invalid:
+    inv_entry #BAD_ERROR
+
+el0_sync_invalid:
+    inv_entry #BAD_SYNC
+
+el0_irq_invalid:
+    inv_entry #BAD_IRQ
+
+el0_fiq_invalid:
+    inv_entry #BAD_FIQ
+
+el0_error_invalid:
+    inv_entry #BAD_ERROR
 
 .globl enable_interrupts
 enable_interrupts:
