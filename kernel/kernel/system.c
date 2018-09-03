@@ -10,7 +10,7 @@ void system_init()
     system_register_call(__NR_write, (syscall_t*) do_write);
 }
 
-void system_handler(unsigned n, process_regs_t* regs)
+void system_handler(process_regs_t* regs, unsigned n)
 {
     assert(n < SYSCALL_COUNT);
 

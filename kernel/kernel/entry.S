@@ -1,4 +1,5 @@
 #include <entry.h>
+#include <memory.h>
 
 .macro vector label
     .balign 0x80
@@ -78,10 +79,24 @@ vector_table:
     add sp, sp, #PROCESS_REGS_SIZE
 .endm
 
+.macro irq_stack_entry
+    ldr x21, =(VA_START | 0x10000)
+    mov sp, x21
+.endm
+
+.macro debug_entry reason
+    mov x0, sp
+    mov x1, \reason
+    mrs x2, esr_el1
+    mrs x3, far_el1
+    bl debug_process_regs
+.endm
+
 el1_irq:
     msr spsel, 0
     save_regs
     mov x0, sp
+    irq_stack_entry
     bl interrupt_handler
     mov sp, x0
     load_regs
@@ -96,11 +111,11 @@ el0_sync:
     lsr x21, x21, #ESR_ELx_EC_SHIFT
     cmp x21, #ESR_ELx_EC_SVC64
     beq el0_sync_svc
-    bl debug_process_regs
+    debug_entry #BAD_SYNC
     b el0_sync_done
 el0_sync_svc:
-    mov x0, x8
-    mov x1, sp
+    mov x0, sp
+    mov x1, x8
     bl system_handler
 el0_sync_done:
     bl disable_interrupts
@@ -111,6 +126,7 @@ el0_irq:
     msr spsel, 0
     save_regs
     mov x0, sp
+    irq_stack_entry
     bl interrupt_handler
     mov sp, x0
     load_regs
@@ -119,11 +135,8 @@ el0_irq:
 .macro inv_entry reason
     msr spsel, 0
     save_regs
-    mov x0, sp
-    mov x1, \reason
-    mrs x2, esr_el1
-    mrs x3, far_el1
-    bl debug_process_regs
+    debug_entry \reason
+    load_regs
     eret
 .endm
 

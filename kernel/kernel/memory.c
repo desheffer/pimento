@@ -11,25 +11,15 @@ static unsigned _page_count = 0;
 static page_t* _pages = 0;
 static unsigned _last_index = 0;
 
-static void* virt_to_phys(void* ptr)
+void memory_init_kernel()
 {
-    return (void*) ((long unsigned) ptr & ~VA_START);
-}
-
-static void* phys_to_virt(void* ptr)
-{
-    return (void*) ((long unsigned) ptr | VA_START);
-}
-
-void memory_init_kernel_table()
-{
-    va_table* tables = (va_table*) virt_to_phys(_heap_start);
+    va_table_t* tables = (va_table_t*) virt_to_phys(_heap_start);
 
     // Reserve space for the tables.
-    _heap_start = (char*) _heap_start + 4 * sizeof(va_table);
+    _heap_start = (char*) _heap_start + 4 * sizeof(va_table_t);
 
     // Zero out the tables.
-    memset(tables, 0, 4 * sizeof(va_table));
+    memset(tables, 0, 4 * sizeof(va_table_t));
 
     // L0 row 0: [0xFFFF000000000000 - 0xFFFF007FFFFFFFFF]
     tables[0][0] = (long unsigned) &tables[1] |
@@ -84,9 +74,9 @@ void memory_init_kernel_table()
         } else if (addr >= (long unsigned) virt_to_phys(&__rodata_start)
             && addr < (long unsigned) virt_to_phys(&__rodata_end)
         ) {
-            flags |= PT_RO | PT_XN;
+            flags |= PT_RO | PT_PXN;
         } else {
-            flags |= PT_XN;
+            flags |= PT_PXN;
         }
 
         tables[3][i] = addr |
@@ -133,6 +123,89 @@ void memory_init()
     _last_index = page_index(pages_end);
 }
 
+void memory_create_process(process_t* process, page_t* init_stack)
+{
+    // @TODO: Allocate a base table only and allocate more memory as requested.
+    va_table_t* l0 = alloc_page();
+    push_back(process->pages, l0);
+    process->ttbr = phys_to_ttbr(l0, process->pid);
+
+    va_table_t* l1 = alloc_page();
+    push_back(process->pages, l1);
+
+    va_table_t* l2 = alloc_page();
+    push_back(process->pages, l2);
+
+    va_table_t* l3_f = alloc_page();
+    push_back(process->pages, l3_f);
+
+    va_table_t* l3_b = alloc_page();
+    push_back(process->pages, l3_b);
+
+    // L0 row 0: [0x0000000000000000 - 0x0000007FFFFFFFFF]
+    (*((va_table_t*) phys_to_virt(l0)))[0] = (long unsigned) l1 |
+        PT_TABLE |
+        PT_AF;
+
+    // L1 row 0: [0x0000000000000000 - 0x000000003FFFFFFF]
+    (*((va_table_t*) phys_to_virt(l1)))[0] = (long unsigned) l2 |
+        PT_TABLE |
+        PT_AF;
+
+    // L2 row 0: [0x0000000000000000 - 0x00000000001FFFFF]
+    (*((va_table_t*) phys_to_virt(l2)))[0] = (long unsigned) l3_f |
+        PT_TABLE |
+        PT_AF;
+
+    // L2 row 511: [0x000000003FE00000 - 0x000000003FFFFFFF]
+    (*((va_table_t*) phys_to_virt(l2)))[511] = (long unsigned) l3_b |
+        PT_TABLE |
+        PT_AF;
+
+    // L3 front rows 0 - 7: [0x0000000000000000 - 0x0000000000008FFF]
+    // @TODO: 16 is a made up, magic number.
+    for (long unsigned i = 0; i < 16; ++i) {
+        void* page = alloc_page();
+        push_back(process->pages, page);
+
+        // @TODO: XN, RO, etc...
+        long unsigned flags = 0;
+
+        (*((va_table_t*) phys_to_virt(l3_f)))[i] = (long unsigned) page |
+            PT_PAGE |
+            flags |
+            PT_AF |
+            PT_USER |
+            PT_ATTR(MT_NORMAL);
+    }
+
+    // L3 back row 511: [0x000000003FFFEFFF - 0x000000003FFFFFFF]
+    (*((va_table_t*) phys_to_virt(l3_b)))[511] = (long unsigned) init_stack |
+        PT_PAGE |
+        PT_AF |
+        PT_USER |
+        PT_XN |
+        PT_ATTR(MT_NORMAL);
+}
+
+void memory_destroy_process(process_t* process)
+{
+    // @TODO: Call free_page() for each entry in process->pages.
+    (void) process;
+}
+
+void memory_switch_mm(process_t* process)
+{
+    asm volatile(
+        "msr ttbr0_el1, %0\n\t"
+        "ic iallu\n\t"
+        "dsb nsh\n\t"
+        "isb"
+        :
+        : "r" (process->ttbr)
+    );
+}
+
 void memory_reserve_range(void* start, void* end)
 {
     unsigned index = page_index(start);
@@ -162,8 +235,7 @@ void* alloc_page()
     leave_critical();
 
     if (ptr) {
-        ptr = phys_to_virt(ptr);
-        memset(ptr, 0, PAGE_SIZE);
+        memset(phys_to_virt(ptr), 0, PAGE_SIZE);
     }
 
     return ptr;
@@ -171,11 +243,11 @@ void* alloc_page()
 
 void free_page(void* ptr)
 {
-    ptr = virt_to_phys(ptr);
     unsigned index = page_index(ptr);
 
     enter_critical();
 
+    assert(index < _page_count);
     assert(_pages[index].allocated);
 
     _pages[index].allocated = 0;

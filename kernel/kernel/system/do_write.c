@@ -4,9 +4,9 @@
 
 void do_write(process_regs_t* regs)
 {
-    int fd = (int) regs->x[0];
-    char* buf = (char*) regs->x[1];
-    size_t count = (size_t) regs->x[2];
+    int fd = (int) regs->regs[0];
+    char* buf = (char*) regs->regs[1];
+    size_t count = (size_t) regs->regs[2];
 
     ssize_t ret = 0;
 
@@ -17,5 +17,5 @@ void do_write(process_regs_t* regs)
         ++ret;
     }
 
-    regs->x[0] = ret;
+    regs->regs[0] = ret;
 }

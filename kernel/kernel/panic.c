@@ -73,18 +73,18 @@ void debug_process_regs(process_regs_t* state, long unsigned reason, long unsign
 
     kprintf("\nRegisters:\n\n");
 
-    kprintf("   spsr = %08x%08x", (unsigned) (state->spsr >> 32), (unsigned) state->spsr);
-    kprintf("   lr   = %08x%08x", (unsigned) (state->lr >> 32), (unsigned) state->lr);
+    kprintf("pstate = %08x%08x", (unsigned) (state->pstate >> 32), (unsigned) state->pstate);
+    kprintf("   pc  = %08x%08x", (unsigned) (state->pc >> 32), (unsigned) state->pc);
     kprintf("\n");
-    kprintf("   esr  = %08x%08x", (unsigned) (esr >> 32), (unsigned) esr);
-    kprintf("   far  = %08x%08x", (unsigned) (far >> 32), (unsigned) far);
+    kprintf("   esr = %08x%08x", (unsigned) (esr >> 32), (unsigned) esr);
+    kprintf("   far = %08x%08x", (unsigned) (far >> 32), (unsigned) far);
     kprintf("\n");
 
-    for (unsigned i = 0; i < NUM_REGS; ++i) {
+    for (unsigned i = 0; i < sizeof(state->regs) / sizeof(state->regs[0]); ++i) {
         if (i % 2 == 0) {
             kprintf("\n");
         }
-        kprintf("   x%-2u  = %08x%08x", i, (unsigned) (state->x[i] >> 32), (unsigned) state->x[i]);
+        kprintf("   x%-2u = %08x%08x", i, (unsigned) (state->regs[i] >> 32), (unsigned) state->regs[i]);
     }
     kprintf("\n");
 

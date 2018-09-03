@@ -1,4 +1,5 @@
 #include <memory.h>
+#include <process.h>
 
 .section ".text.boot"
 
@@ -16,16 +17,13 @@ _start:
     isb
 
     // Change execution level to EL1h.
-    mov x4, #0x3C5
+    mov x4, #PSR_MODE_INIT
     msr spsr_el2, x4
     adr x4, enter_el1
     msr elr_el2, x4
     eret
 
 enter_el1:
-    // Switch to EL1t.
-    msr spsel, 0
-
     // Set up stack pointer.
     adr x4, _start
     mov sp, x4
@@ -39,7 +37,7 @@ enter_el1:
     msr mair_el1, x4
 
     // Set TTBR0 and TTBR1.
-    bl memory_init_kernel_table
+    bl memory_init_kernel
 
     // Set TCR.
     ldr x4, =TCR_EL1
@@ -53,13 +51,12 @@ enter_el1:
     isb
 
     // Jump to virtual memory.
-    adr x4, post_enable_mmu
-    orr x4, x4, #VA_START
+    ldr x4, =post_enable_mmu
     br x4
 
 post_enable_mmu:
     // Move stack pointer to virtual memory.
-    ldr x4, =__start
+    mov x4, sp
     ldr x5, =VA_START
     orr x4, x4, x5
     mov sp, x4

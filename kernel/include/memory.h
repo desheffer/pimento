@@ -7,16 +7,15 @@
 
 #define VA_TABLE_LENGTH 512
 
+#define TCR_ASID16     (0b1UL  << 36) // Use 16 bits of ASID
+#define TCR_TG1_4KB    (0b10UL << 30) // 4KB granule size
+#define TCR_TG0_4KB    (0b00UL << 14) // 4KB granule size
+#define TCR_TxSZ(bits) (((64 - bits) << 16) | ((64 - bits) << 0))
+
 #define TCR_EL1 \
     ( \
-        /* TG1 = 4KB granule size */ \
-        (0b10UL << 30) | \
-        /* T1SZ = Size offset of memory region */ \
-        ((64 - VA_BITS) << 16) | \
-        /* TG0 = 4KB granule size */ \
-        (0b00UL << 14) | \
-        /* T0SZ = Size offset of memory region */ \
-        ((64 - VA_BITS) << 0) \
+        TCR_TxSZ(VA_BITS) | \
+        TCR_ASID16 | TCR_TG1_4KB | TCR_TG0_4KB \
     )
 
 #define MT_DEVICE_nGnRnE 0
@@ -38,23 +37,38 @@
 #define PT_OSH   (0b10UL <<  8) // Outer Shareable
 #define PT_ISH   (0b11UL <<  8) // Inner Shareable
 #define PT_AF    (0b1UL  << 10) // Access flag
-#define PT_XN    (0b11UL << 53) // Execute-never
+#define PT_PXN   (0b1UL  << 53) // Privileged execute-never
+#define PT_XN    (0b1UL  << 54) // Execute-never
 
 #define PT_ATTR(n) ((n) << 2)
 
+#define phys_to_virt(ptr) ((void*) ((long unsigned) (ptr) | VA_START))
+#define virt_to_phys(ptr) ((void*) ((long unsigned) (ptr) & ~VA_START))
+
+#define TTBR_BADDR_MASK 0x7FFFFFFFFFFE
+
+#define ttbr_to_phys(ptr)       ((void*) ((long unsigned) (ptr) & TTBR_BADDR_MASK))
+#define phys_to_ttbr(ptr, asid) (((long unsigned) (asid) << 48) | ((long unsigned) (ptr)))
+
+#define STACK_TOP 0x40000000
+
 #ifndef __ASSEMBLY__
 
+#include <process.h>
 #include <stddef.h>
 
-typedef long unsigned va_table[VA_TABLE_LENGTH];
+typedef long unsigned va_table_t[VA_TABLE_LENGTH];
 
 typedef struct {
     unsigned allocated: 1;
 } page_t;
 
-void memory_init_kernel_table();
+void memory_init_kernel();
 void memory_init();
+void memory_create_process(process_t*, page_t*);
+void memory_destroy_process(process_t*);
 void memory_reserve_range(void*, void*);
+void memory_switch_mm(process_t*);
 
 void* alloc_page();
 void free_page(void*);

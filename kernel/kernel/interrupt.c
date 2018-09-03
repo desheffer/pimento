@@ -1,7 +1,6 @@
 #include <assert.h>
 #include <bcm2837.h>
 #include <interrupt.h>
-#include <scheduler.h>
 
 static interrupt_handler_t* _handlers[NUM_IRQS] = {0};
 static void* _handlers_data[NUM_IRQS] = {0};
@@ -66,5 +65,5 @@ process_regs_t* interrupt_handler(process_regs_t* state)
         }
     }
 
-    return scheduler_next(state);
+    return process_context_switch(state);
 }

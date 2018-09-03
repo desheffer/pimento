@@ -16,6 +16,9 @@ SECTIONS
     __rodata_start = .;
     .rodata : {
         *(.rodata)
+        __shell_start = .;
+        */shell.bin(.data)
+        __shell_end = .;
     }
     . = ALIGN(4096);
     __rodata_end = .;
