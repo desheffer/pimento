@@ -1,10 +1,9 @@
-#include <bcm2837.h>
 #include <serial.h>
 
 void serial_init()
 {
     // Enable the mini UART.
-    *AUX_ENABLES |= 0x1;
+    *AUX_ENABLES |= AUX_ENABLES_MU;
 
     // Disable interrupts.
     *AUX_MU_IER = 0;
@@ -13,7 +12,7 @@ void serial_init()
     *AUX_MU_CNTL = 0;
 
     // Use 8-bit mode.
-    *AUX_MU_LCR = 0x3;
+    *AUX_MU_LCR = AUX_MU_LCR_8BIT;
 
     // Set the line to high.
     *AUX_MU_MCR = 0;
@@ -24,11 +23,9 @@ void serial_init()
     // clock_freq = 250,000,000
     *AUX_MU_BAUD = 270;
 
-    // Set GPIO 14 (bits 12-14) to take alternative function 5 (0b010).
-    *GPFSEL1 = (*GPFSEL1 & ~(0b111 << 12)) | (0b010 << 12);
-
-    // Set GPIO 15 (bits 15-17) to take alternative function 5 (0b010).
-    *GPFSEL1 = (*GPFSEL1 & ~(0b111 << 15)) | (0b010 << 15);
+    // Set GPIO 14/15 to take alternative function 5.
+    *GPFSEL1 = (*GPFSEL1 & GPFSEL1_FSEL14_MASK) | GPFSEL1_FSEL14_F5;
+    *GPFSEL1 = (*GPFSEL1 & GPFSEL1_FSEL15_MASK) | GPFSEL1_FSEL15_F5;
 
     // Disable pull up/down.
     *GPPUD = 0;
@@ -38,8 +35,8 @@ void serial_init()
         asm volatile("nop");
     }
 
-    // Enable GPIO 14 and GPIO 15.
-    *GPPUDCLK0 = (0x1 << 14) | (0x1 << 15);
+    // Enable GPIO 14/15.
+    *GPPUDCLK0 = GPPUDCLK0_PUD14 | GPPUDCLK0_PUD15;
 
     // Wait 150 cycles for the control signal.
     for (unsigned i = 150; i > 0; --i) {
@@ -49,17 +46,15 @@ void serial_init()
     // Flush GPIO settings.
     *GPPUDCLK0 = 0;
 
-    // Enable the transmitter and receiver.
-    *AUX_MU_CNTL = 0x3;
-
-    // Clear the receive and transmit FIFOs.
-    *AUX_MU_IIR = 0x6;
+    // Enable the receiver and transmitter.
+    *AUX_MU_CNTL = AUX_MU_CNTL_RX | AUX_MU_CNTL_TX;
+    *AUX_MU_IIR = AUX_MU_IIR_RX | AUX_MU_IIR_TX;
 }
 
 char serial_getc()
 {
-    // Wait until receive FIFO is not empty.
-    while (!(*AUX_MU_LSR & 0x01));
+    // Wait until receive FIFO is ready.
+    while (!(*AUX_MU_LSR & AUX_MU_LSR_RX_READY));
 
     char r = *AUX_MU_IO;
 
@@ -67,6 +62,7 @@ char serial_getc()
         r = '\n';
     }
 
+    // Echo the character we received.
     serial_putc(r);
 
     return r;
@@ -75,7 +71,7 @@ char serial_getc()
 void serial_putc(char c)
 {
     // Wait until transmit FIFO is empty.
-    while (!(*AUX_MU_LSR & 0x20));
+    while (!(*AUX_MU_LSR & AUX_MU_LSR_TX_EMPTY));
 
     *AUX_MU_IO = c;
 

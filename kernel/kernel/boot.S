@@ -1,3 +1,4 @@
+#include <boot.h>
 #include <memory.h>
 #include <process.h>
 
@@ -7,12 +8,12 @@
 _start:
     // Isolate core 0.
     mrs x4, mpidr_el1
-    and x4, x4, #(0b11 << 0)
+    and x4, x4, #MPIDR_AFF0_MASK
     cbnz x4, halt
 
     // Enable AArch64 in EL1.
     mrs x4, hcr_el2
-    orr x4, x4, #(0b1 << 31)
+    orr x4, x4, #HCR_RW
     msr hcr_el2, x4
     isb
 
@@ -29,7 +30,7 @@ enter_el1:
     mov sp, x4
 
     // Do not trap SIMD/FP.
-    mov x4, #(0b11 << 20)
+    mov x4, #CPACR_CP10
     msr cpacr_el1, x4
 
     // Set up memory attributes.
@@ -46,7 +47,7 @@ enter_el1:
 
     // Enable MMU.
     mrs x4, sctlr_el1
-    orr x4, x4, #(0b1 << 0)
+    orr x4, x4, #SCTLR_M
     msr sctlr_el1, x4
     isb
 

@@ -1,5 +1,4 @@
 #include <assert.h>
-#include <bcm2837.h>
 #include <interrupt.h>
 
 static interrupt_handler_t* _handlers[NUM_IRQS] = {0};
@@ -9,21 +8,21 @@ static void interrupt_disable(irq_number_t num)
 {
     assert(num < NUM_IRQS);
 
-    *CORE0_TIMERS_CNTL ^= (1 << num);
+    *CORE0_TIMERS_CNTL ^= (0b1 << num);
 }
 
 static void interrupt_enable(irq_number_t num)
 {
     assert(num < NUM_IRQS);
 
-    *CORE0_TIMERS_CNTL |= (1 << num);
+    *CORE0_TIMERS_CNTL |= (0b1 << num);
 }
 
 static int interrupt_pending(unsigned num)
 {
     assert(num < NUM_IRQS);
 
-    return *CORE0_IRQ & (1 << num);
+    return *CORE0_IRQ & (0b1 << num);
 }
 
 void interrupt_init()
