@@ -38,7 +38,7 @@ enter_el1:
     msr mair_el1, x4
 
     // Set TTBR0 and TTBR1.
-    bl memory_init_kernel
+    bl memory_init_mmap
 
     // Set TCR.
     ldr x4, =TCR_EL1

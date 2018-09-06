@@ -9,7 +9,7 @@
 extern char __shell_start;
 extern char __shell_end;
 
-// @XXX: Move this block somewhere else...
+// @TODO: Move this block somewhere else...
 #include <assert.h>
 #include <string.h>
 static void init_shell()

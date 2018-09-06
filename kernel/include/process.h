@@ -6,6 +6,8 @@
 
 #define PNAME_LENGTH 32
 
+#define STACK_TOP 0x40000000
+
 #ifndef __ASSEMBLY__
 
 #include <list.h>

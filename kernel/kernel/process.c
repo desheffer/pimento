@@ -60,7 +60,7 @@ process_regs_t* process_context_switch(process_regs_t* regs)
         _current_process = (process_t*) pop_front(_process_queue);
         _current_process->state = running;
 
-        memory_switch_mm(_current_process);
+        mmap_switch(_current_process);
 
         timer_reset();
     }
@@ -89,18 +89,25 @@ process_t* process_create(const char* pname, const void* fn, const void* data)
     // Initialize list of allocated pages.
     process->pages = malloc(sizeof(list_t));
 
+    // Initialize memory map.
+    mmap_create(process);
+
     // Allocate the first page of the stack.
-    void* stack_begin = alloc_page();
-    push_back(process->pages, stack_begin);
+    void* stack_begin = alloc_user_page(process, (void*) (STACK_TOP - PAGE_SIZE));
     void* stack_end = (char*) stack_begin + PAGE_SIZE;
+
+    // @TODO: Allocate dynamically.
+    alloc_user_page(process, (void*) 0x0000);
+    alloc_user_page(process, (void*) 0x1000);
+    alloc_user_page(process, (void*) 0x2000);
+    alloc_user_page(process, (void*) 0x3000);
+    alloc_user_page(process, (void*) 0x4000);
 
     // Initialize startup parameters.
     process->regs = (process_regs_t*) phys_to_virt(stack_end) - 1;
     process->regs->pstate = PSR_MODE_KTHREAD;
     process->regs->pc = (long unsigned) fn;
     process->regs->regs[0] = (long unsigned) data;
-
-    memory_create_process(process, stack_begin);
 
     // Add it to the process list and scheduling queue.
     push_back(_process_list, process);
@@ -124,7 +131,7 @@ void process_destroy(process_t* process)
 
     assert(process->state == stopping);
 
-    memory_destroy_process(process);
+    // @TODO: Call free_page() for each entry in process->pages.
 
     remove(_process_list, process);
 

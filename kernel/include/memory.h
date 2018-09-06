@@ -1,11 +1,15 @@
 #pragma once
 
 #define PAGE_SIZE 4096
+#define PAGE_MASK (0xFFFFFFFFFFFFFFFF - (PAGE_SIZE - 1))
 
 #define VA_BITS  48
 #define VA_START (0xFFFFFFFFFFFFFFFF - ((0x1UL << VA_BITS) - 1))
 
 #define VA_TABLE_LENGTH 512
+
+#define VA_TABLE_TABLE_ADDR_MASK 0xFFFFFFFFF000
+#define VA_TABLE_PAGE_ADDR_MASK  0xFFFFFFFFF000
 
 #define TCR_ASID16     (0b1UL  << 36) // Use 16 bits of ASID
 #define TCR_TG1_4KB    (0b10UL << 30) // 4KB granule size
@@ -50,7 +54,7 @@
 #define ttbr_to_phys(ptr)       ((void*) ((long unsigned) (ptr) & TTBR_BADDR_MASK))
 #define phys_to_ttbr(ptr, asid) (((long unsigned) (asid) << 48) | ((long unsigned) (ptr)))
 
-#define STACK_TOP 0x40000000
+#define va_table_to_virt(pa) (*((va_table_t*) phys_to_virt(pa)))
 
 #ifndef __ASSEMBLY__
 
@@ -65,13 +69,20 @@ typedef struct {
 
 void memory_init_kernel();
 void memory_init();
-void memory_create_process(process_t*, page_t*);
-void memory_destroy_process(process_t*);
 void memory_reserve_range(void*, void*);
-void memory_switch_mm(process_t*);
+
+void mmap_create(process_t*);
+void mmap_map_page(process_t*, void*, void*);
+void mmap_switch(process_t*);
 
 void* alloc_page();
+void* alloc_kernel_page();
+void* alloc_user_page(process_t*, void*);
+
 void free_page(void*);
+void free_kernel_page(void*);
+
+void switch_ttbr(long unsigned);
 
 extern char __start;
 extern char __text_start;

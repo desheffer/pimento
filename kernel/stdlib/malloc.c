@@ -7,5 +7,5 @@ void* malloc(size_t size)
     assert(size <= PAGE_SIZE);
 
     // @TODO: Allocate the appropriate size.
-    return phys_to_virt(alloc_page());
+    return alloc_kernel_page();
 }

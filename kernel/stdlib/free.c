@@ -4,5 +4,5 @@
 void free(void* ptr)
 {
     // @TODO: Free the appropriate size.
-    free_page(virt_to_phys(ptr));
+    free_kernel_page(ptr);
 }
