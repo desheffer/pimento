@@ -10,9 +10,9 @@ SRC     := .
 
 INCLUDES := $(shell find $(INCLUDE) -name '*.h')
 
-OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.o, $(shell find $(SRC) -name '*.S'))
-OBJECTS += $(patsubst $(SRC)/%.c, $(BUILD)/%.o, $(shell find $(SRC) -name '*.c'))
-OBJECTS += $(patsubst $(SRC)/%.cc, $(BUILD)/%.o, $(shell find $(SRC) -name '*.cc'))
+OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%_S.o, $(shell find $(SRC) -name '*.S'))
+OBJECTS += $(patsubst $(SRC)/%.c, $(BUILD)/%_c.o, $(shell find $(SRC) -name '*.c'))
+OBJECTS += $(patsubst $(SRC)/%.cc, $(BUILD)/%_cc.o, $(shell find $(SRC) -name '*.cc'))
 
 BASEFLAGS := -O2 -fpic -nostdlib
 BASEFLAGS += -nostartfiles -ffreestanding -nodefaultlibs
@@ -44,10 +44,10 @@ clean:
 $(BUILD)/$(LIB).a: $(OBJECTS)
 	$(AR) rcs $@ $(OBJECTS)
 
-$(BUILD)/%.o: $(SRC)/%.S $(INCLUDES)
+$(BUILD)/%_S.o: $(SRC)/%.S $(INCLUDES)
 	@mkdir -p $(@D)
 	$(CC) $(ASFLAGS) -c $< -o $@
 
-$(BUILD)/%.o: $(SRC)/%.c $(INCLUDES)
+$(BUILD)/%_c.o: $(SRC)/%.c $(INCLUDES)
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@

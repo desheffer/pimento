@@ -12,7 +12,7 @@ SRC     := .
 
 INCLUDES := $(shell find $(INCLUDE) -name '*.h')
 
-OBJECTS += $(patsubst $(SRC)/%.c, $(BUILD)/%.o, $(shell find $(SRC) -name '*.c'))
+OBJECTS += $(patsubst $(SRC)/%.c, $(BUILD)/%_c.o, $(shell find $(SRC) -name '*.c'))
 OBJECTS += $(LIBC)/libc.a
 
 BASEFLAGS := -O2 -fpic -nostdlib
@@ -48,6 +48,6 @@ $(BUILD)/$(IMG).img: $(BUILD)/$(IMG).elf
 $(BUILD)/$(IMG).elf: $(OBJECTS) link-aarch64-elf.ld
 	$(CC) $(LDFLAGS) $(OBJECTS) -Tlink-aarch64-elf.ld -lgcc -o $@
 
-$(BUILD)/%.o: $(SRC)/%.c $(INCLUDES)
+$(BUILD)/%_c.o: $(SRC)/%.c $(INCLUDES)
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@

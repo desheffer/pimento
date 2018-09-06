@@ -14,12 +14,12 @@ TEST_INCLUDE := include
 INCLUDES := $(shell find $(INCLUDE) -name '*.h')
 INCLUDES += $(shell find $(TEST_INCLUDE) -name '*.h')
 
-OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.o, $(shell find $(SRC) -name '*.S'))
-OBJECTS += $(patsubst $(SRC)/%.c, $(BUILD)/%.o, $(shell find $(SRC) -name '*.c'))
-OBJECTS += $(patsubst $(TEST_SRC)/%.c, $(BUILD)/test/%.o, $(shell find $(TEST_SRC) -name '*.c'))
+OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%_S.o, $(shell find $(SRC) -name '*.S'))
+OBJECTS += $(patsubst $(SRC)/%.c, $(BUILD)/%_c.o, $(shell find $(SRC) -name '*.c'))
+OBJECTS += $(patsubst $(TEST_SRC)/%.c, $(BUILD)/test/%_c.o, $(shell find $(TEST_SRC) -name '*.c'))
 OBJECTS += $(LIBC)/libc.a
 
-OBJECTS := $(filter-out $(BUILD)/kernel/main.o, $(OBJECTS))
+OBJECTS := $(filter-out $(BUILD)/kernel/main_c.o, $(OBJECTS))
 
 BASEFLAGS := -O2 -fpic -nostdlib
 BASEFLAGS += -nostartfiles -ffreestanding -nodefaultlibs
@@ -54,14 +54,14 @@ $(BUILD)/$(IMG).img: $(BUILD)/$(IMG).elf
 $(BUILD)/$(IMG).elf: $(OBJECTS) ../kernel/link-aarch64-elf.ld
 	$(CC) $(LDFLAGS) $(OBJECTS) -T../kernel/link-aarch64-elf.ld -lgcc -o $@
 
-$(BUILD)/%.o: $(SRC)/%.S
+$(BUILD)/%_S.o: $(SRC)/%.S
 	@mkdir -p $(@D)
 	$(CC) $(ASFLAGS) -c $< -o $@
 
-$(BUILD)/%.o: $(SRC)/%.c $(INCLUDES)
+$(BUILD)/%_c.o: $(SRC)/%.c $(INCLUDES)
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD)/test/%.o: $(TEST_SRC)/%.c $(INCLUDES)
+$(BUILD)/test/%_c.o: $(TEST_SRC)/%.c $(INCLUDES)
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
