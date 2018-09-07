@@ -9,7 +9,7 @@
 .globl vector_table
 .balign 0x800
 vector_table:
-    vector el1_sync_invalid     // Synchronous EL1t
+    vector el1_sync             // Synchronous EL1t
     vector el1_irq              // IRQ EL1t
     vector el1_fiq_invalid      // FIQ EL1t
     vector el1_error_invalid    // SError EL1t
@@ -92,6 +92,26 @@ vector_table:
     bl debug_process_regs
 .endm
 
+el1_sync:
+    msr spsel, 0
+    save_regs
+    bl enable_interrupts
+    mrs x21, esr_el1
+    and x21, x21, #ESR_ELx_EC_MASK
+    lsr x21, x21, #ESR_ELx_EC_SHIFT
+    cmp x21, #ESR_ELx_EC_DABT_CUR
+    beq el1_sync_dabt
+    debug_entry #BAD_SYNC
+    b el1_sync_done
+el1_sync_dabt:
+    mrs x0, far_el1
+    bl data_abort_handler
+    b el1_sync_done
+el1_sync_done:
+    bl disable_interrupts
+    load_regs
+    eret
+
 el1_irq:
     msr spsel, 0
     save_regs
@@ -111,12 +131,19 @@ el0_sync:
     lsr x21, x21, #ESR_ELx_EC_SHIFT
     cmp x21, #ESR_ELx_EC_SVC64
     beq el0_sync_svc
+    cmp x21, #ESR_ELx_EC_DABT_LOW
+    beq el0_sync_dabt
     debug_entry #BAD_SYNC
     b el0_sync_done
 el0_sync_svc:
     mov x0, sp
     mov x1, x8
     bl system_handler
+    b el0_sync_done
+el0_sync_dabt:
+    mrs x0, far_el1
+    bl data_abort_handler
+    b el0_sync_done
 el0_sync_done:
     bl disable_interrupts
     load_regs

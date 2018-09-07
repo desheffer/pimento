@@ -84,6 +84,8 @@ void free_kernel_page(void*);
 
 void switch_ttbr(long unsigned);
 
+void data_abort_handler(void*);
+
 extern char __start;
 extern char __text_start;
 extern char __text_end;

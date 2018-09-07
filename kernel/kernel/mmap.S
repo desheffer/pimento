@@ -1,5 +1,3 @@
-.section ".text.boot"
-
 .globl switch_ttbr
 switch_ttbr:
     msr ttbr0_el1, x0

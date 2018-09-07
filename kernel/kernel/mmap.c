@@ -77,3 +77,10 @@ void* alloc_user_page(process_t* process, void* va)
 
     return phys_to_virt(pa);
 }
+
+void data_abort_handler(void* va)
+{
+    process_t* process = process_current();
+
+    alloc_user_page(process, va);
+}

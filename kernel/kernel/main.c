@@ -3,27 +3,18 @@
 #include <memory.h>
 #include <process.h>
 #include <serial.h>
+#include <string.h>
 #include <system.h>
 #include <timer.h>
 
 extern char __shell_start;
 extern char __shell_end;
 
-// @TODO: Move this block somewhere else...
-#include <assert.h>
-#include <string.h>
 static void init_shell()
 {
     memcpy(0x0, &__shell_start, &__shell_end - &__shell_start);
 
-    asm volatile(
-        "msr elr_el1, %0\n\t"
-        "msr spsr_el1, %1\n\t"
-        "mov sp, %2\n\t"
-        "eret"
-        :
-        : "r" (0x0), "r" (PSR_MODE_USER), "r" (STACK_TOP)
-    );
+    move_to_user_mode(0x0, STACK_TOP);
 }
 
 void kernel_main()
