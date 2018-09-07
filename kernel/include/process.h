@@ -37,12 +37,11 @@ typedef struct {
 } process_t;
 
 void process_init();
+unsigned process_assign_pid();
 process_regs_t* process_context_switch(process_regs_t*);
 unsigned process_count();
-process_t* process_create(const char*, const void*, const void*);
 process_t* process_current();
 void process_destroy(process_t*);
-
-void move_to_user_mode(void*, void*);
+void process_enqueue(process_t*);
 
 #endif

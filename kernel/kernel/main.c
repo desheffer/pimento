@@ -1,3 +1,4 @@
+#include <fork.h>
 #include <interrupt.h>
 #include <kstdio.h>
 #include <memory.h>
@@ -12,9 +13,9 @@ extern char __shell_end;
 
 static void init_shell()
 {
-    memcpy(0x0, &__shell_start, &__shell_end - &__shell_start);
+    memcpy((void*) 0x0, &__shell_start, &__shell_end - &__shell_start);
 
-    move_to_user_mode(0x0, STACK_TOP);
+    move_to_user_mode((void*) 0x0, (void*) STACK_TOP);
 }
 
 void kernel_main()
@@ -34,7 +35,7 @@ void kernel_main()
         "\n\n"
     );
 
-    process_create("shell", &init_shell, 0);
+    process_create("shell", &init_shell, (void*) 0x0);
 
     while (process_count() > 1) {
         asm volatile("wfi");
