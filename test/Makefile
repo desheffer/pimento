@@ -1,6 +1,7 @@
 TOOLCHAIN ?= aarch64-none-elf
 CC        := $(TOOLCHAIN)-gcc
 OBJCOPY   := $(TOOLCHAIN)-objcopy
+OBJDUMP   := $(TOOLCHAIN)-objdump
 
 IMG := kernel8
 
@@ -21,21 +22,11 @@ OBJECTS += $(LIBC)/libc.a
 
 OBJECTS := $(filter-out $(BUILD)/kernel/main_c.o, $(OBJECTS))
 
-BASEFLAGS := -O2 -fpic -nostdlib
-BASEFLAGS += -nostartfiles -ffreestanding -nodefaultlibs
-BASEFLAGS += -fno-builtin -fomit-frame-pointer -mcpu=cortex-a53
-WARNFLAGS := -Wall -Wextra -Wshadow -Wcast-align -Wwrite-strings
-WARNFLAGS += -Wredundant-decls -Winline
-WARNFLAGS += -Wno-attributes -Wno-deprecated-declarations
-WARNFLAGS += -Wno-div-by-zero -Wno-endif-labels -Wfloat-equal
-WARNFLAGS += -Wformat=2 -Wno-format-extra-args -Winit-self
-WARNFLAGS += -Winvalid-pch -Wmissing-format-attribute
-WARNFLAGS += -Wmissing-include-dirs -Wno-multichar
-WARNFLAGS += -Wredundant-decls -Wshadow
-WARNFLAGS += -Wno-sign-compare -Wswitch -Wsystem-headers
-WARNFLAGS += -Wno-pragmas -Wno-unused-but-set-parameter
-WARNFLAGS += -Wno-unused-but-set-variable -Wno-unused-result
-WARNFLAGS += -Wwrite-strings -Wdisabled-optimization -Wpointer-arith
+BASEFLAGS := -O2 -nostdlib -nostartfiles
+BASEFLAGS += -ffreestanding -fomit-frame-pointer
+WARNFLAGS := -Wall -Wextra -Wformat=2 -Wcast-align -Wpointer-arith
+WARNFLAGS += -Wredundant-decls -Wshadow -Wwrite-strings
+WARNFLAGS += -Werror=implicit-function-declaration
 INCFLAGS  := -I$(TEST_INCLUDE) -I$(INCLUDE) -I$(LIBC)/../include
 ASFLAGS   := $(INCFLAGS) -D__ASSEMBLY__
 CFLAGS    := $(BASEFLAGS) $(WARNFLAGS) $(INCFLAGS)
@@ -50,6 +41,7 @@ clean:
 
 $(BUILD)/$(IMG).img: $(BUILD)/$(IMG).elf
 	$(OBJCOPY) $(BUILD)/$(IMG).elf -O binary $@
+	$(OBJDUMP) -D $(BUILD)/$(IMG).elf > $(BUILD)/$(IMG).list
 
 $(BUILD)/$(IMG).elf: $(OBJECTS) ../kernel/link-aarch64-elf.ld
 	$(CC) $(LDFLAGS) $(OBJECTS) -T../kernel/link-aarch64-elf.ld -lgcc -o $@

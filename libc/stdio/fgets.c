@@ -5,7 +5,7 @@ char* fgets(char* str, int num, FILE* stream)
 {
     (void) stream;
 
-    unsigned idx = 0;
+    int idx = 0;
     char c;
 
     while (idx < num - 1) {
