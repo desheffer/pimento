@@ -23,7 +23,7 @@ typedef void interrupt_handler_t(void*);
 void interrupt_init();
 void interrupt_connect(irq_number_t, interrupt_handler_t*, void*);
 void interrupt_disconnect(irq_number_t);
-process_regs_t* interrupt_handler(process_regs_t* state);
+void* interrupt_handler(void*);
 
 void disable_interrupts();
 void enable_interrupts();

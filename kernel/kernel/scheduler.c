@@ -1,10 +1,10 @@
 #include <assert.h>
 #include <fork.h>
 #include <list.h>
+#include <limits.h>
 #include <memory.h>
-#include <process.h>
+#include <scheduler.h>
 #include <stdlib.h>
-#include <string.h>
 #include <synchronize.h>
 #include <timer.h>
 
@@ -14,7 +14,7 @@ static list_t* _process_list = 0;
 static list_t* _process_queue = 0;
 static short _scheduling_queued = 0;
 
-static void process_create_init()
+static void scheduler_create_init()
 {
     _current_process = process_create("init", 0, 0);
     _current_process->state = running;
@@ -22,12 +22,12 @@ static void process_create_init()
     pop_front(_process_queue);
 }
 
-static void process_tick()
+static void scheduler_tick()
 {
     _scheduling_queued = 1;
 }
 
-void process_init()
+void scheduler_init()
 {
     _process_list = malloc(sizeof(list_t));
     _process_list->front = 0;
@@ -37,26 +37,28 @@ void process_init()
     _process_queue->front = 0;
     _process_queue->back = 0;
 
-    process_create_init();
+    scheduler_create_init();
 
-    timer_connect(process_tick, 0);
+    timer_connect(scheduler_tick, 0);
     timer_reset();
 }
 
-unsigned process_assign_pid()
+short unsigned scheduler_assign_pid()
 {
     enter_critical();
 
     unsigned pid = _next_pid++;
+
+    assert(pid <= USHRT_MAX);
 
     leave_critical();
 
     return pid;
 }
 
-process_regs_t* process_context_switch(process_regs_t* regs)
+void* scheduler_context_switch(void* sp)
 {
-    _current_process->regs = regs;
+    _current_process->sp = sp;
 
     if (_scheduling_queued) {
         _scheduling_queued = 0;
@@ -65,7 +67,7 @@ process_regs_t* process_context_switch(process_regs_t* regs)
             _current_process->state = sleeping;
             push_back(_process_queue, _current_process);
         } else if (_current_process->state == stopping) {
-            process_destroy(_current_process);
+            scheduler_destroy(_current_process);
             free(_current_process);
         }
 
@@ -77,35 +79,34 @@ process_regs_t* process_context_switch(process_regs_t* regs)
         timer_reset();
     }
 
-    return _current_process->regs;
+    return _current_process->sp;
 }
 
-unsigned process_count()
+unsigned scheduler_count()
 {
     return count(_process_list);
 }
 
-process_t* process_current()
+process_t* scheduler_current()
 {
     assert(_current_process);
 
     return _current_process;
 }
 
-void process_destroy(process_t* process)
+void scheduler_destroy(process_t* process)
 {
     enter_critical();
 
     assert(process->state == stopping);
 
-    // @TODO: Call free_page() for each entry in process->pages.
-
     remove(_process_list, process);
+    process_destroy(process);
 
     leave_critical();
 }
 
-void process_enqueue(process_t* process)
+void scheduler_enqueue(process_t* process)
 {
     push_back(_process_list, process);
     push_front(_process_queue, process);

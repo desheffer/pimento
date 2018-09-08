@@ -1,5 +1,6 @@
 #include <list.h>
 #include <memory.h>
+#include <scheduler.h>
 #include <stdlib.h>
 #include <string.h>
 #include <synchronize.h>
@@ -13,7 +14,7 @@ process_t* process_create(const char* pname, const void* fn, const void* data)
     memset(process, 0, sizeof(process_t));
 
     // Assign a pid and basic information.
-    process->pid = process_assign_pid();
+    process->pid = scheduler_assign_pid();
     process->state = created;
     strncpy(process->pname, pname, PNAME_LENGTH);
 
@@ -28,15 +29,24 @@ process_t* process_create(const char* pname, const void* fn, const void* data)
     void* stack_end = (char*) stack_begin + PAGE_SIZE;
 
     // Initialize startup parameters.
-    process->regs = (process_regs_t*) phys_to_virt(stack_end) - 1;
-    process->regs->pstate = PSR_MODE_KTHREAD;
-    process->regs->pc = (long unsigned) fn;
-    process->regs->regs[0] = (long unsigned) data;
+    process_regs_t* regs = (process_regs_t*) phys_to_virt(stack_end) - 1;
+    regs->pstate = PSR_MODE_KTHREAD;
+    regs->pc = (long unsigned) fn;
+    regs->regs[0] = (long unsigned) data;
+    process->sp = regs;
 
     // Add it to the process list and scheduling queue.
-    process_enqueue(process);
+    scheduler_enqueue(process);
 
     leave_critical();
 
     return process;
+}
+
+void process_destroy(process_t* process)
+{
+    (void) process;
+
+    // @TODO: Call free_page() for each entry in process->pages.
+    // @TODO: Free process.
 }

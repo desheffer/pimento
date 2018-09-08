@@ -31,17 +31,9 @@ typedef struct {
     short unsigned pid;
     process_state_t state;
     char pname[PNAME_LENGTH];
-    process_regs_t* regs;
-    long unsigned ttbr;
     list_t* pages;
+    long unsigned ttbr;
+    void* sp;
 } process_t;
-
-void process_init();
-unsigned process_assign_pid();
-process_regs_t* process_context_switch(process_regs_t*);
-unsigned process_count();
-process_t* process_current();
-void process_destroy(process_t*);
-void process_enqueue(process_t*);
 
 #endif

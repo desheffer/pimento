@@ -2,7 +2,7 @@
 #include <interrupt.h>
 #include <kstdio.h>
 #include <memory.h>
-#include <process.h>
+#include <scheduler.h>
 #include <serial.h>
 #include <string.h>
 #include <system.h>
@@ -25,7 +25,7 @@ void kernel_main()
     system_init();
     interrupt_init();
     timer_init();
-    process_init();
+    scheduler_init();
 
     kputs(
         "\n"
@@ -37,7 +37,7 @@ void kernel_main()
 
     process_create("shell", &init_shell, (void*) 0x0);
 
-    while (process_count() > 1) {
+    while (scheduler_count() > 1) {
         asm volatile("wfi");
     }
 

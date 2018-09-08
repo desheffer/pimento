@@ -1,3 +1,4 @@
+#include <scheduler.h>
 #include <synchronize.h>
 #include <system.h>
 
@@ -10,7 +11,7 @@ void do_exit(process_regs_t* regs)
 
     enter_critical();
 
-    process_t* process = process_current();
+    process_t* process = scheduler_current();
     process->state = stopping;
 
     leave_critical();

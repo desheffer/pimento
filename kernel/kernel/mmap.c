@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <memory.h>
+#include <scheduler.h>
 #include <stdlib.h>
 
 void mmap_create(process_t* process)
@@ -80,7 +81,7 @@ void* alloc_user_page(process_t* process, void* va)
 
 void data_abort_handler(void* va)
 {
-    process_t* process = process_current();
+    process_t* process = scheduler_current();
 
     alloc_user_page(process, va);
 }
