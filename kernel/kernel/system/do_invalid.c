@@ -3,8 +3,6 @@
 
 void do_invalid(process_regs_t* regs)
 {
-    (void) regs;
-
-    kputs("Invalid syscall.\n");
+    kprintf("Invalid syscall (%#x)\n", (unsigned) regs->regs[8]);
     asm volatile("brk #0");
 }

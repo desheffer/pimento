@@ -1,8 +1,13 @@
 #pragma once
 
-#define __NR_read 63
-#define __NR_write 64
-#define __NR_exit 93
+#define __NR_ioctl           0x1D
+#define __NR_read            0x3F
+#define __NR_write           0x40
+#define __NR_readv           0x41
+#define __NR_writev          0x42
+#define __NR_exit            0x5D
+#define __NR_exit_group      0x5E
+#define __NR_set_tid_address 0x60
 
 long _syscall(long, long, long, long, long, long, long);
 

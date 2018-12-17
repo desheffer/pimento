@@ -13,8 +13,13 @@ void do_read(process_regs_t* regs)
     assert(fd == 0);
 
     while (count--) {
-        *(buf++) = serial_getc();
+        char c = serial_getc();
+        *(buf++) = c;
         ++ret;
+
+        if (c == '\n') {
+            break;
+        }
     }
 
     regs->regs[0] = ret;

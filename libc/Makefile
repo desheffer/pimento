@@ -1,4 +1,4 @@
-TOOLCHAIN ?= aarch64-none-elf
+TOOLCHAIN ?= aarch64-linux
 CC        := $(TOOLCHAIN)-gcc
 AR        := $(TOOLCHAIN)-ar
 
@@ -22,7 +22,7 @@ WARNFLAGS += -Werror=implicit-function-declaration
 INCFLAGS  := -I$(INCLUDE)
 ASFLAGS   := $(INCFLAGS) -D__ASSEMBLY__
 CFLAGS    := $(BASEFLAGS) $(WARNFLAGS) $(INCFLAGS)
-LDFLAGS   := $(BASEFLAGS)
+LDFLAGS   := $(BASEFLAGS) -lgcc
 
 .PHONY: all clean
 

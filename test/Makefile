@@ -1,4 +1,4 @@
-TOOLCHAIN ?= aarch64-none-elf
+TOOLCHAIN ?= aarch64-linux
 CC        := $(TOOLCHAIN)-gcc
 OBJCOPY   := $(TOOLCHAIN)-objcopy
 OBJDUMP   := $(TOOLCHAIN)-objdump
@@ -30,7 +30,7 @@ WARNFLAGS += -Werror=implicit-function-declaration
 INCFLAGS  := -I$(TEST_INCLUDE) -I$(INCLUDE) -I$(LIBC)/../include
 ASFLAGS   := $(INCFLAGS) -D__ASSEMBLY__
 CFLAGS    := $(BASEFLAGS) $(WARNFLAGS) $(INCFLAGS)
-LDFLAGS   := $(BASEFLAGS)
+LDFLAGS   := $(BASEFLAGS) -lgcc
 
 .PHONY: all clean
 
@@ -44,7 +44,7 @@ $(BUILD)/$(IMG).img: $(BUILD)/$(IMG).elf
 	$(OBJDUMP) -D $(BUILD)/$(IMG).elf > $(BUILD)/$(IMG).list
 
 $(BUILD)/$(IMG).elf: $(OBJECTS) ../kernel/link-aarch64-elf.ld
-	$(CC) $(LDFLAGS) $(OBJECTS) -T../kernel/link-aarch64-elf.ld -lgcc -o $@
+	$(CC) $(LDFLAGS) $(OBJECTS) -T../kernel/link-aarch64-elf.ld -o $@
 
 $(BUILD)/%_S.o: $(SRC)/%.S
 	@mkdir -p $(@D)

@@ -49,8 +49,8 @@ vector_table:
     stp x28, x29, [sp, #16 * 14]
     str x30, [sp, #16 * 15]
 
-    mrs x22, elr_el1
     mrs x21, spsr_el1
+    mrs x22, elr_el1
     stp x21, x22, [sp, #16 * 16]
 .endm
 

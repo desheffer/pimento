@@ -1,4 +1,4 @@
-TOOLCHAIN ?= aarch64-none-elf
+TOOLCHAIN ?= aarch64-linux
 CC        := $(TOOLCHAIN)-gcc
 OBJCOPY   := $(TOOLCHAIN)-objcopy
 OBJDUMP   := $(TOOLCHAIN)-objdump
@@ -25,7 +25,7 @@ WARNFLAGS += -Werror=implicit-function-declaration
 INCFLAGS  := -I$(INCLUDE) -I$(LIBC)/../include
 ASFLAGS   := $(INCFLAGS) -D__ASSEMBLY__
 CFLAGS    := $(BASEFLAGS) $(WARNFLAGS) $(INCFLAGS)
-LDFLAGS   := $(BASEFLAGS)
+LDFLAGS   := $(BASEFLAGS) -lgcc
 
 .PHONY: all clean
 
@@ -39,7 +39,7 @@ $(BUILD)/$(IMG).img: $(BUILD)/$(IMG).elf
 	$(OBJDUMP) -D $(BUILD)/$(IMG).elf > $(BUILD)/$(IMG).list
 
 $(BUILD)/$(IMG).elf: $(OBJECTS) link-aarch64-elf.ld
-	$(CC) $(LDFLAGS) $(OBJECTS) -Tlink-aarch64-elf.ld -lgcc -o $@
+	$(CC) $(LDFLAGS) $(OBJECTS) -Tlink-aarch64-elf.ld -o $@
 
 $(BUILD)/%_S.o: $(SRC)/%.S $(INCLUDES)
 	@mkdir -p $(@D)
@@ -50,4 +50,4 @@ $(BUILD)/%_c.o: $(SRC)/%.c $(INCLUDES)
 	$(CC) $(CFLAGS) -c $< -o $@
 
 $(BUILD)/%.bin: ../*/build/%.img
-	$(OBJCOPY) --input binary --output elf64-littleaarch64 --binary-architecture aarch64 $< $@
+	$(OBJCOPY) --input-target binary --output-target elf64-littleaarch64 --binary-architecture aarch64 $< $@

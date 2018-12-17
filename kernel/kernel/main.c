@@ -13,9 +13,12 @@ extern char __shell_end;
 
 static void init_shell()
 {
-    memcpy((void*) 0x0, &__shell_start, &__shell_end - &__shell_start);
+    void* start = (void*) 0x400120;
+    void* entry = (void*) 0x400210;
 
-    move_to_user_mode((void*) 0x0, (void*) STACK_TOP);
+    memcpy(start, &__shell_start, &__shell_end - &__shell_start);
+
+    move_to_user_mode(entry, (void*) STACK_TOP);
 }
 
 void kernel_main()
@@ -35,7 +38,7 @@ void kernel_main()
         "\n\n"
     );
 
-    process_create("shell", &init_shell, (void*) 0x0);
+    process_create("shell", &init_shell, 0);
 
     while (scheduler_count() > 1) {
         asm volatile("wfi");

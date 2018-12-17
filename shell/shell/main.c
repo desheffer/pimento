@@ -1,15 +1,16 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 int main()
 {
     printf("[Shell]\n\n");
 
-    char* cmd = (char*) malloc(1024);
+    char cmd[1024];
 
     while (1) {
         printf("$ ");
+        fflush(stdout);
+
         fgets(cmd, 1024, stdin);
 
         if (strcmp("\n", cmd) == 0) {
@@ -20,8 +21,6 @@ int main()
             printf("Unknown command: %s\n", cmd);
         }
     }
-
-    free(cmd);
 
     return 0;
 }
