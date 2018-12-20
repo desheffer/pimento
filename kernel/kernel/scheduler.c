@@ -19,7 +19,7 @@ static void scheduler_create_init()
     _current_process = process_create("init", 0, 0);
     _current_process->state = running;
 
-    pop_front(_process_queue);
+    list_pop_front(_process_queue);
 }
 
 static void scheduler_tick()
@@ -65,13 +65,13 @@ void* scheduler_context_switch(void* sp)
 
         if (_current_process->state == running) {
             _current_process->state = sleeping;
-            push_back(_process_queue, _current_process);
+            list_push_back(_process_queue, _current_process);
         } else if (_current_process->state == stopping) {
             scheduler_destroy(_current_process);
             free(_current_process);
         }
 
-        _current_process = (process_t*) pop_front(_process_queue);
+        _current_process = (process_t*) list_pop_front(_process_queue);
         _current_process->state = running;
 
         mmap_switch(_current_process);
@@ -84,7 +84,7 @@ void* scheduler_context_switch(void* sp)
 
 unsigned scheduler_count()
 {
-    return count(_process_list);
+    return list_count(_process_list);
 }
 
 process_t* scheduler_current()
@@ -100,7 +100,7 @@ void scheduler_destroy(process_t* process)
 
     assert(process->state == stopping);
 
-    remove(_process_list, process);
+    list_remove(_process_list, process);
     process_destroy(process);
 
     leave_critical();
@@ -108,6 +108,6 @@ void scheduler_destroy(process_t* process)
 
 void scheduler_enqueue(process_t* process)
 {
-    push_back(_process_list, process);
-    push_front(_process_queue, process);
+    list_push_back(_process_list, process);
+    list_push_front(_process_queue, process);
 }

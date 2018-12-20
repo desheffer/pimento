@@ -6,7 +6,7 @@
 void mmap_create(process_t* process)
 {
     va_table_t* l0 = alloc_page();
-    push_back(process->pages, l0);
+    list_push_back(process->pages, l0);
 
     process->ttbr = phys_to_ttbr(l0, process->pid);
 }
@@ -24,7 +24,7 @@ static va_table_t* add_table(process_t* process, va_table_t* tab, void* va, unsi
 
     if (!(va_table_to_virt(tab)[index] & PT_TABLE)) {
         va_table_t* new_tab = alloc_page();
-        push_back(process->pages, new_tab);
+        list_push_back(process->pages, new_tab);
 
         va_table_to_virt(tab)[index] = (long unsigned) new_tab |
             PT_TABLE |
@@ -40,7 +40,7 @@ static void* add_page(process_t* process, va_table_t* tab, void* va, void* pa)
     unsigned index = va_table_index(va, 3);
 
     pa = (void*) ((long unsigned) pa & PAGE_MASK);
-    push_back(process->pages, pa);
+    list_push_back(process->pages, pa);
 
     va_table_to_virt(tab)[index] = (long unsigned) pa |
         PT_PAGE |

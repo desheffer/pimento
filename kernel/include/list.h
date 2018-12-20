@@ -11,10 +11,10 @@ typedef struct {
     list_item_t* back;
 } list_t;
 
-void clear(list_t*);
-unsigned count(list_t*);
-void* pop_back(list_t*);
-void* pop_front(list_t*);
-void push_back(list_t*, void*);
-void push_front(list_t*, void*);
-void remove(list_t*, void*);
+void list_clear(list_t*);
+unsigned list_count(list_t*);
+void* list_pop_back(list_t*);
+void* list_pop_front(list_t*);
+void list_push_back(list_t*, void*);
+void list_push_front(list_t*, void*);
+void list_remove(list_t*, void*);

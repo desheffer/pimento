@@ -2,16 +2,16 @@
 #include <list.h>
 #include <stdlib.h>
 
-void clear(list_t* list)
+void list_clear(list_t* list)
 {
     assert(list);
 
     while (list->front) {
-        pop_front(list);
+        list_pop_front(list);
     }
 }
 
-unsigned count(list_t* list)
+unsigned list_count(list_t* list)
 {
     assert(list);
 
@@ -26,7 +26,7 @@ unsigned count(list_t* list)
     return count;
 }
 
-void push_back(list_t* list, void* item)
+void list_push_back(list_t* list, void* item)
 {
     assert(list);
 
@@ -44,7 +44,7 @@ void push_back(list_t* list, void* item)
     list->back = list_item;
 }
 
-void push_front(list_t* list, void* item)
+void list_push_front(list_t* list, void* item)
 {
     assert(list);
 
@@ -62,7 +62,7 @@ void push_front(list_t* list, void* item)
     list->front = list_item;
 }
 
-void* pop_back(list_t* list)
+void* list_pop_back(list_t* list)
 {
     assert(list);
     assert(list->back);
@@ -83,7 +83,7 @@ void* pop_back(list_t* list)
     return item;
 }
 
-void* pop_front(list_t* list)
+void* list_pop_front(list_t* list)
 {
     assert(list);
     assert(list->front);
@@ -104,7 +104,7 @@ void* pop_front(list_t* list)
     return item;
 }
 
-void remove(list_t* list, void* item)
+void list_remove(list_t* list, void* item)
 {
     assert(list);
 
@@ -115,9 +115,9 @@ void remove(list_t* list, void* item)
 
         if (list_item->item == item) {
             if (list_item == list->front) {
-                pop_front(list);
+                list_pop_front(list);
             } else if (list_item == list->back) {
-                pop_back(list);
+                list_pop_back(list);
             } else {
                 list_item->prev->next = list_item->next;
                 list_item->next->prev = list_item->prev;
