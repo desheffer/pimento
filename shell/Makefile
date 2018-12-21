@@ -8,7 +8,7 @@ IMG := shell
 BUILD := build
 SRC   := .
 
-OBJECTS += $(patsubst $(SRC)/%.c, $(BUILD)/%_c.o, $(shell find $(SRC) -name '*.c'))
+OBJECTS += $(patsubst $(SRC)/%.c, $(BUILD)/%.c.o, $(shell find $(SRC) -name '*.c'))
 
 BASEFLAGS := -O2
 WARNFLAGS := -Wall -Wextra -Wformat=2 -Wcast-align -Wpointer-arith
@@ -31,6 +31,6 @@ $(BUILD)/$(IMG).img: $(BUILD)/$(IMG).elf
 $(BUILD)/$(IMG).elf: $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
 
-$(BUILD)/%_c.o: $(SRC)/%.c $(INCLUDES)
+$(BUILD)/%.c.o: $(SRC)/%.c $(INCLUDES)
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@

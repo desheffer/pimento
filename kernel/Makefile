@@ -12,8 +12,8 @@ SRC     := .
 
 INCLUDES := $(shell find $(INCLUDE) -name '*.h')
 
-OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%_S.o, $(shell find $(SRC) -name '*.S'))
-OBJECTS += $(patsubst $(SRC)/%.c, $(BUILD)/%_c.o, $(shell find $(SRC) -name '*.c'))
+OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.S.o, $(shell find $(SRC) -name '*.S'))
+OBJECTS += $(patsubst $(SRC)/%.c, $(BUILD)/%.c.o, $(shell find $(SRC) -name '*.c'))
 OBJECTS += $(LIBK)/libk.a
 OBJECTS += $(BUILD)/shell.bin
 
@@ -41,11 +41,11 @@ $(BUILD)/$(IMG).img: $(BUILD)/$(IMG).elf
 $(BUILD)/$(IMG).elf: $(OBJECTS) link-aarch64-elf.ld
 	$(CC) $(LDFLAGS) $(OBJECTS) -Tlink-aarch64-elf.ld -o $@
 
-$(BUILD)/%_S.o: $(SRC)/%.S $(INCLUDES)
+$(BUILD)/%.S.o: $(SRC)/%.S $(INCLUDES)
 	@mkdir -p $(@D)
 	$(CC) $(ASFLAGS) -c $< -o $@
 
-$(BUILD)/%_c.o: $(SRC)/%.c $(INCLUDES)
+$(BUILD)/%.c.o: $(SRC)/%.c $(INCLUDES)
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
 
