@@ -11,6 +11,7 @@ void system_init();
 void system_handler(process_regs_t*, unsigned);
 void system_register_call(unsigned, syscall_t*);
 
+void do_brk(process_regs_t*);
 void do_exit(process_regs_t*);
 void do_exit_group(process_regs_t*);
 void do_ioctl(process_regs_t*);

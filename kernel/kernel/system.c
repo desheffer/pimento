@@ -5,6 +5,7 @@ static syscall_t* _calls[__NR_syscalls] = {0};
 
 void system_init()
 {
+    system_register_call(__NR_brk, (syscall_t*) do_brk);
     system_register_call(__NR_exit, (syscall_t*) do_exit);
     system_register_call(__NR_exit_group, (syscall_t*) do_exit_group);
     system_register_call(__NR_ioctl, (syscall_t*) do_ioctl);
