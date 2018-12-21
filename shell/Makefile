@@ -6,7 +6,6 @@ OBJDUMP   := $(TOOLCHAIN)-objdump
 IMG := shell
 
 BUILD := build
-LIBC  := ../libc/build
 SRC   := .
 
 OBJECTS += $(patsubst $(SRC)/%.c, $(BUILD)/%_c.o, $(shell find $(SRC) -name '*.c'))

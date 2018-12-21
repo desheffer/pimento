@@ -7,7 +7,7 @@ IMG := kernel8
 
 BUILD        := build
 INCLUDE      := ../kernel/include
-LIBC         := ../libc/build
+LIBK         := ../libk/build
 SRC          := ../kernel
 TEST_SRC     := .
 TEST_INCLUDE := include
@@ -18,7 +18,7 @@ INCLUDES += $(shell find $(TEST_INCLUDE) -name '*.h')
 OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%_S.o, $(shell find $(SRC) -name '*.S'))
 OBJECTS += $(patsubst $(SRC)/%.c, $(BUILD)/%_c.o, $(shell find $(SRC) -name '*.c'))
 OBJECTS += $(patsubst $(TEST_SRC)/%.c, $(BUILD)/test/%_c.o, $(shell find $(TEST_SRC) -name '*.c'))
-OBJECTS += $(LIBC)/libc.a
+OBJECTS += $(LIBK)/libk.a
 
 OBJECTS := $(filter-out $(BUILD)/kernel/main_c.o, $(OBJECTS))
 
@@ -27,7 +27,7 @@ BASEFLAGS += -ffreestanding -fomit-frame-pointer
 WARNFLAGS := -Wall -Wextra -Wformat=2 -Wcast-align -Wpointer-arith
 WARNFLAGS += -Wredundant-decls -Wshadow -Wwrite-strings
 WARNFLAGS += -Werror=implicit-function-declaration
-INCFLAGS  := -I$(TEST_INCLUDE) -I$(INCLUDE) -I$(LIBC)/../include
+INCFLAGS  := -I$(TEST_INCLUDE) -I$(INCLUDE) -I$(LIBK)/../include
 ASFLAGS   := $(INCFLAGS) -D__ASSEMBLY__
 CFLAGS    := $(BASEFLAGS) $(WARNFLAGS) $(INCFLAGS)
 LDFLAGS   := $(BASEFLAGS) -lgcc

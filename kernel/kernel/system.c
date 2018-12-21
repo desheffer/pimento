@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <system.h>
 
-static syscall_t* _calls[SYSCALL_COUNT] = {0};
+static syscall_t* _calls[__NR_syscalls] = {0};
 
 void system_init()
 {
@@ -17,7 +17,7 @@ void system_init()
 
 void system_handler(process_regs_t* regs, unsigned n)
 {
-    assert(n < SYSCALL_COUNT);
+    assert(n < __NR_syscalls);
 
     if (_calls[n]) {
         _calls[n](regs);

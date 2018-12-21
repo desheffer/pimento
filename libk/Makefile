@@ -2,7 +2,7 @@ TOOLCHAIN ?= aarch64-linux
 CC        := $(TOOLCHAIN)-gcc
 AR        := $(TOOLCHAIN)-ar
 
-LIB := libc
+LIB := libk
 
 BUILD   := build
 INCLUDE := include

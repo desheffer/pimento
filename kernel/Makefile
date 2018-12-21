@@ -7,14 +7,14 @@ IMG := kernel8
 
 BUILD   := build
 INCLUDE := include
-LIBC    := ../libc/build
+LIBK    := ../libk/build
 SRC     := .
 
 INCLUDES := $(shell find $(INCLUDE) -name '*.h')
 
 OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%_S.o, $(shell find $(SRC) -name '*.S'))
 OBJECTS += $(patsubst $(SRC)/%.c, $(BUILD)/%_c.o, $(shell find $(SRC) -name '*.c'))
-OBJECTS += $(LIBC)/libc.a
+OBJECTS += $(LIBK)/libk.a
 OBJECTS += $(BUILD)/shell.bin
 
 BASEFLAGS := -O2 -nostdlib -nostartfiles
@@ -22,7 +22,7 @@ BASEFLAGS += -ffreestanding -fomit-frame-pointer
 WARNFLAGS := -Wall -Wextra -Wformat=2 -Wcast-align -Wpointer-arith
 WARNFLAGS += -Wredundant-decls -Wshadow -Wwrite-strings
 WARNFLAGS += -Werror=implicit-function-declaration
-INCFLAGS  := -I$(INCLUDE) -I$(LIBC)/../include
+INCFLAGS  := -I$(INCLUDE) -I$(LIBK)/../include
 ASFLAGS   := $(INCFLAGS) -D__ASSEMBLY__
 CFLAGS    := $(BASEFLAGS) $(WARNFLAGS) $(INCFLAGS)
 LDFLAGS   := $(BASEFLAGS) -lgcc

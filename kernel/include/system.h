@@ -1,9 +1,9 @@
 #pragma once
 
+#include <asm-generic/unistd.h>
 #include <process.h>
-#include <unistd.h>
 
-#define SYSCALL_COUNT 292
+typedef size_t ssize_t;
 
 typedef void syscall_t(process_regs_t*);
 
