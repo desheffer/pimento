@@ -3,7 +3,7 @@ CC        := $(TOOLCHAIN)-gcc
 OBJCOPY   := $(TOOLCHAIN)-objcopy
 OBJDUMP   := $(TOOLCHAIN)-objdump
 
-IMG := shell
+BIN := shell
 
 BUILD := build
 SRC   := .
@@ -19,18 +19,15 @@ LDFLAGS   := $(BASEFLAGS) -lgcc -static
 
 .PHONY: all clean
 
-all: $(BUILD)/$(IMG).img $(BUILD)/$(IMG).list
+all: $(BUILD)/$(BIN).elf $(BUILD)/$(BIN).list
 
 clean:
 	rm -rf $(BUILD)
 
-$(BUILD)/$(IMG).img: $(BUILD)/$(IMG).elf
-	$(OBJCOPY) $(BUILD)/$(IMG).elf -O binary $@
+$(BUILD)/$(BIN).list: $(BUILD)/$(BIN).elf
+	$(OBJDUMP) -D $(BUILD)/$(BIN).elf > $(BUILD)/$(BIN).list
 
-$(BUILD)/$(IMG).list: $(BUILD)/$(IMG).elf
-	$(OBJDUMP) -D $(BUILD)/$(IMG).elf > $(BUILD)/$(IMG).list
-
-$(BUILD)/$(IMG).elf: $(OBJECTS)
+$(BUILD)/$(BIN).elf: $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
 
 $(BUILD)/%.c.o: $(SRC)/%.c $(INCLUDES)

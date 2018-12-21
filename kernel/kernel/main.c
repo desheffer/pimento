@@ -1,10 +1,10 @@
+#include <elf.h>
 #include <fork.h>
 #include <interrupt.h>
 #include <kstdio.h>
 #include <memory.h>
 #include <scheduler.h>
 #include <serial.h>
-#include <string.h>
 #include <system.h>
 #include <timer.h>
 
@@ -13,10 +13,7 @@ extern char __shell_end;
 
 static void init_shell()
 {
-    void* start = (void*) 0x400120;
-    void* entry = (void*) 0x400210;
-
-    memcpy(start, &__shell_start, &__shell_end - &__shell_start);
+    void* entry = elf_load(&__shell_start, &__shell_end - &__shell_start);
 
     move_to_user_mode(entry, (void*) STACK_TOP);
 }

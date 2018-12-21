@@ -51,5 +51,5 @@ $(BUILD)/%.c.o: $(SRC)/%.c $(INCLUDES)
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD)/%.bin: ../*/build/%.img
+$(BUILD)/%.bin: ../*/build/%.elf
 	$(OBJCOPY) --input-target binary --output-target elf64-littleaarch64 --binary-architecture aarch64 $< $@
