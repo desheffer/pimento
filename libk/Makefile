@@ -1,6 +1,6 @@
-TOOLCHAIN ?= aarch64-linux
-CC        := $(TOOLCHAIN)-gcc
-AR        := $(TOOLCHAIN)-ar
+PREFIX ?=
+CC     := $(PREFIX)gcc
+AR     := $(PREFIX)ar
 
 LIB := libk
 

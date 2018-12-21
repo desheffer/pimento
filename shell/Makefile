@@ -1,7 +1,7 @@
-TOOLCHAIN ?= aarch64-linux
-CC        := $(TOOLCHAIN)-gcc
-OBJCOPY   := $(TOOLCHAIN)-objcopy
-OBJDUMP   := $(TOOLCHAIN)-objdump
+PREFIX  ?=
+CC      := $(PREFIX)gcc
+OBJCOPY := $(PREFIX)objcopy
+OBJDUMP := $(PREFIX)objdump
 
 BIN := shell
 
