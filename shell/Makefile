@@ -19,13 +19,15 @@ LDFLAGS   := $(BASEFLAGS) -lgcc -static
 
 .PHONY: all clean
 
-all: $(BUILD)/$(IMG).img
+all: $(BUILD)/$(IMG).img $(BUILD)/$(IMG).list
 
 clean:
 	rm -rf $(BUILD)
 
 $(BUILD)/$(IMG).img: $(BUILD)/$(IMG).elf
 	$(OBJCOPY) $(BUILD)/$(IMG).elf -O binary $@
+
+$(BUILD)/$(IMG).list: $(BUILD)/$(IMG).elf
 	$(OBJDUMP) -D $(BUILD)/$(IMG).elf > $(BUILD)/$(IMG).list
 
 $(BUILD)/$(IMG).elf: $(OBJECTS)
