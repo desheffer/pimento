@@ -2,7 +2,7 @@
 #include <serial.h>
 #include <system.h>
 
-void do_read(process_regs_t* regs)
+process_regs_t* do_read(process_regs_t* regs)
 {
     int fd = (int) regs->regs[0];
     char* buf = (char*) regs->regs[1];
@@ -23,4 +23,5 @@ void do_read(process_regs_t* regs)
     }
 
     regs->regs[0] = ret;
+    return regs;
 }

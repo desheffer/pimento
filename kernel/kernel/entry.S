@@ -99,9 +99,17 @@ el1_sync:
     mrs x21, esr_el1
     and x21, x21, #ESR_ELx_EC_MASK
     lsr x21, x21, #ESR_ELx_EC_SHIFT
+    cmp x21, #ESR_ELx_EC_SVC64
+    beq el1_sync_svc
     cmp x21, #ESR_ELx_EC_DABT_CUR
     beq el1_sync_dabt
     debug_entry #BAD_SYNC
+    b el1_sync_done
+el1_sync_svc:
+    mov x0, sp
+    mov x1, x8
+    bl system_handler
+    mov sp, x0
     b el1_sync_done
 el1_sync_dabt:
     mrs x0, far_el1
@@ -139,6 +147,7 @@ el0_sync_svc:
     mov x0, sp
     mov x1, x8
     bl system_handler
+    mov sp, x0
     b el0_sync_done
 el0_sync_dabt:
     mrs x0, far_el1

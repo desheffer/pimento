@@ -7,7 +7,7 @@ typedef struct iovec {
     size_t iov_len;
 } iovec;
 
-void do_readv(process_regs_t* regs)
+process_regs_t* do_readv(process_regs_t* regs)
 {
     int fd = (int) regs->regs[0];
     iovec* iov = (iovec*) regs->regs[1];
@@ -35,4 +35,5 @@ void do_readv(process_regs_t* regs)
     }
 
     regs->regs[0] = ret;
+    return regs;
 }

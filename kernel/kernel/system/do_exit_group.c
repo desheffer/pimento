@@ -2,7 +2,7 @@
 #include <synchronize.h>
 #include <system.h>
 
-void do_exit_group(process_regs_t* regs)
+process_regs_t* do_exit_group(process_regs_t* regs)
 {
     int status = (int) regs->regs[0];
 
@@ -19,4 +19,6 @@ void do_exit_group(process_regs_t* regs)
     while (1) {
         asm volatile("wfi");
     }
+
+    return regs;
 }

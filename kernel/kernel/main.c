@@ -7,16 +7,7 @@
 #include <serial.h>
 #include <system.h>
 #include <timer.h>
-
-extern char __shell_start;
-extern char __shell_end;
-
-static void init_shell()
-{
-    void* entry = elf_load(&__shell_start, &__shell_end - &__shell_start);
-
-    move_to_user_mode(entry, (void*) STACK_TOP);
-}
+#include <unistd.h>
 
 void kernel_main()
 {
@@ -35,11 +26,15 @@ void kernel_main()
         "\n\n"
     );
 
-    process_create("shell", &init_shell, 0);
+    /* if (fork() == 0) { */
+        char* const argv[] = {0};
+        char* const envp[] = {0};
+        execve("/bin/sh", argv, envp);
+    /* } */
 
-    while (scheduler_count() > 1) {
-        asm volatile("wfi");
-    }
+    /* while (scheduler_count() > 1) { */
+    /*     asm volatile("wfi"); */
+    /* } */
 
     kputs("\nWill now halt.\n");
 }

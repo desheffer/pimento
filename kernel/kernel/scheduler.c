@@ -3,6 +3,7 @@
 #include <list.h>
 #include <limits.h>
 #include <memory.h>
+#include <panic.h>
 #include <scheduler.h>
 #include <stdlib.h>
 #include <synchronize.h>
@@ -69,6 +70,10 @@ void* scheduler_context_switch(void* sp)
         } else if (_current_process->state == stopping) {
             scheduler_destroy(_current_process);
             free(_current_process);
+        }
+
+        if (list_count(_process_queue) == 0) {
+            halt();
         }
 
         _current_process = (process_t*) list_pop_front(_process_queue);
