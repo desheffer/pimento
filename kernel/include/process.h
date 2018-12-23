@@ -36,4 +36,8 @@ typedef struct {
     void* sp;
 } process_t;
 
+process_t* process_create(const char*, const void*, const void*);
+void process_destroy(process_t*);
+void* process_set_args(void*, char* const[], char* const[]);
+
 #endif

@@ -1,5 +1,3 @@
-#include <elf.h>
-#include <fork.h>
 #include <interrupt.h>
 #include <kstdio.h>
 #include <memory.h>
@@ -27,9 +25,9 @@ void kernel_main()
     );
 
     /* if (fork() == 0) { */
-        char* const argv[] = {0};
-        char* const envp[] = {0};
-        execve("/bin/sh", argv, envp);
+        const char* argv[] = {"/bin/sh", 0};
+        const char* envp[] = {"PWD=/", 0};
+        execve("/bin/sh", (char* const*) argv, (char* const*) envp);
     /* } */
 
     /* while (scheduler_count() > 1) { */

@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 
-int main()
+int main(int argc, char* argv[], char* envp[])
 {
+    (void) argc;
+
     printf("[Shell]\n\n");
 
     char cmd[1024];
@@ -13,12 +15,21 @@ int main()
 
         fgets(cmd, 1024, stdin);
 
-        if (strcmp("\n", cmd) == 0) {
+        char* pos = strchr(cmd, '\n');
+        if (pos != 0) {
+            *pos = '\0';
+        }
+
+        if (strcmp("", cmd) == 0) {
             continue;
-        } else if (strcmp("exit\n", cmd) == 0) {
+        } else if (strcmp("env", cmd) == 0) {
+            for (int i = 0; envp[i] != 0; ++i) {
+                printf("%s\n", envp[i]);
+            }
+        } else if (strcmp("exit", cmd) == 0) {
             break;
         } else {
-            printf("Unknown command: %s\n", cmd);
+            printf("%s: %s: unknown command\n", argv[0], cmd);
         }
     }
 

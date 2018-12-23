@@ -1,9 +1,9 @@
 #include <assert.h>
-#include <fork.h>
 #include <list.h>
 #include <limits.h>
 #include <memory.h>
 #include <panic.h>
+#include <process.h>
 #include <scheduler.h>
 #include <stdlib.h>
 #include <synchronize.h>

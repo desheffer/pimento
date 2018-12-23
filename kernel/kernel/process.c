@@ -29,7 +29,7 @@ process_t* process_create(const char* pname, const void* fn, const void* data)
     void* stack_end = (char*) stack_begin + PAGE_SIZE;
 
     // Initialize startup parameters.
-    process_regs_t* regs = (process_regs_t*) phys_to_virt(stack_end) - 1;
+    process_regs_t* regs = (process_regs_t*) stack_end - 1;
     regs->pstate = PSR_MODE_KTHREAD;
     regs->pc = (long unsigned) fn;
     regs->regs[0] = (long unsigned) data;
@@ -49,4 +49,46 @@ void process_destroy(process_t* process)
 
     // @TODO: Call free_page() for each entry in process->pages.
     // @TODO: Free process.
+}
+
+void* process_set_args(void* sp, char* const argv[], char* const envp[])
+{
+    // Find size of argv.
+    unsigned argv_size = 0;
+    for (char* const* iter = argv; *iter != 0; ++iter) {
+        ++argv_size;
+    }
+
+    // Find size of envp.
+    unsigned envp_size = 0;
+    for (char* const* iter = envp; *iter != 0; ++iter) {
+        ++envp_size;
+    }
+
+    // Location for new strings.
+    char* char_ptr = (char*) sp;
+
+    // Locations for new arrays.
+    char** envp_ptr = (char**) sp - envp_size - 1;
+    char** argv_ptr = envp_ptr - argv_size - 1;
+    int* argc_ptr = (int*) (argv_ptr - 1);
+
+    // Copy argc.
+    argc_ptr[0] = argv_size;
+
+    // Copy argv.
+    for (unsigned i = 0; i < argv_size; ++i) {
+        argv_ptr[i] = char_ptr;
+        strcpy(argv_ptr[i], argv[i]);
+        char_ptr += strlen(char_ptr) + 1;
+    }
+
+    // Copy envp.
+    for (unsigned i = 0; i < envp_size; ++i) {
+        envp_ptr[i] = char_ptr;
+        strcpy(envp_ptr[i], envp[i]);
+        char_ptr += strlen(char_ptr) + 1;
+    }
+
+    return (void*) argc_ptr;
 }
