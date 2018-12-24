@@ -19,7 +19,7 @@ process_t* process_create(const char* pname, const void* fn, const void* data)
     strncpy(process->pname, pname, PNAME_LENGTH);
 
     // Initialize list of allocated pages.
-    process->pages = malloc(sizeof(list_t));
+    process->pages = list_new();
 
     // Initialize memory map.
     mmap_create(process);

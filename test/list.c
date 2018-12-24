@@ -4,9 +4,7 @@
 
 void test_list()
 {
-    list_t* list = malloc(sizeof(list_t));
-    list->front = 0;
-    list->back = 0;
+    list_t* list = list_new();
 
     int one = 1;
     int two = 2;
@@ -85,4 +83,6 @@ void test_list()
     list_remove(list, &three);
     assert(list_count(list) == 0);
     list_clear(list);
+
+    list_delete(list);
 }

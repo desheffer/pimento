@@ -47,8 +47,8 @@ process_regs_t* do_execve(process_regs_t* regs)
     strncpy(process->pname, pname, PNAME_LENGTH);
 
     // Initialize list of allocated pages.
-    // @TODO: Reap old pages.
-    process->pages = malloc(sizeof(list_t));
+    // @TODO: Reap old pages and delete old list.
+    process->pages = list_new();
 
     // Initialize a new memory map.
     mmap_create(process);

@@ -30,13 +30,8 @@ static void scheduler_tick()
 
 void scheduler_init()
 {
-    _process_list = malloc(sizeof(list_t));
-    _process_list->front = 0;
-    _process_list->back = 0;
-
-    _process_queue = malloc(sizeof(list_t));
-    _process_queue->front = 0;
-    _process_queue->back = 0;
+    _process_list = list_new();
+    _process_queue = list_new();
 
     scheduler_create_init();
 

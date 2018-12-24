@@ -26,6 +26,23 @@ unsigned list_count(list_t* list)
     return count;
 }
 
+void list_delete(list_t* list)
+{
+    assert(list);
+
+    list_clear(list);
+    free(list);
+}
+
+list_t* list_new()
+{
+    list_t* list = malloc(sizeof(list_t));
+    list->front = 0;
+    list->back = 0;
+
+    return list;
+}
+
 void list_push_back(list_t* list, void* item)
 {
     assert(list);
