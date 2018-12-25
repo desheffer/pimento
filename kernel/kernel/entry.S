@@ -1,5 +1,5 @@
 #include <entry.h>
-#include <memory.h>
+#include <mmap.h>
 
 .macro vector label
     .balign 0x80

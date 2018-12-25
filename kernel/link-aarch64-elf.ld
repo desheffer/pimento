@@ -13,12 +13,16 @@ SECTIONS
     . = ALIGN(4096);
     __text_end = .;
 
+    __shell_start = .;
+    .text.shell : {
+        */shell.bin(.data)
+    }
+    . = ALIGN(4096);
+    __shell_end = .;
+
     __rodata_start = .;
     .rodata : {
         *(.rodata)
-        __shell_start = .;
-        */shell.bin(.data)
-        __shell_end = .;
     }
     . = ALIGN(4096);
     __rodata_end = .;
@@ -29,6 +33,13 @@ SECTIONS
     }
     . = ALIGN(4096);
     __data_end = .;
+
+    __va_table_start = .;
+    .data.va_table : {
+        . += 4 * 4096;
+    }
+    . = ALIGN(4096);
+    __va_table_end = .;
 
     __bss_start = .;
     .bss : {

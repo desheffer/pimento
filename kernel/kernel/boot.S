@@ -1,5 +1,5 @@
 #include <boot.h>
-#include <memory.h>
+#include <mmap.h>
 #include <process.h>
 
 .section ".text.boot"
@@ -18,7 +18,7 @@ _start:
     isb
 
     // Change execution level to EL1h.
-    mov x4, #PSR_MODE_INIT
+    ldr x4, =PSR_MODE_INIT
     msr spsr_el2, x4
     adr x4, enter_el1
     msr elr_el2, x4
@@ -30,7 +30,7 @@ enter_el1:
     mov sp, x4
 
     // Do not trap SIMD/FP.
-    mov x4, #CPACR_CP10
+    ldr x4, =CPACR_CP10
     msr cpacr_el1, x4
 
     // Set up memory attributes.
@@ -38,7 +38,7 @@ enter_el1:
     msr mair_el1, x4
 
     // Set TTBR0 and TTBR1.
-    bl memory_init_mmap
+    bl mmap_init
 
     // Set TCR.
     ldr x4, =TCR_EL1

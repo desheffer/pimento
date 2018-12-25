@@ -1,90 +1,20 @@
 #pragma once
 
-#define PAGE_SIZE 4096
-#define PAGE_MASK (0xFFFFFFFFFFFFFFFF - (PAGE_SIZE - 1))
-
-#define VA_BITS  48
-#define VA_START (0xFFFFFFFFFFFFFFFF - ((0x1UL << VA_BITS) - 1))
-
-#define VA_TABLE_LENGTH 512
-
-#define VA_TABLE_TABLE_ADDR_MASK 0xFFFFFFFFF000
-#define VA_TABLE_PAGE_ADDR_MASK  0xFFFFFFFFF000
-
-#define TCR_ASID16     (0b1UL  << 36) // Use 16 bits of ASID
-#define TCR_TG1_4KB    (0b10UL << 30) // 4KB granule size
-#define TCR_TG0_4KB    (0b00UL << 14) // 4KB granule size
-#define TCR_TxSZ(bits) (((64 - bits) << 16) | ((64 - bits) << 0))
-
-#define TCR_EL1 \
-    ( \
-        TCR_TxSZ(VA_BITS) | \
-        TCR_ASID16 | TCR_TG1_4KB | TCR_TG0_4KB \
-    )
-
-#define MT_DEVICE_nGnRnE 0
-#define MT_NORMAL        1
-#define MT_NORMAL_NC     2
-
-#define MAIR_EL1 \
-    ( \
-        (0x00UL << (8 * MT_DEVICE_nGnRnE)) | \
-        (0xFFUL << (8 * MT_NORMAL)) | \
-        (0x44UL << (8 * MT_NORMAL_NC)) \
-    )
-
-#define PT_BLOCK (0b01UL <<  0) // Block descriptor
-#define PT_TABLE (0b11UL <<  0) // Table descriptor
-#define PT_PAGE  (0b11UL <<  0) // Page descriptor
-#define PT_USER  (0b1UL  <<  6) // Unprivileged
-#define PT_RO    (0b1UL  <<  7) // Read-Only
-#define PT_OSH   (0b10UL <<  8) // Outer Shareable
-#define PT_ISH   (0b11UL <<  8) // Inner Shareable
-#define PT_AF    (0b1UL  << 10) // Access flag
-#define PT_PXN   (0b1UL  << 53) // Privileged execute-never
-#define PT_XN    (0b1UL  << 54) // Execute-never
-
-#define PT_ATTR(n) ((n) << 2)
-
-#define phys_to_virt(ptr) ((void*) ((long unsigned) (ptr) | VA_START))
-#define virt_to_phys(ptr) ((void*) ((long unsigned) (ptr) & ~VA_START))
-
-#define TTBR_BADDR_MASK 0x7FFFFFFFFFFE
-
-#define ttbr_to_phys(ptr)       ((void*) ((long unsigned) (ptr) & TTBR_BADDR_MASK))
-#define phys_to_ttbr(ptr, asid) (((long unsigned) (asid) << 48) | ((long unsigned) (ptr)))
-
-#define va_table_to_virt(pa) (*((va_table_t*) phys_to_virt(pa)))
-
-#ifndef __ASSEMBLY__
-
+#include <mmap.h>
 #include <process.h>
-#include <stddef.h>
-
-typedef long unsigned va_table_t[VA_TABLE_LENGTH];
 
 typedef struct {
     unsigned allocated: 1;
 } page_t;
 
-void memory_init_kernel();
 void memory_init();
 void memory_reserve_range(void*, void*);
 
-void mmap_create(process_t*);
-void mmap_map_page(process_t*, void*, void*);
-void mmap_switch(process_t*);
-
-void* alloc_page();
 void* alloc_kernel_page();
-void* alloc_user_page(process_t*, void*);
+void* alloc_user_page(process_t*);
 
-void free_page(void*);
 void free_kernel_page(void*);
-
-void switch_ttbr(long unsigned);
-
-void data_abort_handler(void*);
+void free_user_page(process_t*, void*);
 
 extern char __start;
 extern char __text_start;
@@ -93,8 +23,8 @@ extern char __rodata_start;
 extern char __rodata_end;
 extern char __data_start;
 extern char __data_end;
+extern char __va_table_start;
+extern char __va_table_end;
 extern char __bss_start;
 extern char __bss_end;
 extern char __end;
-
-#endif

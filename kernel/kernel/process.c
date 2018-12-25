@@ -25,7 +25,8 @@ process_t* process_create(const char* pname, const void* fn, const void* data)
     mmap_create(process);
 
     // Allocate the first page of the stack.
-    void* stack_begin = alloc_user_page(process, (void*) (STACK_TOP - PAGE_SIZE));
+    void* stack_begin = alloc_user_page(process);
+    mmap_map_page(process, (void*) (STACK_TOP - PAGE_SIZE), stack_begin);
     void* stack_end = (char*) stack_begin + PAGE_SIZE;
 
     // Initialize startup parameters.
@@ -47,7 +48,7 @@ void process_destroy(process_t* process)
 {
     (void) process;
 
-    // @TODO: Call free_page() for each entry in process->pages.
+    // @TODO: Call free_user_page() for each entry in process->pages.
     // @TODO: Free process.
 }
 
