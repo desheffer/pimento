@@ -5,7 +5,7 @@
 
 static int _in_debug_process_regs = 0;
 
-void debug_process_regs(process_regs_t* state, long unsigned reason, long unsigned esr, long unsigned far)
+void debug_process_regs(registers_t* state, long unsigned reason, long unsigned esr, long unsigned far)
 {
     if (_in_debug_process_regs) {
         panic();

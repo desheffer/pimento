@@ -1,6 +1,6 @@
 #include <system.h>
 
-process_regs_t* do_ioctl(process_regs_t* regs)
+registers_t* do_ioctl(registers_t* regs)
 {
     // @TODO
     regs->regs[0] = 0;

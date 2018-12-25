@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <interrupt.h>
-#include <scheduler.h>
 
 static interrupt_handler_t* _handlers[NUM_IRQS] = {0};
 static void* _handlers_data[NUM_IRQS] = {0};
@@ -56,7 +55,7 @@ void interrupt_disconnect(irq_number_t num)
     _handlers_data[num] = 0;
 }
 
-void* interrupt_handler(void* sp)
+void interrupt_handler()
 {
     for (unsigned num = 0; num < NUM_IRQS; ++num) {
         if (interrupt_pending(num) && _handlers[num]) {
@@ -64,6 +63,4 @@ void* interrupt_handler(void* sp)
             break;
         }
     }
-
-    return scheduler_context_switch(sp);
 }

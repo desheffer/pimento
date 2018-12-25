@@ -17,7 +17,7 @@ void system_init()
     system_register_call(__NR_writev, (syscall_t*) do_writev);
 }
 
-process_regs_t* system_handler(process_regs_t* regs, unsigned n)
+registers_t* system_handler(registers_t* regs, unsigned n)
 {
     assert(n < __NR_syscalls);
 

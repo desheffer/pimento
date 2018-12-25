@@ -1,6 +1,6 @@
 #pragma once
 
-#define PROCESS_REGS_SIZE 272
+#define PROCESS_REGS_SIZE (34 * 8)
 
 #define ESR_ELx_EC_SHIFT 26
 #define ESR_ELx_EC_MASK  (0b111111UL << ESR_ELx_EC_SHIFT)
@@ -39,3 +39,14 @@
 #define BAD_IRQ   1
 #define BAD_FIQ   2
 #define BAD_ERROR 3
+
+#ifndef __ASSEMBLY__
+
+typedef struct {
+    long unsigned regs[31]; // x0 - x30
+    long unsigned sp;
+    long unsigned pc;
+    long unsigned pstate;
+} registers_t;
+
+#endif

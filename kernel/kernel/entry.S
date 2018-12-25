@@ -9,13 +9,13 @@
 .globl vector_table
 .balign 0x800
 vector_table:
-    vector el1_sync             // Synchronous EL1t
-    vector el1_irq              // IRQ EL1t
+    vector el1_sync_invalid     // Synchronous EL1t
+    vector el1_irq_invalid      // IRQ EL1t
     vector el1_fiq_invalid      // FIQ EL1t
     vector el1_error_invalid    // SError EL1t
 
-    vector el1_sync_invalid     // Synchronous EL1h
-    vector el1_irq_invalid      // IRQ EL1h
+    vector el1_sync             // Synchronous EL1h
+    vector el1_irq              // IRQ EL1h
     vector el1_fiq_invalid      // FIQ EL1h
     vector el1_error_invalid    // SError EL1h
 
@@ -29,7 +29,7 @@ vector_table:
     vector el0_fiq_invalid      // FIQ 32-bit EL0
     vector el0_error_invalid    // SError 32-bit EL0
 
-.macro save_regs
+.macro save_regs el
     sub sp, sp, #PROCESS_REGS_SIZE
 
     stp x0, x1, [sp, #16 * 0]
@@ -47,17 +47,30 @@ vector_table:
     stp x24, x25, [sp, #16 * 12]
     stp x26, x27, [sp, #16 * 13]
     stp x28, x29, [sp, #16 * 14]
-    str x30, [sp, #16 * 15]
 
-    mrs x21, spsr_el1
-    mrs x22, elr_el1
+    .if \el == 0
+    mrs x21, sp_el0
+    stp x30, x21, [sp, #16 * 15]
+    .else
+    stp x30, xzr, [sp, #16 * 15]
+    .endif
+
+    mrs x21, elr_el1
+    mrs x22, spsr_el1
     stp x21, x22, [sp, #16 * 16]
 .endm
 
-.macro load_regs
+.macro load_regs el
     ldp x21, x22, [sp, #16 * 16]
-    msr spsr_el1, x21
-    msr elr_el1, x22
+    msr elr_el1, x21
+    msr spsr_el1, x22
+
+    .if \el == 0
+    ldp x30, x21, [sp, #16 * 15]
+    msr sp_el0, x21
+    .else
+    ldp x30, xzr, [sp, #16 * 15]
+    .endif
 
     ldp x0, x1, [sp, #16 * 0]
     ldp x2, x3, [sp, #16 * 1]
@@ -74,14 +87,8 @@ vector_table:
     ldp x24, x25, [sp, #16 * 12]
     ldp x26, x27, [sp, #16 * 13]
     ldp x28, x29, [sp, #16 * 14]
-    ldr x30, [sp, #16 * 15]
 
     add sp, sp, #PROCESS_REGS_SIZE
-.endm
-
-.macro irq_stack_entry
-    ldr x21, =(VA_START | 0x10000)
-    mov sp, x21
 .endm
 
 .macro debug_entry reason
@@ -93,8 +100,7 @@ vector_table:
 .endm
 
 el1_sync:
-    msr spsel, 0
-    save_regs
+    save_regs 1
     bl enable_interrupts
     mrs x21, esr_el1
     and x21, x21, #ESR_ELx_EC_MASK
@@ -117,22 +123,17 @@ el1_sync_dabt:
     b el1_sync_done
 el1_sync_done:
     bl disable_interrupts
-    load_regs
+    load_regs 1
     eret
 
 el1_irq:
-    msr spsel, 0
-    save_regs
-    mov x0, sp
-    irq_stack_entry
+    save_regs 1
     bl interrupt_handler
-    mov sp, x0
-    load_regs
+    load_regs 1
     eret
 
 el0_sync:
-    msr spsel, 0
-    save_regs
+    save_regs 0
     bl enable_interrupts
     mrs x21, esr_el1
     and x21, x21, #ESR_ELx_EC_MASK
@@ -155,47 +156,75 @@ el0_sync_dabt:
     b el0_sync_done
 el0_sync_done:
     bl disable_interrupts
-    load_regs
+    load_regs 0
     eret
 
 el0_irq:
-    msr spsel, 0
-    save_regs
-    mov x0, sp
-    irq_stack_entry
+    save_regs 0
     bl interrupt_handler
-    mov sp, x0
-    load_regs
+    load_regs 0
     eret
 
-.macro inv_entry reason
-    msr spsel, 0
-    save_regs
+.macro inv_entry el reason
+    save_regs \el
     debug_entry \reason
-    load_regs
+    load_regs \el
     eret
 .endm
 
 el1_sync_invalid:
-    inv_entry #BAD_SYNC
+    inv_entry 1, #BAD_SYNC
 
 el1_irq_invalid:
-    inv_entry #BAD_IRQ
+    inv_entry 1, #BAD_IRQ
 
 el1_fiq_invalid:
-    inv_entry #BAD_FIQ
+    inv_entry 1, #BAD_FIQ
 
 el1_error_invalid:
-    inv_entry #BAD_ERROR
+    inv_entry 1, #BAD_ERROR
 
 el0_sync_invalid:
-    inv_entry #BAD_SYNC
+    inv_entry 0, #BAD_SYNC
 
 el0_irq_invalid:
-    inv_entry #BAD_IRQ
+    inv_entry 0, #BAD_IRQ
 
 el0_fiq_invalid:
-    inv_entry #BAD_FIQ
+    inv_entry 0, #BAD_FIQ
 
 el0_error_invalid:
-    inv_entry #BAD_ERROR
+    inv_entry 0, #BAD_ERROR
+
+// x0 = Previous CPU context
+// x1 = Next CPU context
+.globl cpu_switch_to
+cpu_switch_to:
+    mov x9, sp
+    stp x19, x20, [x0, #16 * 0]
+    stp x21, x22, [x0, #16 * 1]
+    stp x23, x24, [x0, #16 * 2]
+    stp x25, x26, [x0, #16 * 3]
+    stp x27, x28, [x0, #16 * 4]
+    stp x29, x9, [x0, #16 * 5]
+    str x30, [x0, #16 * 6]
+
+    ldp x19, x20, [x1, #16 * 0]
+    ldp x21, x22, [x1, #16 * 1]
+    ldp x23, x24, [x1, #16 * 2]
+    ldp x25, x26, [x1, #16 * 3]
+    ldp x27, x28, [x1, #16 * 4]
+    ldp x29, x9, [x1, #16 * 5]
+    ldr x30, [x1, #16 * 6]
+    mov sp, x9
+
+    ret
+
+// x19 = Function to execute
+// x20 = Data parameter
+.globl fork_tail
+fork_tail:
+    bl scheduler_tail
+    mov x0, x20
+    blr x19
+    b panic

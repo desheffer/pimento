@@ -139,9 +139,9 @@ void mmap_map_page(process_t* process, void* va, void* pa)
     add_page(process, tab, va, virt_to_phys(pa));
 }
 
-void mmap_switch(process_t* process)
+void mmap_switch_to(process_t* process)
 {
-    switch_ttbr(process->ttbr);
+    ttbr_switch_to(process->ttbr);
 }
 
 void data_abort_handler(void* va)

@@ -1,6 +1,6 @@
 #include <system.h>
 
-process_regs_t* do_set_tid_address(process_regs_t* regs)
+registers_t* do_set_tid_address(registers_t* regs)
 {
     // @TODO
     regs->regs[0] = 0;

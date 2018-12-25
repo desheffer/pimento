@@ -2,7 +2,7 @@
 #include <synchronize.h>
 #include <system.h>
 
-process_regs_t* do_exit(process_regs_t* regs)
+registers_t* do_exit(registers_t* regs)
 {
     int status = (int) regs->regs[0];
 

@@ -2,7 +2,7 @@
 #include <serial.h>
 #include <system.h>
 
-process_regs_t* do_write(process_regs_t* regs)
+registers_t* do_write(registers_t* regs)
 {
     int fd = (int) regs->regs[0];
     char* buf = (char*) regs->regs[1];

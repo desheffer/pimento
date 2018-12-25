@@ -5,10 +5,31 @@
 #include <string.h>
 #include <synchronize.h>
 
+process_t* process_create_kernel()
+{
+    // Create a new process control block.
+    process_t* process = malloc(sizeof(process_t));
+    memset(process, 0, sizeof(process_t));
+
+    // Assign a pid and basic information.
+    process->pid = 0;
+    process->state = running;
+    strncpy(process->pname, "kernel", PNAME_LENGTH);
+
+    // Initialize list of allocated pages.
+    process->pages = list_new();
+
+    // Initialize memory map.
+    mmap_create(process);
+
+    // Initialize execution.
+    process->cpu_context = malloc(sizeof(cpu_context_t));
+
+    return process;
+}
+
 process_t* process_create(const char* pname, const void* fn, const void* data)
 {
-    enter_critical();
-
     // Create a new process control block.
     process_t* process = malloc(sizeof(process_t));
     memset(process, 0, sizeof(process_t));
@@ -24,22 +45,18 @@ process_t* process_create(const char* pname, const void* fn, const void* data)
     // Initialize memory map.
     mmap_create(process);
 
-    // Allocate the first page of the stack.
-    void* stack_begin = alloc_user_page(process);
-    mmap_map_page(process, (void*) (STACK_TOP - PAGE_SIZE), stack_begin);
-    void* stack_end = (char*) stack_begin + PAGE_SIZE;
+    // Allocate the first page of the interrupt stack.
+    void* stack_top = (char*) alloc_user_page(process) + PAGE_SIZE;
 
-    // Initialize startup parameters.
-    process_regs_t* regs = (process_regs_t*) stack_end - 1;
-    regs->pstate = PSR_MODE_KTHREAD;
-    regs->pc = (long unsigned) fn;
-    regs->regs[0] = (long unsigned) data;
-    process->sp = regs;
+    // Initialize execution.
+    process->cpu_context = malloc(sizeof(cpu_context_t));
+    process->cpu_context->regs[0] = (long unsigned) fn;
+    process->cpu_context->regs[1] = (long unsigned) data;
+    process->cpu_context->sp = (long unsigned) stack_top;
+    process->cpu_context->pc = (long unsigned) fork_tail;
 
-    // Add it to the process list and scheduling queue.
+    // Add it to the scheduling queue.
     scheduler_enqueue(process);
-
-    leave_critical();
 
     return process;
 }

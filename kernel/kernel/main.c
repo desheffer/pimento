@@ -7,6 +7,22 @@
 #include <timer.h>
 #include <unistd.h>
 
+void two()
+{
+    while (1) {
+        kputs("2");
+        asm volatile("wfi");
+    }
+}
+
+void three()
+{
+    while (1) {
+        kputs("3");
+        asm volatile("wfi");
+    }
+}
+
 void kernel_main()
 {
     serial_init();
@@ -24,15 +40,20 @@ void kernel_main()
         "\n\n"
     );
 
+    process_create("two", two, 0);
+    process_create("three", three, 0);
+
     /* if (fork() == 0) { */
-        const char* argv[] = {"/bin/sh", 0};
-        const char* envp[] = {"PWD=/", 0};
-        execve("/bin/sh", (char* const*) argv, (char* const*) envp);
+    /*     const char* argv[] = {"/bin/sh", 0}; */
+    /*     const char* envp[] = {"PWD=/", 0}; */
+    /*     execve("/bin/sh", (char* const*) argv, (char* const*) envp); */
     /* } */
 
-    /* while (scheduler_count() > 1) { */
-    /*     asm volatile("wfi"); */
-    /* } */
+    scheduler_context_switch();
+
+    while (scheduler_count() > 1) {
+        asm volatile("wfi");
+    }
 
     kputs("\nWill now halt.\n");
 }

@@ -30,7 +30,8 @@ static char** copy_args(char* const src[])
     return dest;
 }
 
-process_regs_t* do_execve(process_regs_t* regs)
+// @TODO: This method is very broken right now.
+registers_t* do_execve(registers_t* regs)
 {
     char* pname = (char*) regs->regs[0];
     char** argv = copy_args((char* const*) regs->regs[1]);
@@ -52,7 +53,7 @@ process_regs_t* do_execve(process_regs_t* regs)
 
     // Initialize a new memory map.
     mmap_create(process);
-    mmap_switch(process);
+    mmap_switch_to(process);
 
     // Begin a new stack.
     void* stack = (void*) STACK_TOP;
@@ -61,11 +62,10 @@ process_regs_t* do_execve(process_regs_t* regs)
     stack = process_set_args(stack, argv, envp);
 
     // Load stack with initial state.
-    stack = (void*) ((process_regs_t*) stack - 1);
-    regs = (process_regs_t*) stack;
+    stack = (void*) ((registers_t*) stack - 1);
+    regs = (registers_t*) stack;
     regs->pstate = PSR_MODE_USER;
     regs->pc = (long unsigned) elf_load(&__shell_start, &__shell_end - &__shell_start);
-    process->sp = regs;
 
     leave_critical();
 
