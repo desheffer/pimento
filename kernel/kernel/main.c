@@ -7,13 +7,6 @@
 #include <timer.h>
 #include <unistd.h>
 
-static void init()
-{
-    const char* argv[] = {"/bin/sh", 0};
-    const char* envp[] = {"PWD=/", 0};
-    execve("/bin/sh", (char* const*) argv, (char* const*) envp);
-}
-
 void kernel_main()
 {
     serial_init();
@@ -31,13 +24,11 @@ void kernel_main()
         "\n\n"
     );
 
-    process_create("init", init, 0);
-
     scheduler_context_switch();
 
-    while (scheduler_count() > 1) {
-        asm volatile("wfi");
-    }
+    const char* argv[] = {"/bin/sh", 0};
+    const char* envp[] = {"PWD=/", 0};
+    execve("/bin/sh", (char* const*) argv, (char* const*) envp);
 
     kputs("\nWill now halt.\n");
 }

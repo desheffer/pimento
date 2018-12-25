@@ -28,39 +28,6 @@ process_t* process_create_kernel()
     return process;
 }
 
-process_t* process_create(const char* pname, const void* fn, const void* data)
-{
-    // Create a new process control block.
-    process_t* process = malloc(sizeof(process_t));
-    memset(process, 0, sizeof(process_t));
-
-    // Assign a pid and basic information.
-    process->pid = scheduler_assign_pid();
-    process->state = created;
-    strncpy(process->pname, pname, PNAME_LENGTH);
-
-    // Initialize list of allocated pages.
-    process->pages = list_new();
-
-    // Initialize memory map.
-    mmap_create(process);
-
-    // Allocate the first page of the interrupt stack.
-    void* int_stack_top = (char*) alloc_user_page(process) + PAGE_SIZE;
-
-    // Initialize execution.
-    process->cpu_context = malloc(sizeof(cpu_context_t));
-    process->cpu_context->regs[0] = (long unsigned) fn;
-    process->cpu_context->regs[1] = (long unsigned) data;
-    process->cpu_context->sp = (long unsigned) int_stack_top;
-    process->cpu_context->pc = (long unsigned) fork_tail;
-
-    // Add it to the scheduling queue.
-    scheduler_enqueue(process);
-
-    return process;
-}
-
 void process_destroy(process_t* process)
 {
     (void) process;
