@@ -29,7 +29,7 @@ vector_table:
     vector el0_fiq_invalid      // FIQ 32-bit EL0
     vector el0_error_invalid    // SError 32-bit EL0
 
-.macro save_regs el
+.macro save_regs
     sub sp, sp, #PROCESS_REGS_SIZE
 
     stp x0, x1, [sp, #16 * 0]
@@ -48,29 +48,21 @@ vector_table:
     stp x26, x27, [sp, #16 * 13]
     stp x28, x29, [sp, #16 * 14]
 
-    .if \el == 0
     mrs x21, sp_el0
     stp x30, x21, [sp, #16 * 15]
-    .else
-    stp x30, xzr, [sp, #16 * 15]
-    .endif
 
     mrs x21, elr_el1
     mrs x22, spsr_el1
     stp x21, x22, [sp, #16 * 16]
 .endm
 
-.macro load_regs el
+.macro load_regs
     ldp x21, x22, [sp, #16 * 16]
     msr elr_el1, x21
     msr spsr_el1, x22
 
-    .if \el == 0
     ldp x30, x21, [sp, #16 * 15]
     msr sp_el0, x21
-    .else
-    ldp x30, xzr, [sp, #16 * 15]
-    .endif
 
     ldp x0, x1, [sp, #16 * 0]
     ldp x2, x3, [sp, #16 * 1]
@@ -100,7 +92,7 @@ vector_table:
 .endm
 
 el1_sync:
-    save_regs 1
+    save_regs
     bl enable_interrupts
     mrs x21, esr_el1
     and x21, x21, #ESR_ELx_EC_MASK
@@ -123,17 +115,17 @@ el1_sync_dabt:
     b el1_sync_done
 el1_sync_done:
     bl disable_interrupts
-    load_regs 1
+    load_regs
     eret
 
 el1_irq:
-    save_regs 1
+    save_regs
     bl interrupt_handler
-    load_regs 1
+    load_regs
     eret
 
 el0_sync:
-    save_regs 0
+    save_regs
     bl enable_interrupts
     mrs x21, esr_el1
     and x21, x21, #ESR_ELx_EC_MASK
@@ -156,19 +148,19 @@ el0_sync_dabt:
     b el0_sync_done
 el0_sync_done:
     bl disable_interrupts
-    load_regs 0
+    load_regs
     eret
 
 el0_irq:
-    save_regs 0
+    save_regs
     bl interrupt_handler
-    load_regs 0
+    load_regs
     eret
 
 .macro inv_entry el reason
-    save_regs \el
+    save_regs
     debug_entry \reason
-    load_regs \el
+    load_regs
     eret
 .endm
 

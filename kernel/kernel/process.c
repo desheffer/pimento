@@ -46,13 +46,13 @@ process_t* process_create(const char* pname, const void* fn, const void* data)
     mmap_create(process);
 
     // Allocate the first page of the interrupt stack.
-    void* stack_top = (char*) alloc_user_page(process) + PAGE_SIZE;
+    void* int_stack_top = (char*) alloc_user_page(process) + PAGE_SIZE;
 
     // Initialize execution.
     process->cpu_context = malloc(sizeof(cpu_context_t));
     process->cpu_context->regs[0] = (long unsigned) fn;
     process->cpu_context->regs[1] = (long unsigned) data;
-    process->cpu_context->sp = (long unsigned) stack_top;
+    process->cpu_context->sp = (long unsigned) int_stack_top;
     process->cpu_context->pc = (long unsigned) fork_tail;
 
     // Add it to the scheduling queue.

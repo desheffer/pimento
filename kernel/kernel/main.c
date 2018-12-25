@@ -7,20 +7,11 @@
 #include <timer.h>
 #include <unistd.h>
 
-void two()
+static void init()
 {
-    while (1) {
-        kputs("2");
-        asm volatile("wfi");
-    }
-}
-
-void three()
-{
-    while (1) {
-        kputs("3");
-        asm volatile("wfi");
-    }
+    const char* argv[] = {"/bin/sh", 0};
+    const char* envp[] = {"PWD=/", 0};
+    execve("/bin/sh", (char* const*) argv, (char* const*) envp);
 }
 
 void kernel_main()
@@ -40,14 +31,7 @@ void kernel_main()
         "\n\n"
     );
 
-    process_create("two", two, 0);
-    process_create("three", three, 0);
-
-    /* if (fork() == 0) { */
-    /*     const char* argv[] = {"/bin/sh", 0}; */
-    /*     const char* envp[] = {"PWD=/", 0}; */
-    /*     execve("/bin/sh", (char* const*) argv, (char* const*) envp); */
-    /* } */
+    process_create("init", init, 0);
 
     scheduler_context_switch();
 

@@ -30,7 +30,6 @@ static char** copy_args(char* const src[])
     return dest;
 }
 
-// @TODO: This method is very broken right now.
 registers_t* do_execve(registers_t* regs)
 {
     char* pname = (char*) regs->regs[0];
@@ -55,22 +54,23 @@ registers_t* do_execve(registers_t* regs)
     mmap_create(process);
     mmap_switch_to(process);
 
-    // Begin a new stack.
-    void* stack = (void*) STACK_TOP;
+    // Allocate the first page of the interrupt stack.
+    void* int_stack_top = (char*) alloc_user_page(process) + PAGE_SIZE;
 
-    // Load stack with argv and envp.
-    stack = process_set_args(stack, argv, envp);
+    // Load child stack with argv and envp.
+    void* stack_top = (void*) STACK_TOP;
+    stack_top = process_set_args(stack_top, argv, envp);
 
-    // Load stack with initial state.
-    stack = (void*) ((registers_t*) stack - 1);
-    regs = (registers_t*) stack;
-    regs->pstate = PSR_MODE_USER;
-    regs->pc = (long unsigned) elf_load(&__shell_start, &__shell_end - &__shell_start);
+    // Initialize execution.
+    registers_t* new_regs = (registers_t*) int_stack_top - 1;
+    new_regs->sp = (long unsigned) stack_top;
+    new_regs->pc = (long unsigned) elf_load(&__shell_start, &__shell_end - &__shell_start);
+    new_regs->pstate = PSR_MODE_USER;
 
     leave_critical();
 
     free(argv);
     free(envp);
 
-    return regs;
+    return new_regs;
 }

@@ -2,7 +2,6 @@ PREFIX  ?=
 CC      := $(PREFIX)gcc
 OBJCOPY := $(PREFIX)objcopy
 OBJDUMP := $(PREFIX)objdump
-STRIP   := $(PREFIX)strip
 
 BIN := shell
 
@@ -30,7 +29,6 @@ $(BUILD)/$(BIN).list: $(BUILD)/$(BIN).elf
 
 $(BUILD)/$(BIN).elf: $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
-	$(STRIP) --strip-all $@
 
 $(BUILD)/%.c.o: $(SRC)/%.c $(INCLUDES)
 	@mkdir -p $(@D)
