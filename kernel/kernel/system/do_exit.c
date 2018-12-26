@@ -16,9 +16,7 @@ registers_t* do_exit(registers_t* regs)
 
     leave_critical();
 
-    while (1) {
-        asm volatile("wfi");
-    }
+    scheduler_context_switch();
 
     return regs;
 }

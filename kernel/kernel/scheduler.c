@@ -67,9 +67,9 @@ void scheduler_context_switch()
     /*     free(_current_process); */
     /* } */
 
-    /* if (list_count(_process_queue) == 0) { */
-    /*     halt(); */
-    /* } */
+    if (list_count(_process_queue) == 0) {
+        halt();
+    }
 
     process_t* next = (process_t*) list_pop_front(_process_queue);
     next->state = running;
