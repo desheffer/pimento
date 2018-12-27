@@ -11,7 +11,6 @@ void kernel_main()
 {
     serial_init();
     memory_init();
-    system_init();
     interrupt_init();
     timer_init();
     scheduler_init();

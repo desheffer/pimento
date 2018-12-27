@@ -2,7 +2,7 @@
 #include <synchronize.h>
 #include <system.h>
 
-registers_t* do_exit_group(registers_t* regs)
+registers_t* sys_exit(registers_t* regs)
 {
     int status = (int) regs->regs[0];
 

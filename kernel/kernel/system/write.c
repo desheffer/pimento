@@ -1,8 +1,9 @@
 #include <assert.h>
 #include <serial.h>
+#include <sys/uio.h>
 #include <system.h>
 
-registers_t* do_write(registers_t* regs)
+registers_t* sys_write(registers_t* regs)
 {
     int fd = (int) regs->regs[0];
     char* buf = (char*) regs->regs[1];

@@ -30,7 +30,7 @@ static char** copy_args(char* const src[])
     return dest;
 }
 
-registers_t* do_execve(registers_t* regs)
+registers_t* sys_execve(registers_t* regs)
 {
     char* pname = (char*) regs->regs[0];
     char** argv = copy_args((char* const*) regs->regs[1]);

@@ -1,34 +1,20 @@
 #include <assert.h>
 #include <system.h>
 
-static syscall_t* _calls[__NR_syscalls] = {0};
+#undef SYSCALL
+#define SYSCALL(nr, call) [__NR_ ## nr] = call,
 
-void system_init()
+static syscall_t* _calls[__NR_syscalls] = {
+#include <system/syscalls.h>
+};
+
+registers_t* system_handler(registers_t* regs, unsigned nr)
 {
-    system_register_call(__NR_brk, (syscall_t*) do_brk);
-    system_register_call(__NR_execve, (syscall_t*) do_execve);
-    system_register_call(__NR_exit, (syscall_t*) do_exit);
-    system_register_call(__NR_exit_group, (syscall_t*) do_exit_group);
-    system_register_call(__NR_ioctl, (syscall_t*) do_ioctl);
-    system_register_call(__NR_read, (syscall_t*) do_read);
-    system_register_call(__NR_readv, (syscall_t*) do_readv);
-    system_register_call(__NR_set_tid_address, (syscall_t*) do_set_tid_address);
-    system_register_call(__NR_write, (syscall_t*) do_write);
-    system_register_call(__NR_writev, (syscall_t*) do_writev);
-}
+    assert(nr < __NR_syscalls);
 
-registers_t* system_handler(registers_t* regs, unsigned n)
-{
-    assert(n < __NR_syscalls);
-
-    if (_calls[n]) {
-        return _calls[n](regs);
+    if (_calls[nr]) {
+        return _calls[nr](regs);
     }
 
-    return do_invalid(regs);
-}
-
-void system_register_call(unsigned n, syscall_t* call)
-{
-    _calls[n] = call;
+    return sys_invalid(regs);
 }
