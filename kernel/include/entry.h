@@ -42,7 +42,7 @@
 
 #ifndef __ASSEMBLY__
 
-typedef struct {
+typedef struct registers_t {
     long unsigned regs[31]; // x0 - x30
     long unsigned sp;
     long unsigned pc;

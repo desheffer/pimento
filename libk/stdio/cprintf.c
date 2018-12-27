@@ -4,7 +4,7 @@
 
 #define BUF_MAX 13
 
-typedef struct {
+typedef struct vcprintf_specifiers_t {
     char* buf;
     unsigned alt;
     unsigned base;

@@ -21,13 +21,13 @@ typedef enum {
     stopping,
 } process_state_t;
 
-typedef struct {
+typedef struct cpu_context_t {
     long unsigned regs[11]; // x19 - x29
     long unsigned sp;
     long unsigned pc;
 } cpu_context_t;
 
-typedef struct {
+typedef struct process_t {
     short unsigned pid;
     process_state_t state;
     char pname[PNAME_LENGTH];

@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-typedef struct {
+typedef struct vsnprintf_putc_data_t {
     char* dest;
     size_t num_chars;
     size_t max_chars;

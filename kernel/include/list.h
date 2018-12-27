@@ -6,7 +6,7 @@ typedef struct list_item_t {
     struct list_item_t* next;
 } list_item_t;
 
-typedef struct {
+typedef struct list_t {
     list_item_t* front;
     list_item_t* back;
 } list_t;

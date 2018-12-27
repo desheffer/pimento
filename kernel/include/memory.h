@@ -3,7 +3,7 @@
 #include <mmap.h>
 #include <process.h>
 
-typedef struct {
+typedef struct page_t {
     unsigned allocated: 1;
 } page_t;
 
