@@ -19,8 +19,8 @@ unsigned list_count(list_t* list)
     unsigned count = 0;
 
     while (list_item != 0) {
-        list_item = list_item->next;
         ++count;
+        list_item = list_item->next;
     }
 
     return count;

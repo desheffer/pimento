@@ -38,6 +38,47 @@ void process_destroy(process_t* process)
     // @TODO: Free process.
 }
 
+int process_clone(process_t* parent)
+{
+    enter_critical();
+
+    // Create a new process control block.
+    process_t* child = kzalloc(sizeof(process_t));
+
+    // Assign a pid and basic information.
+    child->pid = scheduler_assign_pid();
+    child->state = created;
+    strncpy(child->pname, parent->pname, PNAME_LENGTH);
+
+    // Initialize child's memory map.
+    mm_create(child);
+    mm_switch_to(child);
+    mm_copy_from(parent, child);
+
+    // Allocate the first page of the interrupt stack.
+    void* int_stack_top = (char*) alloc_kernel_page() + PAGE_SIZE;
+
+    // Locate the interrupt stack for the parent process.
+    // @TODO: Move interrupt stacks into VM, because this is awful.
+    long unsigned sp;
+    asm volatile("mov %0, sp" : "=r" (sp));
+    void* parent_int_stack_top = (void*) ((sp & PAGE_MASK) + PAGE_SIZE);
+    memcpy((void*) ((long unsigned) int_stack_top - PAGE_SIZE), (void*) ((long unsigned) parent_int_stack_top - PAGE_SIZE), PAGE_SIZE);
+
+    // Initialize execution.
+    child->cpu_context = kzalloc(sizeof(cpu_context_t));
+    child->cpu_context->sp = (long unsigned) int_stack_top - PROCESS_REGS_SIZE;
+    child->cpu_context->pc = (long unsigned) fork_tail;
+
+    scheduler_enqueue(child);
+
+    mm_switch_to(parent);
+
+    leave_critical();
+
+    return child->pid;
+}
+
 int process_exec(const char* pname, char* const argv[], char* const envp[])
 {
     // @TODO: Support arbitrary files.
@@ -56,7 +97,7 @@ int process_exec(const char* pname, char* const argv[], char* const envp[])
     mm_switch_to(process);
 
     // Allocate the first page of the interrupt stack.
-    void* int_stack_top = (char*) alloc_page() + PAGE_SIZE;
+    void* int_stack_top = (char*) alloc_kernel_page() + PAGE_SIZE;
 
     // Load child stack with argv and envp.
     void* stack_top = (void*) STACK_TOP;

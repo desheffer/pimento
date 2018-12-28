@@ -17,7 +17,7 @@ typedef enum {
     created,
     running,
     sleeping,
-    stopping,
+    zombie,
 } process_state_t;
 
 typedef struct cpu_context_t {
@@ -38,9 +38,11 @@ typedef struct process_t {
 
 process_t* process_create_kernel(void);
 void process_destroy(process_t*);
+int process_clone(process_t*);
 int process_exec(const char*, char* const[], char* const[]);
 void* process_set_args(void*, char* const[], char* const[]);
 
 void do_exec(registers_t*);
+void fork_tail();
 
 #endif

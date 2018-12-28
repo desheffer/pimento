@@ -68,11 +68,9 @@ void scheduler_context_switch(void)
         list_push_back(_process_queue, prev);
     }
 
-    failif(_current_process->state == stopping);
-    /* if (_current_process->state == stopping) { */
-    /*     scheduler_destroy(_current_process); */
-    /*     kfree(_current_process); */
-    /* } */
+    if (prev->state == zombie) {
+        /* scheduler_destroy(prev); */
+    }
 
     if (list_count(_process_queue) == 0) {
         halt();
@@ -104,7 +102,7 @@ void scheduler_destroy(process_t* process)
 {
     enter_critical();
 
-    assert(process->state == stopping);
+    assert(process->state == zombie);
 
     list_remove(_process_list, process);
     process_destroy(process);

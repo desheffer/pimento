@@ -10,7 +10,7 @@ void sys_exit_group(int status)
     enter_critical();
 
     process_t* process = scheduler_current();
-    process->state = stopping;
+    process->state = zombie;
 
     leave_critical();
 

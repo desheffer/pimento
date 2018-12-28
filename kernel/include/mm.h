@@ -72,6 +72,7 @@ typedef struct mm_context_t {
 } mm_context_t;
 
 void mm_init(void);
+void mm_copy_from(process_t*, process_t*);
 void mm_create(process_t*);
 void mm_map_page(process_t*, void*, void*);
 void mm_switch_to(process_t*);

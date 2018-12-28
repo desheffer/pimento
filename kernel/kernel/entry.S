@@ -209,3 +209,10 @@ do_exec:
     mov sp, x0
     load_regs
     eret
+
+.globl fork_tail
+fork_tail:
+    bl disable_interrupts
+    load_regs
+    mov x0, 0
+    eret

@@ -93,6 +93,23 @@ static void record_alloc(process_t* process, void* pa, void* va, unsigned flags)
     list_push_back(process->mm_context->pages, page);
 }
 
+void mm_copy_from(process_t* parent, process_t* child)
+{
+    list_item_t* page_item = parent->mm_context->pages->front;
+
+    while (page_item != 0) {
+        page_t* page = (page_t*) page_item->item;
+
+        if ((page->flags & PG_VM) != 0) {
+            mm_map_page(child, page->va, alloc_page());
+
+            memcpy(page->va, phys_to_virt(page->pa), PAGE_SIZE);
+        }
+
+        page_item = page_item->next;
+    }
+}
+
 void mm_create(process_t* process)
 {
     process->mm_context = kzalloc(sizeof(mm_context_t));
@@ -178,7 +195,5 @@ void data_abort_handler(void* va)
 {
     process_t* process = scheduler_current();
 
-    void* pa = alloc_page();
-
-    mm_map_page(process, va, pa);
+    mm_map_page(process, va, alloc_page());
 }

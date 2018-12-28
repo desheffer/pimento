@@ -6,6 +6,18 @@ int main(int argc, char* argv[], char* envp[])
 {
     (void) argc;
 
+    if (fork() == 0) {
+        printf("hello from child\n");
+        return 0;
+    } else {
+        printf("hello from parent\n");
+    }
+
+    // Because we can't wait() yet...
+    for (unsigned i = 100000000; i > 0; --i) {
+        asm volatile("nop");
+    }
+
     printf("[Shell]\n\n");
 
     char cmd[1024];
