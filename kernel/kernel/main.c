@@ -27,7 +27,5 @@ void kernel_main()
 
     const char* argv[] = {"/bin/sh", 0};
     const char* envp[] = {"PWD=/", 0};
-    execve("/bin/sh", (char* const*) argv, (char* const*) envp);
-
-    kputs("\nWill now halt.\n");
+    process_exec("/bin/sh", (char* const*) argv, (char* const*) envp);
 }

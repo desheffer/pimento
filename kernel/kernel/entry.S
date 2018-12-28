@@ -97,17 +97,9 @@ el1_sync:
     mrs x21, esr_el1
     and x21, x21, #ESR_ELx_EC_MASK
     lsr x21, x21, #ESR_ELx_EC_SHIFT
-    cmp x21, #ESR_ELx_EC_SVC64
-    beq el1_sync_svc
     cmp x21, #ESR_ELx_EC_DABT_CUR
     beq el1_sync_dabt
     debug_entry #BAD_SYNC
-    b el1_sync_done
-el1_sync_svc:
-    mov x0, sp
-    mov x1, x8
-    bl system_handler
-    mov sp, x0
     b el1_sync_done
 el1_sync_dabt:
     mrs x0, far_el1
@@ -212,11 +204,9 @@ cpu_switch_to:
 
     ret
 
-// x19 = Function to execute
-// x20 = Data parameter
-.globl fork_tail
-fork_tail:
-    bl scheduler_tail
-    mov x0, x20
-    blr x19
-    b panic
+.globl do_exec
+do_exec:
+    bl disable_interrupts
+    mov sp, x0
+    load_regs
+    eret

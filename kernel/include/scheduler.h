@@ -12,4 +12,3 @@ void scheduler_enqueue(process_t*);
 void scheduler_tail();
 
 void cpu_switch_to(cpu_context_t*, cpu_context_t*);
-void fork_tail();

@@ -38,6 +38,9 @@ typedef struct process_t {
 
 process_t* process_create_kernel();
 void process_destroy(process_t*);
+int process_exec(const char*, char* const[], char* const[]);
 void* process_set_args(void*, char* const[], char* const[]);
+
+void do_exec(registers_t*);
 
 #endif

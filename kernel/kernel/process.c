@@ -1,9 +1,15 @@
+#include <assert.h>
+#include <elf.h>
 #include <list.h>
 #include <memory.h>
+#include <process.h>
 #include <scheduler.h>
 #include <stdlib.h>
 #include <string.h>
 #include <synchronize.h>
+
+extern char __shell_start;
+extern char __shell_end;
 
 process_t* process_create_kernel()
 {
@@ -34,6 +40,50 @@ void process_destroy(process_t* process)
 
     // @TODO: Call free_user_page() for each entry in process->pages.
     // @TODO: Free process.
+}
+
+int process_exec(const char* pname, char* const argv[], char* const envp[])
+{
+    // @TODO: Support arbitrary files.
+    assert(strcmp("/bin/sh", pname) == 0);
+
+    enter_critical();
+
+    process_t* process = scheduler_current();
+
+    // Update process name.
+    strncpy(process->pname, pname, PNAME_LENGTH);
+
+    // Initialize list of allocated pages.
+    // @TODO: Reap old pages and delete old list.
+    process->pages = list_new();
+
+    // Initialize a new memory map.
+    mmap_create(process);
+    mmap_switch_to(process);
+
+    // Allocate the first page of the interrupt stack.
+    void* int_stack_top = (char*) alloc_user_page(process) + PAGE_SIZE;
+
+    // Load child stack with argv and envp.
+    void* stack_top = (void*) STACK_TOP;
+    stack_top = process_set_args(stack_top, argv, envp);
+
+    // Initialize execution.
+    registers_t* new_regs = (registers_t*) int_stack_top - 1;
+    new_regs->sp = (long unsigned) stack_top;
+    new_regs->pc = (long unsigned) elf_load(&__shell_start, &__shell_end - &__shell_start);
+    new_regs->pstate = PSR_MODE_USER;
+
+    leave_critical();
+
+    /* free(argv); */
+    /* free(envp); */
+
+    // @TODO: Need to reset kernel stack so we don't overflow.
+    do_exec(new_regs);
+
+    return -1;
 }
 
 void* process_set_args(void* sp, char* const argv[], char* const envp[])
