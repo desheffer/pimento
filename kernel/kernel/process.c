@@ -26,7 +26,7 @@ process_t* process_create_kernel(void)
     process->pages = list_new();
 
     // Initialize memory map.
-    mmap_create(process);
+    mm_create(process);
 
     // Initialize execution.
     process->cpu_context = malloc(sizeof(cpu_context_t));
@@ -59,8 +59,8 @@ int process_exec(const char* pname, char* const argv[], char* const envp[])
     process->pages = list_new();
 
     // Initialize a new memory map.
-    mmap_create(process);
-    mmap_switch_to(process);
+    mm_create(process);
+    mm_switch_to(process);
 
     // Allocate the first page of the interrupt stack.
     void* int_stack_top = (char*) alloc_user_page(process) + PAGE_SIZE;

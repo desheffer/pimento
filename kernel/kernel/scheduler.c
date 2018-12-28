@@ -53,7 +53,7 @@ static void switch_to(process_t* prev, process_t* next)
 
     _current_process = next;
 
-    mmap_switch_to(next);
+    mm_switch_to(next);
 
     cpu_switch_to(prev->cpu_context, next->cpu_context);
 }

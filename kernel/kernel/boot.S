@@ -1,5 +1,5 @@
 #include <boot.h>
-#include <mmap.h>
+#include <mm.h>
 #include <process.h>
 
 .section ".text.boot"
@@ -38,7 +38,7 @@ enter_el1:
     msr mair_el1, x4
 
     // Set TTBR0 and TTBR1.
-    bl mmap_init
+    bl mm_init
 
     // Set TCR.
     ldr x4, =TCR_EL1

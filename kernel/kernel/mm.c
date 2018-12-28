@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void mmap_init(void)
+void mm_init(void)
 {
     va_table_t* tables = (va_table_t*) virt_to_phys(&__va_table_start);
 
@@ -82,7 +82,7 @@ void mmap_init(void)
     asm volatile("msr ttbr1_el1, %0" :: "r" (tables));
 }
 
-void mmap_create(process_t* process)
+void mm_create(process_t* process)
 {
     va_table_t* l0 = virt_to_phys(alloc_user_page(process));
 
@@ -128,7 +128,7 @@ static void* add_page(process_t* process, va_table_t* tab, void* va, void* pa)
     return pa;
 }
 
-void mmap_map_page(process_t* process, void* va, void* pa)
+void mm_map_page(process_t* process, void* va, void* pa)
 {
     va_table_t* tab = ttbr_to_phys(process->ttbr);
 
@@ -139,7 +139,7 @@ void mmap_map_page(process_t* process, void* va, void* pa)
     add_page(process, tab, va, virt_to_phys(pa));
 }
 
-void mmap_switch_to(process_t* process)
+void mm_switch_to(process_t* process)
 {
     ttbr_switch_to(process->ttbr);
 }
@@ -150,5 +150,5 @@ void data_abort_handler(void* va)
 
     void* pa = alloc_user_page(process);
 
-    mmap_map_page(process, va, pa);
+    mm_map_page(process, va, pa);
 }
