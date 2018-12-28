@@ -25,7 +25,7 @@ static int interrupt_pending(unsigned num)
     return *CORE0_IRQ & (0b1 << num);
 }
 
-void interrupt_init()
+void interrupt_init(void)
 {
     for (unsigned i = 0; i < NUM_IRQS; ++i) {
         _handlers[i] = 0;
@@ -55,7 +55,7 @@ void interrupt_disconnect(irq_number_t num)
     _handlers_data[num] = 0;
 }
 
-void interrupt_handler()
+void interrupt_handler(void)
 {
     for (unsigned num = 0; num < NUM_IRQS; ++num) {
         if (interrupt_pending(num) && _handlers[num]) {

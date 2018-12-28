@@ -18,7 +18,7 @@ static void* page_start(unsigned index)
     return (char*) 0 + index * PAGE_SIZE;
 }
 
-void memory_init()
+void memory_init(void)
 {
     // @TODO: Get from hardware.
     void* alloc_end = (void*) 0x3F000000;
@@ -48,7 +48,7 @@ void memory_reserve_range(void* start, void* end)
     }
 }
 
-static void* alloc_page()
+static void* alloc_page(void)
 {
     void* pa = 0;
 
@@ -73,7 +73,7 @@ static void* alloc_page()
     return pa;
 }
 
-void* alloc_kernel_page()
+void* alloc_kernel_page(void)
 {
     void* pa = alloc_page();
 

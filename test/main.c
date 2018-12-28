@@ -3,7 +3,7 @@
 #include <serial.h>
 #include <test.h>
 
-void kernel_main()
+void kernel_main(void)
 {
     serial_init();
     memory_init();

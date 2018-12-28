@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void mmap_init()
+void mmap_init(void)
 {
     va_table_t* tables = (va_table_t*) virt_to_phys(&__va_table_start);
 

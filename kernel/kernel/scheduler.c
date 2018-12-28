@@ -14,7 +14,14 @@ static unsigned _next_pid = 1;
 static list_t* _process_list = 0;
 static list_t* _process_queue = 0;
 
-void scheduler_init()
+static void scheduler_timer(void* data)
+{
+    (void) data;
+
+    scheduler_context_switch();
+}
+
+void scheduler_init(void)
 {
     _process_list = list_new();
     _process_queue = list_new();
@@ -22,10 +29,10 @@ void scheduler_init()
     _current_process = process_create_kernel();
     list_push_back(_process_list, _current_process);
 
-    timer_connect(scheduler_context_switch, 0);
+    timer_connect(scheduler_timer, 0);
 }
 
-short unsigned scheduler_assign_pid()
+short unsigned scheduler_assign_pid(void)
 {
     enter_critical();
 
@@ -51,7 +58,7 @@ static void switch_to(process_t* prev, process_t* next)
     cpu_switch_to(prev->cpu_context, next->cpu_context);
 }
 
-void scheduler_context_switch()
+void scheduler_context_switch(void)
 {
     disable_interrupts();
 
@@ -81,12 +88,12 @@ void scheduler_context_switch()
     enable_interrupts();
 }
 
-unsigned scheduler_count()
+unsigned scheduler_count(void)
 {
     return list_count(_process_list);
 }
 
-process_t* scheduler_current()
+process_t* scheduler_current(void)
 {
     assert(_current_process != 0);
 
@@ -111,7 +118,7 @@ void scheduler_enqueue(process_t* process)
     list_push_back(_process_queue, process);
 }
 
-void scheduler_tail()
+void scheduler_tail(void)
 {
     timer_reset();
 

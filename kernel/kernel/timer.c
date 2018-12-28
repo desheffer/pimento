@@ -4,7 +4,7 @@
 
 static unsigned _quantum = 0;
 
-void timer_init()
+void timer_init(void)
 {
     unsigned freq;
     asm volatile("mrs %0, cntfrq_el0" : "=r" (freq));
@@ -22,12 +22,12 @@ void timer_connect(interrupt_handler_t* handler, void* handler_data)
     interrupt_connect(local_irq_cntpnsirq, handler, handler_data);
 }
 
-void timer_disconnect()
+void timer_disconnect(void)
 {
     interrupt_disconnect(local_irq_cntpnsirq);
 }
 
-void timer_reset()
+void timer_reset(void)
 {
     assert(_quantum > 0);
 
@@ -38,7 +38,7 @@ void timer_reset()
     asm volatile("msr cntp_ctl_el0, %0" :: "r" (1));
 }
 
-long unsigned timer_counter()
+long unsigned timer_counter(void)
 {
     long unsigned count;
 

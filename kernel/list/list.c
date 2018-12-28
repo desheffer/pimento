@@ -34,7 +34,7 @@ void list_delete(list_t* list)
     free(list);
 }
 
-list_t* list_new()
+list_t* list_new(void)
 {
     list_t* list = malloc(sizeof(list_t));
     list->front = 0;

@@ -2,7 +2,7 @@
 #include <list.h>
 #include <stdlib.h>
 
-void test_list()
+void test_list(void)
 {
     list_t* list = list_new();
 

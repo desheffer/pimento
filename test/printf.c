@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-void test_printf()
+void test_printf(void)
 {
     char buf[1024];
     unsigned len;

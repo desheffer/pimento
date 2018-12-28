@@ -7,10 +7,10 @@ typedef struct page_t {
     unsigned allocated: 1;
 } page_t;
 
-void memory_init();
+void memory_init(void);
 void memory_reserve_range(void*, void*);
 
-void* alloc_kernel_page();
+void* alloc_kernel_page(void);
 void* alloc_user_page(process_t*);
 
 void free_kernel_page(void*);

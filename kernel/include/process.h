@@ -36,7 +36,7 @@ typedef struct process_t {
     long unsigned ttbr;
 } process_t;
 
-process_t* process_create_kernel();
+process_t* process_create_kernel(void);
 void process_destroy(process_t*);
 int process_exec(const char*, char* const[], char* const[]);
 void* process_set_args(void*, char* const[], char* const[]);

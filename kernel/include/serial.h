@@ -24,6 +24,6 @@
 #define AUX_MU_LSR_RX_READY (0b1 << 0) // Data ready
 #define AUX_MU_LSR_TX_EMPTY (0b1 << 5) // Transmitter empty
 
-void serial_init();
-char serial_getc();
+void serial_init(void);
+char serial_getc(void);
 void serial_putc(char);

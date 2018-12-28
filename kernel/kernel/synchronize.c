@@ -5,7 +5,7 @@
 static unsigned _critical_level = 0;
 static unsigned _daif = 0;
 
-void enter_critical()
+void enter_critical(void)
 {
     unsigned daif;
     asm volatile ("mrs %0, daif" : "=r" (daif));
@@ -17,7 +17,7 @@ void enter_critical()
     }
 }
 
-void leave_critical()
+void leave_critical(void)
 {
     assert(_critical_level > 0);
 

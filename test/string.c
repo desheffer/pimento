@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <string.h>
 
-void test_string()
+void test_string(void)
 {
     char str[1024];
 

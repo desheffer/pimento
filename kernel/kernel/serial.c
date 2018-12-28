@@ -1,6 +1,6 @@
 #include <serial.h>
 
-void serial_init()
+void serial_init(void)
 {
     // Enable the mini UART.
     *AUX_ENABLES |= AUX_ENABLES_MU;
@@ -51,7 +51,7 @@ void serial_init()
     *AUX_MU_IIR = AUX_MU_IIR_RX | AUX_MU_IIR_TX;
 }
 
-char serial_getc()
+char serial_getc(void)
 {
     // Wait until receive FIFO is ready.
     while (!(*AUX_MU_LSR & AUX_MU_LSR_RX_READY));

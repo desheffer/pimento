@@ -62,7 +62,7 @@
 
 typedef long unsigned va_table_t[VA_TABLE_LENGTH];
 
-void mmap_init();
+void mmap_init(void);
 void mmap_create(process_t*);
 void mmap_map_page(process_t*, void*, void*);
 void mmap_switch_to(process_t*);

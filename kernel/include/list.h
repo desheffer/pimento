@@ -14,7 +14,7 @@ typedef struct list_t {
 void list_clear(list_t*);
 unsigned list_count(list_t*);
 void list_delete(list_t*);
-list_t* list_new();
+list_t* list_new(void);
 void* list_pop_back(list_t*);
 void* list_pop_front(list_t*);
 void list_push_back(list_t*, void*);

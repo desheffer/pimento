@@ -7,7 +7,7 @@
 #include <timer.h>
 #include <unistd.h>
 
-void kernel_main()
+void kernel_main(void)
 {
     serial_init();
     memory_init();

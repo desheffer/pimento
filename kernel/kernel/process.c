@@ -11,7 +11,7 @@
 extern char __shell_start;
 extern char __shell_end;
 
-process_t* process_create_kernel()
+process_t* process_create_kernel(void)
 {
     // Create a new process control block.
     process_t* process = malloc(sizeof(process_t));

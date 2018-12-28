@@ -91,7 +91,7 @@ void debug_process_regs(registers_t* state, long unsigned reason, long unsigned 
     halt();
 }
 
-void panic()
+void panic(void)
 {
     kputs(
         "\n"
