@@ -1,10 +1,8 @@
 #include <kstdio.h>
 #include <system.h>
 
-registers_t* sys_invalid(registers_t* regs)
+void sys_invalid(unsigned nr)
 {
-    kprintf("Invalid syscall (%#x)\n", (unsigned) regs->regs[8]);
+    kprintf("Invalid syscall (%#x)\n", nr);
     asm volatile("brk #0");
-
-    return regs;
 }

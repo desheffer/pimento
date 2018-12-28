@@ -1,8 +1,9 @@
 #include <system.h>
 
-registers_t* sys_brk(registers_t* regs)
+int sys_brk(void* addr)
 {
+    (void) addr;
+
     // @TODO
-    regs->regs[0] = 0;
-    return regs;
+    return 0;
 }

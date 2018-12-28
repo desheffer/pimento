@@ -2,19 +2,20 @@
 
 #include <asm-generic/unistd.h>
 #include <process.h>
+#include <sys/uio.h>
 
-typedef registers_t* syscall_t(registers_t*);
+typedef long unsigned syscall_t();
 
-registers_t* sys_brk(registers_t*);
-registers_t* sys_execve(registers_t*);
-registers_t* sys_exit(registers_t*);
-registers_t* sys_exit_group(registers_t*);
-registers_t* sys_ioctl(registers_t*);
-registers_t* sys_read(registers_t*);
-registers_t* sys_readv(registers_t*);
-registers_t* sys_set_tid_address(registers_t*);
-registers_t* sys_write(registers_t*);
-registers_t* sys_writev(registers_t*);
+int sys_brk(void*);
+int sys_execve(const char*, char* const[], char* const[]);
+void sys_exit(int);
+void sys_exit_group(int);
+int sys_ioctl(int, long unsigned);
+ssize_t sys_read(int, char*, size_t);
+ssize_t sys_readv(int, const struct iovec*, int);
+long sys_set_tid_address(int*);
+ssize_t sys_write(int, const char*, size_t);
+ssize_t sys_writev(int, const struct iovec*, int);
 
-registers_t* sys_invalid(registers_t*);
-registers_t* system_handler(registers_t*, unsigned);
+void sys_invalid(unsigned);
+void system_handler(registers_t*, unsigned);

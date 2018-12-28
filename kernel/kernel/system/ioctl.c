@@ -1,8 +1,10 @@
 #include <system.h>
 
-registers_t* sys_ioctl(registers_t* regs)
+int sys_ioctl(int fd, long unsigned request)
 {
     // @TODO
-    regs->regs[0] = 0;
-    return regs;
+    (void) fd;
+    (void) request;
+
+    return 0;
 }

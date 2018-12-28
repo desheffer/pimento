@@ -18,7 +18,7 @@ process_t* process_create_kernel()
     memset(process, 0, sizeof(process_t));
 
     // Assign a pid and basic information.
-    process->pid = 0;
+    process->pid = scheduler_assign_pid();
     process->state = running;
     strncpy(process->pname, "kernel", PNAME_LENGTH);
 

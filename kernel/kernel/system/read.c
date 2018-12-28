@@ -1,14 +1,9 @@
 #include <assert.h>
 #include <serial.h>
-#include <sys/uio.h>
 #include <system.h>
 
-registers_t* sys_read(registers_t* regs)
+ssize_t sys_read(int fd, char* buf, size_t count)
 {
-    int fd = (int) regs->regs[0];
-    char* buf = (char*) regs->regs[1];
-    size_t count = (size_t) regs->regs[2];
-
     ssize_t ret = 0;
 
     assert(fd == 0);
@@ -23,6 +18,5 @@ registers_t* sys_read(registers_t* regs)
         }
     }
 
-    regs->regs[0] = ret;
-    return regs;
+    return ret;
 }

@@ -132,7 +132,6 @@ el0_sync_svc:
     mov x0, sp
     mov x1, x8
     bl system_handler
-    mov sp, x0
     b el0_sync_done
 el0_sync_dabt:
     mrs x0, far_el1

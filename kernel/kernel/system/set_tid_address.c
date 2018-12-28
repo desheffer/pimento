@@ -1,8 +1,9 @@
 #include <system.h>
 
-registers_t* sys_set_tid_address(registers_t* regs)
+long sys_set_tid_address(int* tidptr)
 {
     // @TODO
-    regs->regs[0] = 0;
-    return regs;
+    (void) tidptr;
+
+    return 0;
 }

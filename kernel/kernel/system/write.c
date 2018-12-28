@@ -1,14 +1,9 @@
 #include <assert.h>
 #include <serial.h>
-#include <sys/uio.h>
 #include <system.h>
 
-registers_t* sys_write(registers_t* regs)
+ssize_t sys_write(int fd, const char* buf, size_t count)
 {
-    int fd = (int) regs->regs[0];
-    char* buf = (char*) regs->regs[1];
-    size_t count = (size_t) regs->regs[2];
-
     ssize_t ret = 0;
 
     assert(fd == 1);
@@ -18,6 +13,5 @@ registers_t* sys_write(registers_t* regs)
         ++ret;
     }
 
-    regs->regs[0] = ret;
-    return regs;
+    return ret;
 }

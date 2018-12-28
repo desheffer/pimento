@@ -1,14 +1,9 @@
 #include <assert.h>
 #include <serial.h>
-#include <sys/uio.h>
 #include <system.h>
 
-registers_t* sys_writev(registers_t* regs)
+ssize_t sys_writev(int fd, const struct iovec* iov, int iovcnt)
 {
-    int fd = (int) regs->regs[0];
-    struct iovec* iov = (struct iovec*) regs->regs[1];
-    size_t iovcnt = (size_t) regs->regs[2];
-
     ssize_t ret = 0;
 
     assert(fd == 1);
@@ -25,6 +20,5 @@ registers_t* sys_writev(registers_t* regs)
         ++iov;
     }
 
-    regs->regs[0] = ret;
-    return regs;
+    return ret;
 }

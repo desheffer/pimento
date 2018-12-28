@@ -2,11 +2,9 @@
 #include <synchronize.h>
 #include <system.h>
 
-registers_t* sys_exit(registers_t* regs)
+void sys_exit(int status)
 {
-    int status = (int) regs->regs[0];
-
-    // @TODO: Use status.
+    // @TODO
     (void) status;
 
     enter_critical();
@@ -17,6 +15,4 @@ registers_t* sys_exit(registers_t* regs)
     leave_critical();
 
     scheduler_context_switch();
-
-    return regs;
 }
