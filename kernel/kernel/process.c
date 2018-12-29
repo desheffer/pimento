@@ -77,9 +77,6 @@ int process_exec(const char* pname, char* const argv[], char* const envp[])
 
     leave_critical();
 
-    /* free(argv); */
-    /* free(envp); */
-
     // @TODO: Need to reset kernel stack so we don't overflow.
     do_exec(new_regs);
 

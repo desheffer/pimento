@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 int main(int argc, char* argv[], char* envp[])
 {
@@ -22,6 +23,8 @@ int main(int argc, char* argv[], char* envp[])
 
         if (strcmp("", cmd) == 0) {
             continue;
+        } else if (strcmp("sh", cmd) == 0) {
+            execve(argv[0], argv, envp);
         } else if (strcmp("env", cmd) == 0) {
             for (int i = 0; envp[i] != 0; ++i) {
                 printf("%s\n", envp[i]);
