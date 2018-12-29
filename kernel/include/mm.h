@@ -49,14 +49,8 @@
 #define phys_to_virt(ptr) ((void*) ((long unsigned) (ptr) | VA_START))
 #define virt_to_phys(ptr) ((void*) ((long unsigned) (ptr) & ~VA_START))
 
-#define TTBR_BADDR_MASK 0x7FFFFFFFFFFE
-
-#define pgd_to_phys(ptr)       ((void*) ((long unsigned) (ptr) & TTBR_BADDR_MASK))
-#define phys_to_pgd(ptr, asid) ((pgd_t) (((long unsigned) (asid) << 48) | ((long unsigned) (ptr))))
-
-#define va_table_to_virt(pa) (*((va_table_t*) phys_to_virt(pa)))
-
-#define PAGE_FLAG_USER 1
+#define PG_VM   1
+#define PG_USER 2
 
 #ifndef __ASSEMBLY__
 
@@ -73,8 +67,8 @@ typedef struct page_t {
 } page_t;
 
 typedef struct mm_context_t {
-    list_t* pages;
     pgd_t pgd;
+    list_t* pages;
 } mm_context_t;
 
 void mm_init(void);
@@ -83,6 +77,6 @@ void mm_map_page(process_t*, void*, void*);
 void mm_switch_to(process_t*);
 
 void data_abort_handler(void*);
-void pgd_switch_to(pgd_t);
+void ttbr_switch_to(long unsigned);
 
 #endif

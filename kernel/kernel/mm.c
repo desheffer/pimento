@@ -86,7 +86,6 @@ void mm_init(void)
 static void record_alloc(process_t* process, void* pa, void* va, unsigned flags)
 {
     page_t* page = kzalloc(sizeof(page_t));
-
     page->pa = pa;
     page->va = va;
     page->flags = flags;
@@ -101,11 +100,10 @@ void mm_create(process_t* process)
     // Initialize list of allocated pages.
     process->mm_context->pages = list_new();
 
-    va_table_t* l0 = alloc_page();
+    // Allocate page global directory.
+    process->mm_context->pgd = alloc_page();
 
-    record_alloc(process, (void*) l0, 0, 0);
-
-    process->mm_context->pgd = phys_to_pgd(l0, process->pid);
+    record_alloc(process, (void*) process->mm_context->pgd, 0, 0);
 }
 
 static unsigned va_table_index(void* va, unsigned level)
@@ -115,30 +113,33 @@ static unsigned va_table_index(void* va, unsigned level)
     return ((long unsigned) va >> (39 - 9 * level)) & 0x1FF;
 }
 
+#define va_table_access(pa) (*((va_table_t*) phys_to_virt(pa)))
+
 static va_table_t* add_table(process_t* process, va_table_t* tab, void* va, unsigned level)
 {
     unsigned index = va_table_index(va, level);
 
-    if (!(va_table_to_virt(tab)[index] & PT_TABLE)) {
+    if (!(va_table_access(tab)[index] & PT_TABLE)) {
         va_table_t* new_tab = alloc_page();
 
         record_alloc(process, (void*) new_tab, 0, 0);
 
-        va_table_to_virt(tab)[index] = (long unsigned) new_tab |
+        va_table_access(tab)[index] = (long unsigned) new_tab |
             PT_TABLE |
             PT_AF;
     }
 
-    long unsigned row = va_table_to_virt(tab)[index];
+    long unsigned row = va_table_access(tab)[index];
     return (va_table_t*) (row & VA_TABLE_TABLE_ADDR_MASK);
 }
 
 static void* add_page(process_t* process, va_table_t* tab, void* va, void* pa)
 {
     unsigned index = va_table_index(va, 3);
-    record_alloc(process, pa, va, PAGE_FLAG_USER);
 
-    va_table_to_virt(tab)[index] = (long unsigned) pa |
+    record_alloc(process, pa, va, PG_USER | PG_VM);
+
+    va_table_access(tab)[index] = (long unsigned) pa |
         PT_PAGE |
         PT_AF |
         PT_USER |
@@ -149,7 +150,7 @@ static void* add_page(process_t* process, va_table_t* tab, void* va, void* pa)
 
 void mm_map_page(process_t* process, void* va, void* pa)
 {
-    va_table_t* tab = pgd_to_phys(process->mm_context->pgd);
+    va_table_t* tab = (va_table_t*) process->mm_context->pgd;
 
     for (unsigned level = 0; level < 3; ++level) {
         tab = add_table(process, tab, va, level);
@@ -160,7 +161,10 @@ void mm_map_page(process_t* process, void* va, void* pa)
 
 void mm_switch_to(process_t* process)
 {
-    pgd_switch_to(process->mm_context->pgd);
+    long unsigned asid = (long unsigned) process->pid;
+    long unsigned pgd = (long unsigned) process->mm_context->pgd;
+
+    ttbr_switch_to((asid << 48) | pgd);
 }
 
 void data_abort_handler(void* va)
