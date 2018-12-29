@@ -1,6 +1,12 @@
 # pi-os
 
-These are my experiments in building an operating system for Raspberry Pi 3.
+These are my experiments in building an operating system for the Raspberry Pi 3
+Model B.
+
+For simplicity, I am using [musl libc](https://www.musl-libc.org/) and trying
+to match the [Linux system call
+definitions](https://thog.github.io/syscalls-table-aarch64/latest.html).
+
 This project has been heavily guided by the following resources:
 
 - https://github.com/bztsrc/raspi3-tutorial
@@ -13,24 +19,32 @@ This project has been heavily guided by the following resources:
 
 ## Getting Started
 
-This code is designed to run on a Raspberry Pi 3 Model B. Be aware that other
-versions of the Pi may experience compatibility issues.
+This code is designed to run in QEMU and on real hardware.
 
-Before you can build the project, you will need the GCC `aarch64-none-elf`
-toolchain. You can download it using your package manager or use the
-`docker.sh` script in this repository.
+You will need to install [Docker](https://docs.docker.com/install/) before
+proceeding. A Docker image is provided to help with compiling and running the
+kernel.
 
-Build the project by running `make`. This will generate a file called
-`build/kernel8.img`. Copy this file to the SD card of your Pi, replacing the
-existing `/boot/kernel8.img` file. You can now boot the Pi and it will run the
-new code.
+### QEMU
+
+Launch the Docker environment by running `docker.sh`. Next, run `make run`
+inside the Docker container. This will compile the kernel and start QEMU.
+
+That's it! The kernel is now running.
+
+### Raspberry Pi 3 Model B
+
+Please note the specific model of Pi that I am using. This code will likely
+experience compatibility issues wth older versions of the Pi.
+
+Launch the Docker environment by running `docker.sh`. Next, run `make` inside
+the Docker container. This will compile the kernel and generate a kernel image,
+`kernel/build/kernel8.img`. Copy this image to the SD card for your Pi,
+overwriting the existing `/boot/kernel8.img` file. Boot the Pi and the kernel
+should be running.
 
 You will quickly become tired of swapping the SD card back and forth every time
-a change is made. The process will be much easier if you purchase a USB-to-TTL
-serial cable and install [Raspbootin](https://github.com/desheffer/raspbootin).
-This setup uses the serial connection to load the newest kernel image every
-time the Pi is booted.
-
-Finally, it's worth noting that it is possible to emulate some aspects of the
-Pi using QEMU. Unfortunately, there is very limited support for the Raspberry
-Pi 3, so your mileage may vary.
+a change is made. The process can be made easier by purchasing a USB-to-TTL
+serial cable and installing
+[Raspbootin](https://github.com/desheffer/raspbootin). This method loads the
+newest kernel image over the serial connection every time the Pi is booted.
