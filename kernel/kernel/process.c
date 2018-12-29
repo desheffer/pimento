@@ -57,7 +57,7 @@ int process_exec(const char* pname, char* const argv[], char* const envp[])
     mm_switch_to(process);
 
     // Allocate the first page of the interrupt stack.
-    void* int_stack_top = (char*) alloc_user_page(process) + PAGE_SIZE;
+    void* int_stack_top = (char*) alloc_page() + PAGE_SIZE;
 
     // Load child stack with argv and envp.
     void* stack_top = (void*) STACK_TOP;

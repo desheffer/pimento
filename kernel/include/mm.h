@@ -56,6 +56,8 @@
 
 #define va_table_to_virt(pa) (*((va_table_t*) phys_to_virt(pa)))
 
+#define PAGE_FLAG_USER 1
+
 #ifndef __ASSEMBLY__
 
 #include <process.h>
@@ -63,6 +65,12 @@
 typedef long unsigned va_table_t[VA_TABLE_LENGTH];
 
 typedef long unsigned* pgd_t;
+
+typedef struct page_t {
+    void* pa;
+    void* va;
+    unsigned flags;
+} page_t;
 
 typedef struct mm_context_t {
     list_t* pages;

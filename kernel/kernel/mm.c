@@ -83,6 +83,19 @@ void mm_init(void)
     asm volatile("msr ttbr1_el1, %0" :: "r" (tables));
 }
 
+static void record_alloc(process_t* process, void* pa, void* va, unsigned flags)
+{
+    page_t* page = malloc(sizeof(page_t));
+
+    assert(page != 0);
+
+    page->pa = pa;
+    page->va = va;
+    page->flags = flags;
+
+    list_push_back(process->mm_context->pages, page);
+}
+
 void mm_create(process_t* process)
 {
     process->mm_context = malloc(sizeof(mm_context_t));
@@ -91,7 +104,8 @@ void mm_create(process_t* process)
     // Initialize list of allocated pages.
     process->mm_context->pages = list_new();
 
-    va_table_t* l0 = virt_to_phys(alloc_user_page(process));
+    va_table_t* l0 = alloc_page();
+    record_alloc(process, (void*) l0, 0, 0);
 
     process->mm_context->pgd = phys_to_pgd(l0, process->pid);
 }
@@ -108,7 +122,8 @@ static va_table_t* add_table(process_t* process, va_table_t* tab, void* va, unsi
     unsigned index = va_table_index(va, level);
 
     if (!(va_table_to_virt(tab)[index] & PT_TABLE)) {
-        va_table_t* new_tab = virt_to_phys(alloc_user_page(process));
+        va_table_t* new_tab = alloc_page();
+        record_alloc(process, (void*) new_tab, 0, 0);
 
         va_table_to_virt(tab)[index] = (long unsigned) new_tab |
             PT_TABLE |
@@ -122,9 +137,7 @@ static va_table_t* add_table(process_t* process, va_table_t* tab, void* va, unsi
 static void* add_page(process_t* process, va_table_t* tab, void* va, void* pa)
 {
     unsigned index = va_table_index(va, 3);
-
-    pa = (void*) ((long unsigned) pa & PAGE_MASK);
-    list_push_back(process->mm_context->pages, pa);
+    record_alloc(process, pa, va, PAGE_FLAG_USER);
 
     va_table_to_virt(tab)[index] = (long unsigned) pa |
         PT_PAGE |
@@ -155,7 +168,7 @@ void data_abort_handler(void* va)
 {
     process_t* process = scheduler_current();
 
-    void* pa = alloc_user_page(process);
+    void* pa = alloc_page();
 
     mm_map_page(process, va, pa);
 }

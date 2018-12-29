@@ -5,7 +5,7 @@
 #include <synchronize.h>
 
 static unsigned _page_count = 0;
-static page_t* _pages = 0;
+static memory_page_t* _pages = 0;
 static unsigned _last_index = 0;
 
 static int page_index(void* start)
@@ -26,7 +26,7 @@ void memory_init(void)
     _page_count = ((char*) alloc_end - (char*) 0) / PAGE_SIZE;
 
     // Create pages without using malloc.
-    _pages = (page_t*) &__end;;
+    _pages = (memory_page_t*) &__end;
 
     for (unsigned i = 0; i < _page_count; ++i) {
         _pages[i].allocated = 0;
@@ -48,7 +48,7 @@ void memory_reserve_range(void* start, void* end)
     }
 }
 
-static void* alloc_page(void)
+void* alloc_page(void)
 {
     void* pa = 0;
 
@@ -82,18 +82,7 @@ void* alloc_kernel_page(void)
     return phys_to_virt(pa);
 }
 
-void* alloc_user_page(process_t* process)
-{
-    void* pa = alloc_page();
-
-    assert(pa != 0);
-
-    list_push_back(process->mm_context->pages, pa);
-
-    return phys_to_virt(pa);
-}
-
-static void free_page(void* pa)
+void free_page(void* pa)
 {
     unsigned index = page_index(pa);
 
@@ -110,12 +99,4 @@ static void free_page(void* pa)
 void free_kernel_page(void* va)
 {
     free_page(virt_to_phys(va));
-}
-
-void free_user_page(process_t* process, void* va)
-{
-    (void) process;
-    (void) va;
-
-    // @TODO
 }
