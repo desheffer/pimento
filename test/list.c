@@ -1,6 +1,6 @@
 #include <assert.h>
+#include <kstdlib.h>
 #include <list.h>
-#include <stdlib.h>
 
 void test_list(void)
 {

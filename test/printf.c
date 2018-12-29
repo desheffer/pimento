@@ -1,5 +1,5 @@
 #include <assert.h>
-#include <stdio.h>
+#include <kstdio.h>
 #include <string.h>
 
 void test_printf(void)

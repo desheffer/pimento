@@ -1,5 +1,5 @@
+#include <kstdio.h>
 #include <stdint.h>
-#include <stdio.h>
 
 size_t vsprintf(char* s, const char* format, va_list arg)
 {

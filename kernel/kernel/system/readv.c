@@ -6,7 +6,7 @@ ssize_t sys_readv(int fd, const struct iovec* iov, int iovcnt)
 {
     ssize_t ret = 0;
 
-    assert(fd == 0);
+    failif(fd != 0);
 
     while (iovcnt--) {
         char* buf = (char*) iov->iov_base;

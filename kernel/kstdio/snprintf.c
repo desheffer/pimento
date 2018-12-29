@@ -1,5 +1,6 @@
-#include <stdlib.h>
-#include <stdio.h>
+#include <assert.h>
+#include <kstdio.h>
+#include <kstdlib.h>
 
 typedef struct vsnprintf_putc_data_t {
     char* dest;
@@ -18,7 +19,8 @@ static void vsnprintf_putc(void* data, char c)
 
 size_t vsnprintf(char* s, size_t max, const char* format, va_list arg)
 {
-    vsnprintf_putc_data_t* putc_data = (vsnprintf_putc_data_t*) malloc(sizeof(vsnprintf_putc_data_t));
+    vsnprintf_putc_data_t* putc_data = (vsnprintf_putc_data_t*) kmalloc(sizeof(vsnprintf_putc_data_t));
+
     putc_data->dest = s;
     putc_data->num_chars = 0;
     putc_data->max_chars = max;
@@ -28,7 +30,7 @@ size_t vsnprintf(char* s, size_t max, const char* format, va_list arg)
     putc_data->dest[putc_data->num_chars] = 0;
 
     unsigned num_chars = putc_data->num_chars;
-    free(putc_data);
+    kfree(putc_data);
 
     return num_chars;
 }

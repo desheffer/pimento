@@ -1,5 +1,6 @@
-#include <stdio.h>
-#include <stdlib.h>
+#include <assert.h>
+#include <kstdio.h>
+#include <kstdlib.h>
 #include <string.h>
 
 #define BUF_MAX 13
@@ -105,8 +106,9 @@ static void vcprintf_sp(void* data, putc_t putc_f, vcprintf_specifiers_t* sp)
 
 void vcprintf(void* data, putc_t putc_f, const char* format, va_list arg)
 {
-    vcprintf_specifiers_t* sp = (vcprintf_specifiers_t*) malloc(sizeof(vcprintf_specifiers_t));
-    char* buf = (char*) malloc(BUF_MAX);
+    vcprintf_specifiers_t* sp = (vcprintf_specifiers_t*) kzalloc(sizeof(vcprintf_specifiers_t));
+
+    char* buf = (char*) kzalloc(BUF_MAX);
 
     while (*format) {
         if (*format != '%') {
@@ -229,8 +231,8 @@ void vcprintf(void* data, putc_t putc_f, const char* format, va_list arg)
         }
     }
 
-    free(sp);
-    free(buf);
+    kfree(sp);
+    kfree(buf);
 }
 
 void cprintf(void* data, putc_t putc_f, const char* format, ...)

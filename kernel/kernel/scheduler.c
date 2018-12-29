@@ -37,7 +37,7 @@ short unsigned scheduler_assign_pid(void)
 
     unsigned pid = _next_pid++;
 
-    assert(pid <= USHRT_MAX);
+    failif(pid > USHRT_MAX);
 
     leave_critical();
 
@@ -68,9 +68,10 @@ void scheduler_context_switch(void)
         list_push_back(_process_queue, prev);
     }
 
+    failif(_current_process->state == stopping);
     /* if (_current_process->state == stopping) { */
     /*     scheduler_destroy(_current_process); */
-    /*     free(_current_process); */
+    /*     kfree(_current_process); */
     /* } */
 
     if (list_count(_process_queue) == 0) {

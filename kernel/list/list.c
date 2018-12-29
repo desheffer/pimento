@@ -1,10 +1,10 @@
 #include <assert.h>
+#include <kstdlib.h>
 #include <list.h>
-#include <stdlib.h>
 
 void list_clear(list_t* list)
 {
-    assert(list);
+    assert(list != 0);
 
     while (list->front) {
         list_pop_front(list);
@@ -13,7 +13,7 @@ void list_clear(list_t* list)
 
 unsigned list_count(list_t* list)
 {
-    assert(list);
+    assert(list != 0);
 
     list_item_t* list_item = list->front;
     unsigned count = 0;
@@ -28,26 +28,24 @@ unsigned list_count(list_t* list)
 
 void list_delete(list_t* list)
 {
-    assert(list);
+    assert(list != 0);
 
     list_clear(list);
-    free(list);
+    kfree(list);
 }
 
 list_t* list_new(void)
 {
-    list_t* list = malloc(sizeof(list_t));
-    list->front = 0;
-    list->back = 0;
+    list_t* list = kzalloc(sizeof(list_t));
 
     return list;
 }
 
 void list_push_back(list_t* list, void* item)
 {
-    assert(list);
+    assert(list != 0);
 
-    list_item_t* list_item = malloc(sizeof(list_item_t));
+    list_item_t* list_item = kzalloc(sizeof(list_item_t));
     list_item->item = item;
     list_item->prev = list->back;
     list_item->next = 0;
@@ -63,9 +61,9 @@ void list_push_back(list_t* list, void* item)
 
 void list_push_front(list_t* list, void* item)
 {
-    assert(list);
+    assert(list != 0);
 
-    list_item_t* list_item = malloc(sizeof(list_item_t));
+    list_item_t* list_item = kzalloc(sizeof(list_item_t));
     list_item->item = item;
     list_item->prev = 0;
     list_item->next = list->front;
@@ -81,8 +79,8 @@ void list_push_front(list_t* list, void* item)
 
 void* list_pop_back(list_t* list)
 {
-    assert(list);
-    assert(list->back);
+    assert(list != 0);
+    assert(list->back != 0);
 
     list_item_t* list_item = list->back;
     void* item = list_item->item;
@@ -95,15 +93,15 @@ void* list_pop_back(list_t* list)
         list->front = 0;
     }
 
-    free(list_item);
+    kfree(list_item);
 
     return item;
 }
 
 void* list_pop_front(list_t* list)
 {
-    assert(list);
-    assert(list->front);
+    assert(list != 0);
+    assert(list->front != 0);
 
     list_item_t* list_item = list->front;
     void* item = list_item->item;
@@ -116,14 +114,14 @@ void* list_pop_front(list_t* list)
         list->back = 0;
     }
 
-    free(list_item);
+    kfree(list_item);
 
     return item;
 }
 
 void list_remove(list_t* list, void* item)
 {
-    assert(list);
+    assert(list != 0);
 
     list_item_t* list_item = list->front;
 
@@ -139,7 +137,7 @@ void list_remove(list_t* list, void* item)
                 list_item->prev->next = list_item->next;
                 list_item->next->prev = list_item->prev;
 
-                free(list_item);
+                kfree(list_item);
             }
         }
 

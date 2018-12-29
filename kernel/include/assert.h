@@ -7,9 +7,17 @@
 #define STRINGIZE_DETAIL(x) #x
 #define STRINGIZE(x) STRINGIZE_DETAIL(x)
 
+// Assert against unexpected conditions.
 #define assert(cond) \
     if (!(cond)) { \
         kputs("\n\nAssertion failed (" #cond ") at " __FILE__ ":" STRINGIZE(__LINE__) ".\n"); \
+        breakpoint; \
+    }
+
+// Protect against conditions that are likely to occur, but not implemented.
+#define failif(cond) \
+    if ((cond)) { \
+        kputs("\n\nFailure (" #cond ") at " __FILE__ ":" STRINGIZE(__LINE__) ".\n"); \
         breakpoint; \
     }
 

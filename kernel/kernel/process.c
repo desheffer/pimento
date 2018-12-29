@@ -1,10 +1,10 @@
 #include <assert.h>
 #include <elf.h>
+#include <kstdlib.h>
 #include <memory.h>
 #include <mm.h>
 #include <process.h>
 #include <scheduler.h>
-#include <stdlib.h>
 #include <string.h>
 #include <synchronize.h>
 
@@ -14,8 +14,7 @@ extern char __shell_end;
 process_t* process_create_kernel(void)
 {
     // Create a new process control block.
-    process_t* process = malloc(sizeof(process_t));
-    memset(process, 0, sizeof(process_t));
+    process_t* process = kzalloc(sizeof(process_t));
 
     // Assign a pid and basic information.
     process->pid = scheduler_assign_pid();
@@ -26,7 +25,7 @@ process_t* process_create_kernel(void)
     mm_create(process);
 
     // Initialize execution.
-    process->cpu_context = malloc(sizeof(cpu_context_t));
+    process->cpu_context = kzalloc(sizeof(cpu_context_t));
 
     return process;
 }
@@ -42,7 +41,7 @@ void process_destroy(process_t* process)
 int process_exec(const char* pname, char* const argv[], char* const envp[])
 {
     // @TODO: Support arbitrary files.
-    assert(strcmp("/bin/sh", pname) == 0);
+    failif(strcmp("/bin/sh", pname) != 0);
 
     enter_critical();
 

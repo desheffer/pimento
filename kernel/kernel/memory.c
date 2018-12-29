@@ -66,9 +66,9 @@ void* alloc_page(void)
 
     leave_critical();
 
-    if (pa) {
-        memset(phys_to_virt(pa), 0, PAGE_SIZE);
-    }
+    failif(pa == 0);
+
+    memset(phys_to_virt(pa), 0, PAGE_SIZE);
 
     return pa;
 }
@@ -76,8 +76,6 @@ void* alloc_page(void)
 void* alloc_kernel_page(void)
 {
     void* pa = alloc_page();
-
-    assert(pa != 0);
 
     return phys_to_virt(pa);
 }

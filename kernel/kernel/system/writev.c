@@ -6,7 +6,7 @@ ssize_t sys_writev(int fd, const struct iovec* iov, int iovcnt)
 {
     ssize_t ret = 0;
 
-    assert(fd == 1);
+    failif(fd != 1);
 
     while (iovcnt--) {
         char* buf = (char*) iov->iov_base;

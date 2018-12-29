@@ -1,7 +1,7 @@
+#include <kstdlib.h>
 #include <memory.h>
-#include <stdlib.h>
 
-void free(void* ptr)
+void kfree(void* ptr)
 {
     // @TODO: Free the appropriate size.
     free_kernel_page(ptr);

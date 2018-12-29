@@ -1,8 +1,8 @@
 #include <assert.h>
+#include <kstdlib.h>
 #include <memory.h>
 #include <mm.h>
 #include <scheduler.h>
-#include <stdlib.h>
 #include <string.h>
 
 void mm_init(void)
@@ -85,9 +85,7 @@ void mm_init(void)
 
 static void record_alloc(process_t* process, void* pa, void* va, unsigned flags)
 {
-    page_t* page = malloc(sizeof(page_t));
-
-    assert(page != 0);
+    page_t* page = kzalloc(sizeof(page_t));
 
     page->pa = pa;
     page->va = va;
@@ -98,13 +96,13 @@ static void record_alloc(process_t* process, void* pa, void* va, unsigned flags)
 
 void mm_create(process_t* process)
 {
-    process->mm_context = malloc(sizeof(mm_context_t));
-    memset(process->mm_context, 0, sizeof(mm_context_t));
+    process->mm_context = kzalloc(sizeof(mm_context_t));
 
     // Initialize list of allocated pages.
     process->mm_context->pages = list_new();
 
     va_table_t* l0 = alloc_page();
+
     record_alloc(process, (void*) l0, 0, 0);
 
     process->mm_context->pgd = phys_to_pgd(l0, process->pid);
@@ -123,6 +121,7 @@ static va_table_t* add_table(process_t* process, va_table_t* tab, void* va, unsi
 
     if (!(va_table_to_virt(tab)[index] & PT_TABLE)) {
         va_table_t* new_tab = alloc_page();
+
         record_alloc(process, (void*) new_tab, 0, 0);
 
         va_table_to_virt(tab)[index] = (long unsigned) new_tab |

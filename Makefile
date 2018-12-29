@@ -12,7 +12,6 @@ watch:
 	find -regex '.*\(\.c\|\.h\|\.ld\|\.S\|Makefile\)' | entr -c make
 
 %:
-	$(MAKE) -C libk $@
 	$(MAKE) -C shell $@
 	$(MAKE) -C kernel $@
 	$(MAKE) -C test $@

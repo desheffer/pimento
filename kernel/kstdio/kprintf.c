@@ -1,5 +1,5 @@
+#include <kstdio.h>
 #include <serial.h>
-#include <stdio.h>
 #include <synchronize.h>
 
 void kputc(void* data, char c)
