@@ -148,8 +148,15 @@ static void* add_page(process_t* process, va_table_t* tab, void* va, void* pa)
     return pa;
 }
 
+static void* page_addr(void* addr)
+{
+    return (void*) ((long unsigned) addr & PAGE_MASK);
+}
+
 void mm_map_page(process_t* process, void* va, void* pa)
 {
+    va = page_addr(va);
+
     va_table_t* tab = (va_table_t*) process->mm_context->pgd;
 
     for (unsigned level = 0; level < 3; ++level) {
