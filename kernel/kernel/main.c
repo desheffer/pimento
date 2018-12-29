@@ -3,9 +3,7 @@
 #include <memory.h>
 #include <scheduler.h>
 #include <serial.h>
-#include <system.h>
 #include <timer.h>
-#include <unistd.h>
 
 void kernel_main(void)
 {

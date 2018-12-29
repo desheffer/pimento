@@ -1,8 +1,5 @@
 #pragma once
 
-#include <bcm2837.h>
-#include <process.h>
-
 #define NUM_IRQS 10
 
 typedef enum {

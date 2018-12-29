@@ -1,5 +1,7 @@
 #include <assert.h>
+#include <bcm2837.h>
 #include <interrupt.h>
+#include <mm.h>
 
 static interrupt_handler_t* _handlers[NUM_IRQS] = {0};
 static void* _handlers_data[NUM_IRQS] = {0};

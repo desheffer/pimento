@@ -1,6 +1,6 @@
 #pragma once
 
-#include <memory.h>
+#include <mm.h>
 #include <stdint.h>
 
 #define BCM2837(address, size) ((volatile uint ## size ## _t*) ((address) | VA_START))

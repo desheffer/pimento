@@ -2,10 +2,9 @@
 #include <list.h>
 #include <limits.h>
 #include <memory.h>
+#include <mm.h>
 #include <panic.h>
-#include <process.h>
 #include <scheduler.h>
-#include <stdlib.h>
 #include <synchronize.h>
 #include <timer.h>
 

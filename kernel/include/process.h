@@ -12,7 +12,6 @@
 
 #include <entry.h>
 #include <list.h>
-#include <stddef.h>
 
 typedef enum {
     created,

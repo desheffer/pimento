@@ -1,6 +1,5 @@
 #pragma once
 
-#include <stddef.h>
 #include <stdint.h>
 
 typedef uint64_t elf64_addr_t;

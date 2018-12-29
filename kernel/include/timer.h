@@ -1,6 +1,5 @@
 #pragma once
 
-#include <bcm2837.h>
 #include <interrupt.h>
 
 #define HZ 100

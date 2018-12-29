@@ -1,7 +1,5 @@
 #pragma once
 
-#include <bcm2837.h>
-
 #define AUX_ENABLES_MU (0b1 << 0) // Enable mini UART
 
 #define AUX_MU_LCR_8BIT (0b11 << 0) // Enable 8-bit mode

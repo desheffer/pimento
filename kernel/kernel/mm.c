@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <memory.h>
+#include <mm.h>
 #include <scheduler.h>
-#include <stdlib.h>
 #include <string.h>
 
 void mm_init(void)

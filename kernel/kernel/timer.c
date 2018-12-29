@@ -1,5 +1,5 @@
 #include <assert.h>
-#include <limits.h>
+#include <bcm2837.h>
 #include <timer.h>
 
 static unsigned _quantum = 0;

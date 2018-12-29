@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <elf.h>
-#include <list.h>
 #include <memory.h>
+#include <mm.h>
 #include <process.h>
 #include <scheduler.h>
 #include <stdlib.h>
