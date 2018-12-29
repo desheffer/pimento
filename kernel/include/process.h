@@ -26,13 +26,14 @@ typedef struct cpu_context_t {
     long unsigned pc;
 } cpu_context_t;
 
+typedef struct mm_context_t mm_context_t;
+
 typedef struct process_t {
     short unsigned pid;
     process_state_t state;
     char pname[PNAME_LENGTH];
     cpu_context_t* cpu_context;
-    list_t* pages;
-    long unsigned ttbr;
+    mm_context_t* mm_context;
 } process_t;
 
 process_t* process_create_kernel(void);

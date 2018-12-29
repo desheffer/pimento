@@ -2,6 +2,7 @@
 #include <memory.h>
 #include <mm.h>
 #include <scheduler.h>
+#include <stdlib.h>
 #include <string.h>
 
 void mm_init(void)
@@ -84,9 +85,15 @@ void mm_init(void)
 
 void mm_create(process_t* process)
 {
+    process->mm_context = malloc(sizeof(mm_context_t));
+    memset(process->mm_context, 0, sizeof(mm_context_t));
+
+    // Initialize list of allocated pages.
+    process->mm_context->pages = list_new();
+
     va_table_t* l0 = virt_to_phys(alloc_user_page(process));
 
-    process->ttbr = phys_to_ttbr(l0, process->pid);
+    process->mm_context->pgd = phys_to_pgd(l0, process->pid);
 }
 
 static unsigned va_table_index(void* va, unsigned level)
@@ -117,7 +124,7 @@ static void* add_page(process_t* process, va_table_t* tab, void* va, void* pa)
     unsigned index = va_table_index(va, 3);
 
     pa = (void*) ((long unsigned) pa & PAGE_MASK);
-    list_push_back(process->pages, pa);
+    list_push_back(process->mm_context->pages, pa);
 
     va_table_to_virt(tab)[index] = (long unsigned) pa |
         PT_PAGE |
@@ -130,7 +137,7 @@ static void* add_page(process_t* process, va_table_t* tab, void* va, void* pa)
 
 void mm_map_page(process_t* process, void* va, void* pa)
 {
-    va_table_t* tab = ttbr_to_phys(process->ttbr);
+    va_table_t* tab = pgd_to_phys(process->mm_context->pgd);
 
     for (unsigned level = 0; level < 3; ++level) {
         tab = add_table(process, tab, va, level);
@@ -141,7 +148,7 @@ void mm_map_page(process_t* process, void* va, void* pa)
 
 void mm_switch_to(process_t* process)
 {
-    ttbr_switch_to(process->ttbr);
+    pgd_switch_to(process->mm_context->pgd);
 }
 
 void data_abort_handler(void* va)

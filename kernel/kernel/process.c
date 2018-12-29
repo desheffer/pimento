@@ -22,9 +22,6 @@ process_t* process_create_kernel(void)
     process->state = running;
     strncpy(process->pname, "kernel", PNAME_LENGTH);
 
-    // Initialize list of allocated pages.
-    process->pages = list_new();
-
     // Initialize memory map.
     mm_create(process);
 
@@ -54,11 +51,8 @@ int process_exec(const char* pname, char* const argv[], char* const envp[])
     // Update process name.
     strncpy(process->pname, pname, PNAME_LENGTH);
 
-    // Initialize list of allocated pages.
-    // @TODO: Reap old pages and delete old list.
-    process->pages = list_new();
-
     // Initialize a new memory map.
+    // @TODO: Reap old pages and delete old list.
     mm_create(process);
     mm_switch_to(process);
 

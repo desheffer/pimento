@@ -88,7 +88,7 @@ void* alloc_user_page(process_t* process)
 
     assert(pa != 0);
 
-    list_push_back(process->pages, pa);
+    list_push_back(process->mm_context->pages, pa);
 
     return phys_to_virt(pa);
 }

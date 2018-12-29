@@ -51,8 +51,8 @@
 
 #define TTBR_BADDR_MASK 0x7FFFFFFFFFFE
 
-#define ttbr_to_phys(ptr)       ((void*) ((long unsigned) (ptr) & TTBR_BADDR_MASK))
-#define phys_to_ttbr(ptr, asid) (((long unsigned) (asid) << 48) | ((long unsigned) (ptr)))
+#define pgd_to_phys(ptr)       ((void*) ((long unsigned) (ptr) & TTBR_BADDR_MASK))
+#define phys_to_pgd(ptr, asid) ((pgd_t) (((long unsigned) (asid) << 48) | ((long unsigned) (ptr))))
 
 #define va_table_to_virt(pa) (*((va_table_t*) phys_to_virt(pa)))
 
@@ -62,12 +62,19 @@
 
 typedef long unsigned va_table_t[VA_TABLE_LENGTH];
 
+typedef long unsigned* pgd_t;
+
+typedef struct mm_context_t {
+    list_t* pages;
+    pgd_t pgd;
+} mm_context_t;
+
 void mm_init(void);
 void mm_create(process_t*);
 void mm_map_page(process_t*, void*, void*);
 void mm_switch_to(process_t*);
 
 void data_abort_handler(void*);
-void ttbr_switch_to(long unsigned);
+void pgd_switch_to(pgd_t);
 
 #endif
