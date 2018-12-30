@@ -6,17 +6,13 @@ int main(int argc, char* argv[], char* envp[])
 {
     (void) argc;
 
-    if (fork() == 0) {
-        printf("hello from child\n");
-        return 0;
-    } else {
-        printf("hello from parent\n");
-    }
-
-    // Because we can't wait() yet...
-    for (unsigned i = 100000000; i > 0; --i) {
-        asm volatile("nop");
-    }
+    /* if (fork() == 0) { */
+    /*     printf("hello from child\n"); */
+    /*     while (1); */
+    /*     return 0; */
+    /* } else { */
+    /*     printf("hello from parent\n"); */
+    /* } */
 
     printf("[Shell]\n\n");
 
@@ -37,6 +33,11 @@ int main(int argc, char* argv[], char* envp[])
             continue;
         } else if (strcmp("sh", cmd) == 0) {
             execve(argv[0], argv, envp);
+        } else if (strcmp("fork", cmd) == 0) {
+            if (fork() == 0) {
+                printf("hello from child\n");
+                return 0;
+            }
         } else if (strcmp("env", cmd) == 0) {
             for (int i = 0; envp[i] != 0; ++i) {
                 printf("%s\n", envp[i]);

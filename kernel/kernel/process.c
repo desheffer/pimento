@@ -34,8 +34,63 @@ void process_destroy(process_t* process)
 {
     (void) process;
 
-    // @TODO: Call free_user_page() for each entry in process->pages.
-    // @TODO: Free process.
+    // @TODO: Free process and all linked data.
+}
+
+static void create_tail()
+{
+    void (*fn)();
+    void* data;
+
+    asm volatile(
+        "mov %0, x19\n\t"
+        "mov %1, x20"
+        : "=r" (fn), "=r" (data)
+    );
+
+    scheduler_tail();
+
+    fn(data);
+
+    enter_critical();
+
+    // Exit the process when it is finished.
+    process_t* process = scheduler_current();
+    process->state = zombie;
+
+    leave_critical();
+
+    scheduler_context_switch();
+}
+
+int process_create(void* fn, const char* pname, void* data)
+{
+    enter_critical();
+
+    // Create a new process control block.
+    process_t* child = kzalloc(sizeof(process_t));
+
+    // Assign a pid and basic information.
+    child->pid = scheduler_assign_pid();
+    child->state = created;
+    strncpy(child->pname, pname, PNAME_LENGTH);
+
+    // Initialize a new memory map.
+    mm_create(child);
+    mm_create_kstack(child);
+
+    // Initialize execution.
+    child->cpu_context = kzalloc(sizeof(cpu_context_t));
+    child->cpu_context->sp = (long unsigned) KSTACK_TOP;
+    child->cpu_context->pc = (long unsigned) create_tail;
+    child->cpu_context->regs[0] = (long unsigned) fn;
+    child->cpu_context->regs[1] = (long unsigned) data;
+
+    scheduler_enqueue(child);
+
+    leave_critical();
+
+    return child->pid;
 }
 
 int process_clone(process_t* parent)
@@ -50,33 +105,52 @@ int process_clone(process_t* parent)
     child->state = created;
     strncpy(child->pname, parent->pname, PNAME_LENGTH);
 
-    // Initialize child's memory map.
+    // Copy the memory map.
     mm_create(child);
-    mm_switch_to(child);
     mm_copy_from(parent, child);
-
-    // Allocate the first page of the interrupt stack.
-    void* int_stack_top = (char*) alloc_kernel_page() + PAGE_SIZE;
-
-    // Locate the interrupt stack for the parent process.
-    // @TODO: Move interrupt stacks into VM, because this is awful.
-    long unsigned sp;
-    asm volatile("mov %0, sp" : "=r" (sp));
-    void* parent_int_stack_top = (void*) ((sp & PAGE_MASK) + PAGE_SIZE);
-    memcpy((void*) ((long unsigned) int_stack_top - PAGE_SIZE), (void*) ((long unsigned) parent_int_stack_top - PAGE_SIZE), PAGE_SIZE);
 
     // Initialize execution.
     child->cpu_context = kzalloc(sizeof(cpu_context_t));
-    child->cpu_context->sp = (long unsigned) int_stack_top - PROCESS_REGS_SIZE;
-    child->cpu_context->pc = (long unsigned) fork_tail;
+    child->cpu_context->sp = (long unsigned) KSTACK_TOP - PROCESS_REGS_SIZE;
+    child->cpu_context->pc = (long unsigned) create_tail;
+    child->cpu_context->regs[0] = (long unsigned) fork_tail;
 
     scheduler_enqueue(child);
-
-    mm_switch_to(parent);
 
     leave_critical();
 
     return child->pid;
+}
+
+static void exec_tail()
+{
+    const char* pname;
+    char* const* argv;
+    char* const* envp;
+
+    asm volatile(
+        "mov %0, x19\n\t"
+        "mov %1, x20\n\t"
+        "mov %2, x21"
+        : "=r" (pname), "=r" (argv), "=r" (envp)
+    );
+
+    scheduler_tail();
+
+    // Load child stack with argv and envp.
+    // @TODO: Copy args to kernel memory.
+    void* stack_top = (void*) USTACK_TOP;
+    stack_top = process_set_args(stack_top, argv, envp);
+
+    // Initialize process.
+    registers_t* new_regs = (registers_t*) ((long unsigned) KSTACK_TOP - PROCESS_REGS_SIZE);
+    new_regs->sp = (long unsigned) stack_top;
+    new_regs->pc = (long unsigned) elf_load(&__shell_start, &__shell_end - &__shell_start);
+    new_regs->pstate = PSR_MODE_USER;
+
+    do_exec(new_regs);
+
+    scheduler_context_switch();
 }
 
 int process_exec(const char* pname, char* const argv[], char* const envp[])
@@ -86,58 +160,66 @@ int process_exec(const char* pname, char* const argv[], char* const envp[])
 
     enter_critical();
 
-    process_t* process = scheduler_current();
+    process_t* parent = scheduler_current();
 
-    // Update process name.
-    strncpy(process->pname, pname, PNAME_LENGTH);
+    // Create a new process control block.
+    process_t* child = kzalloc(sizeof(process_t));
+
+    // Assign a pid and basic information.
+    child->pid = scheduler_assign_pid();
+    child->state = created;
+    strncpy(child->pname, pname, PNAME_LENGTH);
 
     // Initialize a new memory map.
-    // @TODO: Reap old pages and delete old list.
-    mm_create(process);
-    mm_switch_to(process);
-
-    // Allocate the first page of the interrupt stack.
-    void* int_stack_top = (char*) alloc_kernel_page() + PAGE_SIZE;
-
-    // Load child stack with argv and envp.
-    void* stack_top = (void*) STACK_TOP;
-    stack_top = process_set_args(stack_top, argv, envp);
+    mm_create(child);
+    mm_create_kstack(child);
 
     // Initialize execution.
-    registers_t* new_regs = (registers_t*) int_stack_top - 1;
-    new_regs->sp = (long unsigned) stack_top;
-    new_regs->pc = (long unsigned) elf_load(&__shell_start, &__shell_end - &__shell_start);
-    new_regs->pstate = PSR_MODE_USER;
+    child->cpu_context = kzalloc(sizeof(cpu_context_t));
+    child->cpu_context->sp = (long unsigned) KSTACK_TOP - PROCESS_REGS_SIZE;
+    child->cpu_context->pc = (long unsigned) exec_tail;
+    child->cpu_context->regs[0] = (long unsigned) pname;
+    child->cpu_context->regs[1] = (long unsigned) argv;
+    child->cpu_context->regs[2] = (long unsigned) envp;
+
+    scheduler_enqueue(child);
+    parent->state = zombie;
 
     leave_critical();
 
-    // @TODO: Need to reset kernel stack so we don't overflow.
-    do_exec(new_regs);
+    scheduler_context_switch();
 
     return -1;
 }
 
 void* process_set_args(void* sp, char* const argv[], char* const envp[])
 {
+    // @TODO: Add limits on array and string lengths.
+
+    // Location for new strings.
+    char* char_ptr = (char*) sp;
+
     // Find size of argv.
     unsigned argv_size = 0;
     for (char* const* iter = argv; *iter != 0; ++iter) {
         ++argv_size;
+        char_ptr = char_ptr - strlen(*iter) - 1;
     }
 
     // Find size of envp.
     unsigned envp_size = 0;
     for (char* const* iter = envp; *iter != 0; ++iter) {
         ++envp_size;
+        char_ptr = char_ptr - strlen(*iter) - 1;
     }
 
-    // Location for new strings.
-    char* char_ptr = (char*) sp;
+    // Adjust stack alignment.
+    char_ptr = (char*) STACK_ALIGN((long unsigned) char_ptr);
 
     // Locations for new arrays.
-    char** envp_ptr = (char**) sp - envp_size - 1;
-    char** argv_ptr = envp_ptr - argv_size - 1;
-    int* argc_ptr = (int*) (argv_ptr - 1);
+    char** envp_ptr = (char**) char_ptr - envp_size - 1;
+    char** argv_ptr = (char**) envp_ptr - argv_size - 1;
+    int* argc_ptr = (int*) ((char**) argv_ptr - 1);
 
     // Copy argc.
     argc_ptr[0] = argv_size;

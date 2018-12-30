@@ -1,5 +1,7 @@
 #pragma once
 
+#define STACK_ALIGN(addr) (((addr) + 15) & ~15)
+
 #define PAGE_SIZE 4096
 #define PAGE_MASK (0xFFFFFFFFFFFFFFFF - (PAGE_SIZE - 1))
 
@@ -52,6 +54,10 @@
 #define PG_VM   1
 #define PG_USER 2
 
+#define KSTACK_TOP  0x40000000
+#define KSTACK_SIZE 2
+#define USTACK_TOP  (KSTACK_TOP - KSTACK_SIZE * PAGE_SIZE)
+
 #ifndef __ASSEMBLY__
 
 #include <process.h>
@@ -68,12 +74,14 @@ typedef struct page_t {
 
 typedef struct mm_context_t {
     pgd_t pgd;
+    short unsigned asid;
     list_t* pages;
 } mm_context_t;
 
 void mm_init(void);
 void mm_copy_from(process_t*, process_t*);
 void mm_create(process_t*);
+void mm_create_kstack(process_t*);
 void mm_map_page(process_t*, void*, void*);
 void mm_switch_to(process_t*);
 

@@ -25,7 +25,7 @@ _start:
     eret
 
 enter_el1:
-    // Set up stack pointer.
+    // Set up initial stack pointer.
     adr x4, _start
     mov sp, x4
 
@@ -57,6 +57,7 @@ enter_el1:
 
 post_enable_mmu:
     // Move stack pointer to virtual memory.
+    // @TODO: Move it to KSTACK_TOP.
     mov x4, sp
     ldr x5, =VA_START
     orr x4, x4, x5

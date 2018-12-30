@@ -1,9 +1,13 @@
 #include <assert.h>
 #include <kstdlib.h>
+#include <limits.h>
 #include <memory.h>
 #include <mm.h>
 #include <scheduler.h>
 #include <string.h>
+#include <synchronize.h>
+
+static unsigned _next_asid = 1;
 
 void mm_init(void)
 {
@@ -101,13 +105,29 @@ void mm_copy_from(process_t* parent, process_t* child)
         page_t* page = (page_t*) page_item->item;
 
         if ((page->flags & PG_VM) != 0) {
-            mm_map_page(child, page->va, alloc_page());
+            assert(page->va != 0);
 
-            memcpy(page->va, phys_to_virt(page->pa), PAGE_SIZE);
+            void* child_pa = alloc_page();
+
+            mm_map_page(child, page->va, child_pa);
+
+            memcpy(phys_to_virt(child_pa), phys_to_virt(page->pa), PAGE_SIZE);
         }
 
         page_item = page_item->next;
     }
+}
+
+static short unsigned assign_asid(void)
+{
+    enter_critical();
+
+    unsigned asid = _next_asid++;
+    failif(asid > USHRT_MAX);
+
+    leave_critical();
+
+    return asid;
 }
 
 void mm_create(process_t* process)
@@ -119,8 +139,17 @@ void mm_create(process_t* process)
 
     // Allocate page global directory.
     process->mm_context->pgd = alloc_page();
+    process->mm_context->asid = assign_asid();
 
     record_alloc(process, (void*) process->mm_context->pgd, 0, 0);
+}
+
+void mm_create_kstack(process_t* process)
+{
+    // @TODO: Don't allow PT_USER access.
+    for (unsigned i = KSTACK_SIZE; i > 0; --i) {
+        mm_map_page(process, (void*) ((long unsigned) KSTACK_TOP - i * PAGE_SIZE), alloc_page());
+    }
 }
 
 static unsigned va_table_index(void* va, unsigned level)
@@ -185,7 +214,7 @@ void mm_map_page(process_t* process, void* va, void* pa)
 
 void mm_switch_to(process_t* process)
 {
-    long unsigned asid = (long unsigned) process->pid;
+    long unsigned asid = (long unsigned) process->mm_context->asid;
     long unsigned pgd = (long unsigned) process->mm_context->pgd;
 
     ttbr_switch_to((asid << 48) | pgd);

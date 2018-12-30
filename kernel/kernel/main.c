@@ -1,9 +1,20 @@
 #include <interrupt.h>
 #include <kstdio.h>
 #include <memory.h>
+#include <panic.h>
 #include <scheduler.h>
 #include <serial.h>
 #include <timer.h>
+
+const char* const argv[] = {"/bin/sh", 0};
+const char* const envp[] = {"PWD=/", 0};
+
+static void run_init(void)
+{
+    kputs("Running init...\n");
+
+    process_exec("/bin/sh", (char* const*) argv, (char* const*) envp);
+}
 
 void kernel_main(void)
 {
@@ -21,9 +32,12 @@ void kernel_main(void)
         "\n\n"
     );
 
-    scheduler_context_switch();
+    process_create(run_init, "init", 0);
 
-    const char* argv[] = {"/bin/sh", 0};
-    const char* envp[] = {"PWD=/", 0};
-    process_exec("/bin/sh", (char* const*) argv, (char* const*) envp);
+    while (scheduler_count() > 1) {
+        scheduler_context_switch();
+    }
+
+    kputs("Halting\n");
+    halt();
 }

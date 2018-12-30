@@ -1,4 +1,5 @@
 #include <entry.h>
+#include <interrupt.h>
 #include <kstdio.h>
 #include <panic.h>
 
@@ -6,6 +7,8 @@ static int _in_debug_process_regs = 0;
 
 void debug_process_regs(registers_t* state, long unsigned reason, long unsigned esr, long unsigned far)
 {
+    disable_interrupts();
+
     if (_in_debug_process_regs) {
         panic();
     }
@@ -92,6 +95,8 @@ void debug_process_regs(registers_t* state, long unsigned reason, long unsigned 
 
 void panic(void)
 {
+    disable_interrupts();
+
     kputs(
         "\n"
         "[41m[97m                      [0m\n"

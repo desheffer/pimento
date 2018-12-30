@@ -93,7 +93,6 @@ vector_table:
 
 el1_sync:
     save_regs
-    bl enable_interrupts
     mrs x21, esr_el1
     and x21, x21, #ESR_ELx_EC_MASK
     lsr x21, x21, #ESR_ELx_EC_SHIFT
@@ -103,6 +102,7 @@ el1_sync:
     b el1_sync_done
 el1_sync_dabt:
     mrs x0, far_el1
+    bl enable_interrupts
     bl data_abort_handler
     b el1_sync_done
 el1_sync_done:
@@ -118,7 +118,6 @@ el1_irq:
 
 el0_sync:
     save_regs
-    bl enable_interrupts
     mrs x21, esr_el1
     and x21, x21, #ESR_ELx_EC_MASK
     lsr x21, x21, #ESR_ELx_EC_SHIFT
@@ -131,10 +130,12 @@ el0_sync:
 el0_sync_svc:
     mov x0, sp
     mov x1, x8
+    bl enable_interrupts
     bl system_handler
     b el0_sync_done
 el0_sync_dabt:
     mrs x0, far_el1
+    bl enable_interrupts
     bl data_abort_handler
     b el0_sync_done
 el0_sync_done:
@@ -200,7 +201,6 @@ cpu_switch_to:
     ldp x29, x9, [x1, #16 * 5]
     ldr x30, [x1, #16 * 6]
     mov sp, x9
-
     ret
 
 .globl do_exec
@@ -212,7 +212,6 @@ do_exec:
 
 .globl fork_tail
 fork_tail:
-    bl disable_interrupts
     load_regs
     mov x0, 0
     eret
