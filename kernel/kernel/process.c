@@ -12,7 +12,7 @@
 extern char __shell_start;
 extern char __shell_end;
 
-static process_t* process_create_common(const char* pname, int pid, bool init_kstack, bool enqueue)
+static process_t* process_create_common(const char* pname, int pid, bool init_kstack)
 {
     // Create a new process control block.
     process_t* child = kzalloc(sizeof(process_t));
@@ -37,39 +37,29 @@ static process_t* process_create_common(const char* pname, int pid, bool init_ks
     // Initialize execution.
     child->cpu_context = kzalloc(sizeof(cpu_context_t));
 
-    // Enqueue for scheduling.
-    if (enqueue) {
-        scheduler_enqueue(child);
-    }
-
     return child;
 }
 
 process_t* process_create_kernel(void)
 {
-    process_t* process = process_create_common("kernel", -1, false, false);
+    process_t* process = process_create_common("kernel", -1, false);
 
     return process;
-}
-
-void process_destroy(process_t* process)
-{
-    (void) process;
-
-    // @TODO: Free process and all linked data.
 }
 
 int process_create(void* fn, const char* pname, void* data)
 {
     enter_critical();
 
-    process_t* child = process_create_common(pname, -1, true, true);
+    process_t* child = process_create_common(pname, -1, true);
 
     // Initialize execution.
     child->cpu_context->sp = (long unsigned) KSTACK_TOP;
     child->cpu_context->pc = (long unsigned) process_create_tail_wrapper;
     child->cpu_context->regs[0] = (long unsigned) fn;
     child->cpu_context->regs[1] = (long unsigned) data;
+
+    scheduler_enqueue(child);
 
     leave_critical();
 
@@ -82,13 +72,9 @@ void process_create_tail(process_function_t fn, void* data)
 
     fn(data);
 
-    enter_critical();
-
     // Exit the process when it is finished.
     process_t* process = scheduler_current();
-    process->state = zombie;
-
-    leave_critical();
+    scheduler_exit(process);
 
     scheduler_context_switch();
 }
@@ -97,7 +83,7 @@ int process_clone(process_t* parent)
 {
     enter_critical();
 
-    process_t* child = process_create_common(parent->pname, -1, false, true);
+    process_t* child = process_create_common(parent->pname, -1, false);
 
     // Copy the memory map.
     mm_copy_from(parent, child);
@@ -108,21 +94,30 @@ int process_clone(process_t* parent)
     child->cpu_context->regs[0] = (long unsigned) do_exec;
     child->cpu_context->regs[1] = (long unsigned) KSTACK_TOP - PROCESS_REGS_SIZE;
 
+    scheduler_enqueue(child);
+
     leave_critical();
 
     return child->pid;
 }
 
+void process_destroy(process_t* process)
+{
+    (void) process;
+
+    // @TODO: Free process and all linked data.
+}
+
 int process_exec(const char* pname, char* const argv[], char* const envp[])
 {
+    enter_critical();
+
     // @TODO: Support arbitrary files.
     failif(strcmp("/bin/sh", pname) != 0);
 
-    enter_critical();
-
     process_t* parent = scheduler_current();
 
-    process_t* child = process_create_common(pname, parent->pid, true, true);
+    process_t* child = process_create_common(pname, parent->pid, true);
 
     // Initialize execution.
     child->cpu_context->sp = (long unsigned) KSTACK_TOP - PROCESS_REGS_SIZE;
@@ -131,7 +126,8 @@ int process_exec(const char* pname, char* const argv[], char* const envp[])
     child->cpu_context->regs[1] = (long unsigned) argv;
     child->cpu_context->regs[2] = (long unsigned) envp;
 
-    parent->state = zombie;
+    scheduler_enqueue(child);
+    scheduler_exit(parent);
 
     leave_critical();
 

@@ -13,7 +13,7 @@ static unsigned _next_pid = 0;
 static list_t* _process_list = 0;
 static list_t* _process_queue = 0;
 
-static void scheduler_timer(void* data)
+static void scheduler_tick(void* data)
 {
     (void) data;
 
@@ -26,9 +26,10 @@ void scheduler_init(void)
     _process_queue = list_new();
 
     _current_process = process_create_kernel();
+    _current_process->state = running;
     list_push_back(_process_list, _current_process);
 
-    timer_connect(scheduler_timer, 0);
+    timer_connect(scheduler_tick, 0);
 }
 
 short unsigned scheduler_assign_pid(void)
@@ -62,11 +63,11 @@ void scheduler_context_switch(void)
     if (prev->state == running) {
         prev->state = sleeping;
         list_push_back(_process_queue, prev);
-    }
-
-    if (prev->state == zombie) {
+    } else if (prev->state == stopped) {
         scheduler_destroy(prev);
     }
+
+    assert(list_count(_process_queue) > 0);
 
     process_t* next = (process_t*) list_pop_front(_process_queue);
     next->state = running;
@@ -80,21 +81,33 @@ void scheduler_context_switch(void)
 
 unsigned scheduler_count(void)
 {
-    return list_count(_process_list);
+    enter_critical();
+
+    unsigned count = list_count(_process_list);
+
+    leave_critical();
+
+    return count;
 }
 
 process_t* scheduler_current(void)
 {
+    enter_critical();
+
     assert(_current_process != 0);
 
-    return _current_process;
+    process_t* process = _current_process;
+
+    leave_critical();
+
+    return process;
 }
 
 void scheduler_destroy(process_t* process)
 {
     enter_critical();
 
-    assert(process->state == zombie);
+    assert(process->state == stopped);
 
     list_remove(_process_list, process);
     process_destroy(process);
@@ -104,8 +117,21 @@ void scheduler_destroy(process_t* process)
 
 void scheduler_enqueue(process_t* process)
 {
+    enter_critical();
+
     list_push_back(_process_list, process);
     list_push_back(_process_queue, process);
+
+    leave_critical();
+}
+
+void scheduler_exit(process_t* process)
+{
+    enter_critical();
+
+    process->state = stopped;
+
+    leave_critical();
 }
 
 void scheduler_tail(void)

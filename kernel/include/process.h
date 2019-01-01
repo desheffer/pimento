@@ -15,6 +15,7 @@ typedef enum {
     created,
     running,
     sleeping,
+    stopped,
     zombie,
 } process_state_t;
 
@@ -37,11 +38,11 @@ typedef struct process_t {
 typedef void process_function_t(void*);
 
 process_t* process_create_kernel(void);
-void process_destroy(process_t*);
 int process_create(void*, const char*, void*);
 void process_create_tail(process_function_t, void*);
 void process_create_tail_wrapper(void);
 int process_clone(process_t*);
+void process_destroy(process_t*);
 int process_exec(const char*, char* const[], char* const[]);
 void process_exec_tail(const char*, char* const*, char* const*);
 void process_exec_tail_wrapper(void);
