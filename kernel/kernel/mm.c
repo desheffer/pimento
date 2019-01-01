@@ -11,7 +11,7 @@ static unsigned _next_asid = 1;
 
 void mm_init(void)
 {
-    va_table_t* tables = (va_table_t*) virt_to_phys(&__va_table_start);
+    va_table_t* tables = (va_table_t*) kva_to_pa(&__va_table_start);
 
     memset(tables, 0, 4 * sizeof(va_table_t));
 
@@ -61,12 +61,12 @@ void mm_init(void)
         long unsigned addr = i * PAGE_SIZE;
         long unsigned flags = 0;
 
-        if (addr >= (long unsigned) virt_to_phys(&__text_start)
-            && addr < (long unsigned) virt_to_phys(&__text_end)
+        if (addr >= (long unsigned) kva_to_pa(&__text_start)
+            && addr < (long unsigned) kva_to_pa(&__text_end)
         ) {
             flags |= PT_RO;
-        } else if (addr >= (long unsigned) virt_to_phys(&__rodata_start)
-            && addr < (long unsigned) virt_to_phys(&__rodata_end)
+        } else if (addr >= (long unsigned) kva_to_pa(&__rodata_start)
+            && addr < (long unsigned) kva_to_pa(&__rodata_end)
         ) {
             flags |= PT_RO | PT_PXN;
         } else {
@@ -111,7 +111,7 @@ void mm_copy_from(process_t* parent, process_t* child)
 
             mm_map_page(child, page->va, child_pa);
 
-            memcpy(phys_to_virt(child_pa), phys_to_virt(page->pa), PAGE_SIZE);
+            memcpy(pa_to_kva(child_pa), pa_to_kva(page->pa), PAGE_SIZE);
         }
 
         page_item = page_item->next;
@@ -159,7 +159,7 @@ static unsigned va_table_index(void* va, unsigned level)
     return ((long unsigned) va >> (39 - 9 * level)) & 0x1FF;
 }
 
-#define va_table_access(pa) (*((va_table_t*) phys_to_virt(pa)))
+#define va_table_access(pa) (*((va_table_t*) pa_to_kva(pa)))
 
 static va_table_t* add_table(process_t* process, va_table_t* tab, void* va, unsigned level)
 {
@@ -209,7 +209,7 @@ void mm_map_page(process_t* process, void* va, void* pa)
         tab = add_table(process, tab, va, level);
     }
 
-    add_page(process, tab, va, virt_to_phys(pa));
+    add_page(process, tab, va, kva_to_pa(pa));
 }
 
 void mm_switch_to(process_t* process)

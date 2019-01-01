@@ -48,8 +48,8 @@
 
 #define PT_ATTR(n) ((n) << 2)
 
-#define phys_to_virt(ptr) ((void*) ((long unsigned) (ptr) | VA_START))
-#define virt_to_phys(ptr) ((void*) ((long unsigned) (ptr) & ~VA_START))
+#define pa_to_kva(ptr) ((void*) ((long unsigned) (ptr) | VA_START))
+#define kva_to_pa(ptr) ((void*) ((long unsigned) (ptr) & ~VA_START))
 
 #define PG_VM   1
 #define PG_USER 2

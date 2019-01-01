@@ -208,10 +208,5 @@ do_exec:
     bl disable_interrupts
     mov sp, x0
     load_regs
-    eret
-
-.globl fork_tail
-fork_tail:
-    load_regs
     mov x0, 0
     eret

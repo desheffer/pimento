@@ -5,27 +5,49 @@
 #include <mm.h>
 #include <process.h>
 #include <scheduler.h>
+#include <stdbool.h>
 #include <string.h>
 #include <synchronize.h>
 
 extern char __shell_start;
 extern char __shell_end;
 
-process_t* process_create_kernel(void)
+static process_t* process_create_common(const char* pname, int pid, bool init_kstack, bool enqueue)
 {
     // Create a new process control block.
-    process_t* process = kzalloc(sizeof(process_t));
+    process_t* child = kzalloc(sizeof(process_t));
 
-    // Assign a pid and basic information.
-    process->pid = scheduler_assign_pid();
-    process->state = running;
-    strncpy(process->pname, "kernel", PNAME_LENGTH);
+    // Assign a pid.
+    if (pid >= 0) {
+        child->pid = pid;
+    } else {
+        child->pid = scheduler_assign_pid();
+    }
 
-    // Initialize memory map.
-    mm_create(process);
+    // Assign basic information.
+    child->state = created;
+    strncpy(child->pname, pname, PNAME_LENGTH);
+
+    // Initialize a new memory map.
+    mm_create(child);
+    if (init_kstack) {
+        mm_create_kstack(child);
+    }
 
     // Initialize execution.
-    process->cpu_context = kzalloc(sizeof(cpu_context_t));
+    child->cpu_context = kzalloc(sizeof(cpu_context_t));
+
+    // Enqueue for scheduling.
+    if (enqueue) {
+        scheduler_enqueue(child);
+    }
+
+    return child;
+}
+
+process_t* process_create_kernel(void)
+{
+    process_t* process = process_create_common("kernel", -1, false, false);
 
     return process;
 }
@@ -37,17 +59,25 @@ void process_destroy(process_t* process)
     // @TODO: Free process and all linked data.
 }
 
-static void create_tail()
+int process_create(void* fn, const char* pname, void* data)
 {
-    void (*fn)();
-    void* data;
+    enter_critical();
 
-    asm volatile(
-        "mov %0, x19\n\t"
-        "mov %1, x20"
-        : "=r" (fn), "=r" (data)
-    );
+    process_t* child = process_create_common(pname, -1, true, true);
 
+    // Initialize execution.
+    child->cpu_context->sp = (long unsigned) KSTACK_TOP;
+    child->cpu_context->pc = (long unsigned) process_create_tail_wrapper;
+    child->cpu_context->regs[0] = (long unsigned) fn;
+    child->cpu_context->regs[1] = (long unsigned) data;
+
+    leave_critical();
+
+    return child->pid;
+}
+
+void process_create_tail(process_function_t fn, void* data)
+{
     scheduler_tail();
 
     fn(data);
@@ -63,77 +93,56 @@ static void create_tail()
     scheduler_context_switch();
 }
 
-int process_create(void* fn, const char* pname, void* data)
-{
-    enter_critical();
-
-    // Create a new process control block.
-    process_t* child = kzalloc(sizeof(process_t));
-
-    // Assign a pid and basic information.
-    child->pid = scheduler_assign_pid();
-    child->state = created;
-    strncpy(child->pname, pname, PNAME_LENGTH);
-
-    // Initialize a new memory map.
-    mm_create(child);
-    mm_create_kstack(child);
-
-    // Initialize execution.
-    child->cpu_context = kzalloc(sizeof(cpu_context_t));
-    child->cpu_context->sp = (long unsigned) KSTACK_TOP;
-    child->cpu_context->pc = (long unsigned) create_tail;
-    child->cpu_context->regs[0] = (long unsigned) fn;
-    child->cpu_context->regs[1] = (long unsigned) data;
-
-    scheduler_enqueue(child);
-
-    leave_critical();
-
-    return child->pid;
-}
-
 int process_clone(process_t* parent)
 {
     enter_critical();
 
-    // Create a new process control block.
-    process_t* child = kzalloc(sizeof(process_t));
-
-    // Assign a pid and basic information.
-    child->pid = scheduler_assign_pid();
-    child->state = created;
-    strncpy(child->pname, parent->pname, PNAME_LENGTH);
+    process_t* child = process_create_common(parent->pname, -1, false, true);
 
     // Copy the memory map.
-    mm_create(child);
     mm_copy_from(parent, child);
 
     // Initialize execution.
-    child->cpu_context = kzalloc(sizeof(cpu_context_t));
     child->cpu_context->sp = (long unsigned) KSTACK_TOP - PROCESS_REGS_SIZE;
-    child->cpu_context->pc = (long unsigned) create_tail;
-    child->cpu_context->regs[0] = (long unsigned) fork_tail;
-
-    scheduler_enqueue(child);
+    child->cpu_context->pc = (long unsigned) process_create_tail_wrapper;
+    child->cpu_context->regs[0] = (long unsigned) do_exec;
+    child->cpu_context->regs[1] = (long unsigned) KSTACK_TOP - PROCESS_REGS_SIZE;
 
     leave_critical();
 
     return child->pid;
 }
 
-static void exec_tail()
+int process_exec(const char* pname, char* const argv[], char* const envp[])
 {
-    const char* pname;
-    char* const* argv;
-    char* const* envp;
+    // @TODO: Support arbitrary files.
+    failif(strcmp("/bin/sh", pname) != 0);
 
-    asm volatile(
-        "mov %0, x19\n\t"
-        "mov %1, x20\n\t"
-        "mov %2, x21"
-        : "=r" (pname), "=r" (argv), "=r" (envp)
-    );
+    enter_critical();
+
+    process_t* parent = scheduler_current();
+
+    process_t* child = process_create_common(pname, parent->pid, true, true);
+
+    // Initialize execution.
+    child->cpu_context->sp = (long unsigned) KSTACK_TOP - PROCESS_REGS_SIZE;
+    child->cpu_context->pc = (long unsigned) process_exec_tail_wrapper;
+    child->cpu_context->regs[0] = (long unsigned) pname;
+    child->cpu_context->regs[1] = (long unsigned) argv;
+    child->cpu_context->regs[2] = (long unsigned) envp;
+
+    parent->state = zombie;
+
+    leave_critical();
+
+    scheduler_context_switch();
+
+    return -1;
+}
+
+void process_exec_tail(const char* pname, char* const* argv, char* const* envp)
+{
+    (void) pname;
 
     scheduler_tail();
 
@@ -151,45 +160,6 @@ static void exec_tail()
     do_exec(new_regs);
 
     scheduler_context_switch();
-}
-
-int process_exec(const char* pname, char* const argv[], char* const envp[])
-{
-    // @TODO: Support arbitrary files.
-    failif(strcmp("/bin/sh", pname) != 0);
-
-    enter_critical();
-
-    process_t* parent = scheduler_current();
-
-    // Create a new process control block.
-    process_t* child = kzalloc(sizeof(process_t));
-
-    // Assign a pid and basic information.
-    child->pid = scheduler_assign_pid();
-    child->state = created;
-    strncpy(child->pname, pname, PNAME_LENGTH);
-
-    // Initialize a new memory map.
-    mm_create(child);
-    mm_create_kstack(child);
-
-    // Initialize execution.
-    child->cpu_context = kzalloc(sizeof(cpu_context_t));
-    child->cpu_context->sp = (long unsigned) KSTACK_TOP - PROCESS_REGS_SIZE;
-    child->cpu_context->pc = (long unsigned) exec_tail;
-    child->cpu_context->regs[0] = (long unsigned) pname;
-    child->cpu_context->regs[1] = (long unsigned) argv;
-    child->cpu_context->regs[2] = (long unsigned) envp;
-
-    scheduler_enqueue(child);
-    parent->state = zombie;
-
-    leave_critical();
-
-    scheduler_context_switch();
-
-    return -1;
 }
 
 void* process_set_args(void* sp, char* const argv[], char* const envp[])

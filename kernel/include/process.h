@@ -34,14 +34,20 @@ typedef struct process_t {
     mm_context_t* mm_context;
 } process_t;
 
+typedef void process_function_t(void*);
+
 process_t* process_create_kernel(void);
 void process_destroy(process_t*);
 int process_create(void*, const char*, void*);
+void process_create_tail(process_function_t, void*);
+void process_create_tail_wrapper(void);
 int process_clone(process_t*);
 int process_exec(const char*, char* const[], char* const[]);
+void process_exec_tail(const char*, char* const*, char* const*);
+void process_exec_tail_wrapper(void);
 void* process_set_args(void*, char* const[], char* const[]);
 
 void do_exec(registers_t*);
-void fork_tail();
+void process_clone_tail(void);
 
 #endif

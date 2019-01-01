@@ -32,7 +32,7 @@ void memory_init(void)
         _pages[i].allocated = 0;
     }
 
-    void* pages_end = virt_to_phys((char*) &_pages[_page_count] - 1);
+    void* pages_end = kva_to_pa((char*) &_pages[_page_count] - 1);
     memory_reserve_range(0, pages_end);
 
     _last_index = page_index(pages_end);
@@ -68,7 +68,7 @@ void* alloc_page(void)
 
     failif(pa == 0);
 
-    memset(phys_to_virt(pa), 0, PAGE_SIZE);
+    memset(pa_to_kva(pa), 0, PAGE_SIZE);
 
     return pa;
 }
@@ -77,7 +77,7 @@ void* alloc_kernel_page(void)
 {
     void* pa = alloc_page();
 
-    return phys_to_virt(pa);
+    return pa_to_kva(pa);
 }
 
 void free_page(void* pa)
@@ -96,5 +96,5 @@ void free_page(void* pa)
 
 void free_kernel_page(void* va)
 {
-    free_page(virt_to_phys(va));
+    free_page(kva_to_pa(va));
 }
