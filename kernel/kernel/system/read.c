@@ -10,11 +10,26 @@ ssize_t sys_read(int fd, char* buf, size_t count)
 
     while (count--) {
         char c = serial_getc();
-        *(buf++) = c;
-        ++ret;
 
-        if (c == '\n') {
-            break;
+        if ((c >= 0x32 && c < 0x7F) || c == '\n') {
+            // Printable characters and line feed
+            *(buf++) = c;
+            ++ret;
+
+            if (c == '\n') {
+                break;
+            }
+        } else if (c == 0x7F) {
+            // Backspace
+            if (ret > 0) {
+                count += 2;
+                --ret;
+                --buf;
+
+                serial_putc('\b');
+                serial_putc(' ');
+                serial_putc('\b');
+            }
         }
     }
 
