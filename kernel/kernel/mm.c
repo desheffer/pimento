@@ -188,6 +188,7 @@ static void* add_page(process_t* process, va_table_t* tab, void* va, void* pa)
     va_table_access(tab)[index] = (long unsigned) pa |
         PT_PAGE |
         PT_AF |
+        PT_NG |
         PT_USER |
         PT_ATTR(MT_NORMAL);
 

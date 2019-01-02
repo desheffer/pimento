@@ -36,6 +36,7 @@ int main(int argc, char* argv[], char* envp[])
                 printf("hello from child\n");
                 return 0;
             }
+            printf("hello from parent\n");
         } else if (strcmp("env", cmd) == 0) {
             for (int i = 0; envp[i] != 0; ++i) {
                 printf("%s\n", envp[i]);
