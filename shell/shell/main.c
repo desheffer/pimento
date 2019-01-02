@@ -6,14 +6,6 @@ int main(int argc, char* argv[], char* envp[])
 {
     (void) argc;
 
-    /* if (fork() == 0) { */
-    /*     printf("hello from child\n"); */
-    /*     while (1); */
-    /*     return 0; */
-    /* } else { */
-    /*     printf("hello from parent\n"); */
-    /* } */
-
     printf("[Shell]\n\n");
 
     char cmd[1024];
@@ -31,6 +23,12 @@ int main(int argc, char* argv[], char* envp[])
 
         if (strcmp("", cmd) == 0) {
             continue;
+        } else if (strcmp("help", cmd) == 0) {
+            printf("env  - display environment\n");
+            printf("exit - quit the shell\n");
+            printf("help - show this message\n");
+            printf("fork - test fork()\n");
+            printf("sh   - test execve()\n");
         } else if (strcmp("sh", cmd) == 0) {
             execve(argv[0], argv, envp);
         } else if (strcmp("fork", cmd) == 0) {
