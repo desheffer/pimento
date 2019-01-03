@@ -1,6 +1,7 @@
 #include <assert.h>
 #include <kstdlib.h>
 #include <process.h>
+#include <scheduler.h>
 #include <string.h>
 #include <system.h>
 
@@ -39,6 +40,8 @@ int sys_execve(const char* pname, char* const argv[], char* const envp[])
     // @TODO: How to free?
 
     process_exec(kpname, kargv, kenvp);
+
+    scheduler_context_switch();
 
     return -1;
 }

@@ -24,6 +24,6 @@ void system_handler(registers_t* regs, unsigned nr)
 
         regs->regs[0] = ret;
     } else {
-        sys_invalid(nr);
+        sys_ni(nr);
     }
 }

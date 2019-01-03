@@ -131,9 +131,7 @@ int process_exec(const char* pname, char* const argv[], char* const envp[])
 
     leave_critical();
 
-    scheduler_context_switch();
-
-    return -1;
+    return child->pid;
 }
 
 void process_exec_tail(const char* pname, char* const* argv, char* const* envp)

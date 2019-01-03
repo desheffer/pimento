@@ -28,7 +28,7 @@ typedef struct cpu_context_t {
 typedef struct mm_context_t mm_context_t;
 
 typedef struct process_t {
-    short unsigned pid;
+    unsigned pid;
     process_state_t state;
     char pname[PNAME_LENGTH];
     cpu_context_t* cpu_context;

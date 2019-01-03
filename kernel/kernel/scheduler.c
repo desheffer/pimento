@@ -32,7 +32,7 @@ void scheduler_init(void)
     timer_connect(scheduler_tick, 0);
 }
 
-short unsigned scheduler_assign_pid(void)
+unsigned scheduler_assign_pid(void)
 {
     enter_critical();
 
@@ -134,7 +134,7 @@ void scheduler_exit(process_t* process)
     leave_critical();
 }
 
-process_t* scheduler_get_pid(short unsigned pid)
+process_t* scheduler_get_pid(unsigned pid)
 {
     enter_critical();
 

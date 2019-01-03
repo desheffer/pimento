@@ -118,7 +118,7 @@ void mm_copy_from(process_t* parent, process_t* child)
     }
 }
 
-static short unsigned assign_asid(void)
+static unsigned assign_asid(void)
 {
     enter_critical();
 
@@ -138,8 +138,8 @@ void mm_create(process_t* process)
     process->mm_context->pages = list_new();
 
     // Allocate page global directory.
-    process->mm_context->pgd = alloc_page();
     process->mm_context->asid = assign_asid();
+    process->mm_context->pgd = alloc_page();
 
     record_alloc(process, (void*) process->mm_context->pgd, 0, 0);
 }

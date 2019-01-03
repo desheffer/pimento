@@ -75,7 +75,7 @@ typedef struct page_t {
 
 typedef struct mm_context_t {
     pgd_t pgd;
-    short unsigned asid;
+    unsigned asid;
     list_t* pages;
 } mm_context_t;
 

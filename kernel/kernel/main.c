@@ -11,8 +11,6 @@ const char* const envp[] = {"PWD=/", 0};
 
 static void run_init(void)
 {
-    kputs("Running init...\n");
-
     process_exec("/bin/sh", (char* const*) argv, (char* const*) envp);
 }
 
