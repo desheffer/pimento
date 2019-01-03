@@ -10,6 +10,7 @@ process_t* scheduler_current(void);
 void scheduler_destroy(process_t*);
 void scheduler_enqueue(process_t*);
 void scheduler_exit(process_t*);
+process_t* scheduler_get_pid(short unsigned);
 void scheduler_tail(void);
 
 void cpu_switch_to(cpu_context_t*, cpu_context_t*);

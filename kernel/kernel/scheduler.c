@@ -134,6 +134,28 @@ void scheduler_exit(process_t* process)
     leave_critical();
 }
 
+process_t* scheduler_get_pid(short unsigned pid)
+{
+    enter_critical();
+
+    list_item_t* process_item = _process_list->front;
+    process_t* process = 0;
+
+    while (process_item != 0) {
+        process = (process_t*) process_item->item;
+        if (process->pid == pid) {
+            break;
+        }
+
+        process_item = process_item->next;
+        process = 0;
+    }
+
+    leave_critical();
+
+    return process;
+}
+
 void scheduler_tail(void)
 {
     timer_reset();

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 int main(int argc, char* argv[], char* envp[])
@@ -27,16 +28,16 @@ int main(int argc, char* argv[], char* envp[])
             printf("env  - display environment\n");
             printf("exit - quit the shell\n");
             printf("help - show this message\n");
-            printf("fork - test fork()\n");
-            printf("sh   - test execve()\n");
+            printf("sh   - test fork() and execve()\n");
         } else if (strcmp("sh", cmd) == 0) {
-            execve(argv[0], argv, envp);
-        } else if (strcmp("fork", cmd) == 0) {
-            if (fork() == 0) {
-                printf("hello from child\n");
+            unsigned pid = fork();
+
+            if (pid == 0) {
+                execve(argv[0], argv, envp);
                 return 0;
             }
-            printf("hello from parent\n");
+
+            waitpid(pid, 0, 0);
         } else if (strcmp("env", cmd) == 0) {
             for (int i = 0; envp[i] != 0; ++i) {
                 printf("%s\n", envp[i]);
