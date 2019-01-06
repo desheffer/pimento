@@ -1,9 +1,9 @@
 #include <string.h>
 
-char* strncpy(char* dest, const char* src, size_t num)
+char * strncpy(char * dest, const char * src, size_t num)
 {
-    char* cdest = dest;
-    const char* csrc = src;
+    char * cdest = dest;
+    const char * csrc = src;
 
     while (num--) {
         if (*csrc == '\0') {

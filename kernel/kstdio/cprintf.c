@@ -6,7 +6,7 @@
 #define BUF_MAX 13
 
 struct vcprintf_specifiers {
-    char* buf;
+    char * buf;
     unsigned alt;
     unsigned base;
     unsigned left_align;
@@ -16,13 +16,13 @@ struct vcprintf_specifiers {
     char sign;
 };
 
-static void vcprintf_char(struct vcprintf_specifiers* sp, char c)
+static void vcprintf_char(struct vcprintf_specifiers * sp, char c)
 {
     *sp->buf = c;
     *(sp->buf + 1) = 0;
 }
 
-static void vcprintf_int(struct vcprintf_specifiers* sp, int i)
+static void vcprintf_int(struct vcprintf_specifiers * sp, int i)
 {
     unsigned digit;
 
@@ -41,7 +41,7 @@ static void vcprintf_int(struct vcprintf_specifiers* sp, int i)
     } while (i);
 }
 
-static void vcprintf_uint(struct vcprintf_specifiers* sp, unsigned i)
+static void vcprintf_uint(struct vcprintf_specifiers * sp, unsigned i)
 {
     unsigned digit;
 
@@ -55,9 +55,9 @@ static void vcprintf_uint(struct vcprintf_specifiers* sp, unsigned i)
     } while (i);
 }
 
-static void vcprintf_sp(void* data, putc_t putc_f, struct vcprintf_specifiers* sp)
+static void vcprintf_sp(void * data, putc_t putc_f, struct vcprintf_specifiers * sp)
 {
-    const char* buf = sp->buf;
+    const char * buf = sp->buf;
     size_t len;
 
     len = strlen(sp->buf);
@@ -104,11 +104,11 @@ static void vcprintf_sp(void* data, putc_t putc_f, struct vcprintf_specifiers* s
     }
 }
 
-void vcprintf(void* data, putc_t putc_f, const char* format, va_list arg)
+void vcprintf(void * data, putc_t putc_f, const char * format, va_list arg)
 {
-    struct vcprintf_specifiers* sp = (struct vcprintf_specifiers*) kzalloc(sizeof(struct vcprintf_specifiers));
+    struct vcprintf_specifiers * sp = (struct vcprintf_specifiers *) kzalloc(sizeof(struct vcprintf_specifiers));
 
-    char* buf = (char*) kzalloc(BUF_MAX);
+    char * buf = (char *) kzalloc(BUF_MAX);
 
     while (*format) {
         if (*format != '%') {
@@ -197,7 +197,7 @@ void vcprintf(void* data, putc_t putc_f, const char* format, va_list arg)
                         break;
                     case 's':
                         // String of characters
-                        sp->buf = va_arg(arg, char*);
+                        sp->buf = va_arg(arg, char *);
                         break;
                     case 'u':
                         // Unsigned decimal integer
@@ -235,7 +235,7 @@ void vcprintf(void* data, putc_t putc_f, const char* format, va_list arg)
     kfree(buf);
 }
 
-void cprintf(void* data, putc_t putc_f, const char* format, ...)
+void cprintf(void * data, putc_t putc_f, const char * format, ...)
 {
     va_list args;
 

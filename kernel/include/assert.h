@@ -24,4 +24,4 @@
 #define hexdump(start, length) \
     do_hexdump("Dump at "__FILE__ ":" STRINGIZE(__LINE__) ":\n", start, length)
 
-void do_hexdump(const char*, const void*, size_t);
+void do_hexdump(const char *, const void *, size_t);

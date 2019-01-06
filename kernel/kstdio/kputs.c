@@ -2,7 +2,7 @@
 #include <serial.h>
 #include <synchronize.h>
 
-void kputs(const char* s)
+void kputs(const char * s)
 {
     enter_critical();
 

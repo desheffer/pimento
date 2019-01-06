@@ -15,10 +15,10 @@ enum irq_number {
     local_irq_pmu_fast  = 9,
 };
 
-typedef void interrupt_handler_t(void*);
+typedef void interrupt_handler_t(void *);
 
 void interrupt_init(void);
-void interrupt_connect(enum irq_number, interrupt_handler_t*, void*);
+void interrupt_connect(enum irq_number, interrupt_handler_t *, void *);
 void interrupt_disconnect(enum irq_number);
 void interrupt_handler(void);
 

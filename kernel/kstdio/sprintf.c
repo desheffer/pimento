@@ -1,12 +1,12 @@
 #include <kstdio.h>
 #include <stdint.h>
 
-size_t vsprintf(char* s, const char* format, va_list arg)
+size_t vsprintf(char * s, const char * format, va_list arg)
 {
     return vsnprintf(s, UINT32_MAX, format, arg);
 }
 
-size_t sprintf(char* s, const char* format, ...)
+size_t sprintf(char * s, const char * format, ...)
 {
     va_list args;
     size_t retval;

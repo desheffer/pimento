@@ -2,14 +2,14 @@
 #include <serial.h>
 #include <synchronize.h>
 
-void kputc(void* data, char c)
+void kputc(void * data, char c)
 {
     (void) data;
 
     serial_putc(c);
 }
 
-void kvprintf(const char* format, va_list arg)
+void kvprintf(const char * format, va_list arg)
 {
     enter_critical();
 
@@ -18,7 +18,7 @@ void kvprintf(const char* format, va_list arg)
     leave_critical();
 }
 
-void kprintf(const char* format, ...)
+void kprintf(const char * format, ...)
 {
     va_list args;
 

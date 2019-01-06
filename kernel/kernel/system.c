@@ -2,9 +2,9 @@
 #include <system.h>
 
 #undef SYSCALL
-#define SYSCALL(nr, call) [__NR_ ## nr] = (void*) call,
+#define SYSCALL(nr, call) [__NR_ ## nr] = (void *) call,
 
-static syscall_t* _calls[__NR_syscalls] = {
+static syscall_t * _calls[__NR_syscalls] = {
 #include <system/syscalls.h>
 };
 

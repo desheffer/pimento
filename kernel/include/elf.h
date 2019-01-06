@@ -55,4 +55,4 @@ struct elf64_shdr {
     uint64_t sh_entsize;   // Section size
 };
 
-void* elf_load(const char*, size_t);
+void * elf_load(const char *, size_t);

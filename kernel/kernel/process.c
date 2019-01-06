@@ -12,10 +12,10 @@
 extern char __shell_start;
 extern char __shell_end;
 
-static struct process* process_create_common(const char* pname, int pid, bool init_kstack)
+static struct process * process_create_common(const char * pname, int pid, bool init_kstack)
 {
     // Create a new process control block.
-    struct process* child = kzalloc(sizeof(struct process));
+    struct process * child = kzalloc(sizeof(struct process));
 
     // Assign a pid.
     if (pid >= 0) {
@@ -40,18 +40,18 @@ static struct process* process_create_common(const char* pname, int pid, bool in
     return child;
 }
 
-struct process* process_create_kernel(void)
+struct process * process_create_kernel(void)
 {
-    struct process* process = process_create_common("kernel", -1, false);
+    struct process * process = process_create_common("kernel", -1, false);
 
     return process;
 }
 
-int process_create(void* fn, const char* pname, void* data)
+int process_create(void * fn, const char * pname, void * data)
 {
     enter_critical();
 
-    struct process* child = process_create_common(pname, -1, true);
+    struct process * child = process_create_common(pname, -1, true);
 
     // Initialize execution.
     child->cpu_context->sp = (long unsigned) KSTACK_TOP;
@@ -66,24 +66,24 @@ int process_create(void* fn, const char* pname, void* data)
     return child->pid;
 }
 
-void process_create_tail(process_function_t fn, void* data)
+void process_create_tail(process_function_t fn, void * data)
 {
     scheduler_tail();
 
     fn(data);
 
     // Exit the process when it is finished.
-    struct process* process = scheduler_current();
+    struct process * process = scheduler_current();
     scheduler_exit(process);
 
     scheduler_context_switch();
 }
 
-int process_clone(struct process* parent)
+int process_clone(struct process * parent)
 {
     enter_critical();
 
-    struct process* child = process_create_common(parent->pname, -1, false);
+    struct process * child = process_create_common(parent->pname, -1, false);
 
     // Copy the memory map.
     mm_copy_from(parent, child);
@@ -101,23 +101,23 @@ int process_clone(struct process* parent)
     return child->pid;
 }
 
-void process_destroy(struct process* process)
+void process_destroy(struct process * process)
 {
     (void) process;
 
     // @TODO: Free process and all linked data.
 }
 
-int process_exec(const char* pname, char* const argv[], char* const envp[])
+int process_exec(const char * pname, char * const argv[], char * const envp[])
 {
     enter_critical();
 
     // @TODO: Support arbitrary files.
     failif(strcmp("/bin/sh", pname) != 0);
 
-    struct process* parent = scheduler_current();
+    struct process * parent = scheduler_current();
 
-    struct process* child = process_create_common(pname, parent->pid, true);
+    struct process * child = process_create_common(pname, parent->pid, true);
 
     // Initialize execution.
     child->cpu_context->sp = (long unsigned) KSTACK_TOP - PROCESS_REGS_SIZE;
@@ -134,7 +134,7 @@ int process_exec(const char* pname, char* const argv[], char* const envp[])
     return child->pid;
 }
 
-void process_exec_tail(const char* pname, char* const* argv, char* const* envp)
+void process_exec_tail(const char * pname, char * const * argv, char * const * envp)
 {
     (void) pname;
 
@@ -142,7 +142,7 @@ void process_exec_tail(const char* pname, char* const* argv, char* const* envp)
 
     // Load child stack with argv and envp.
     // @TODO: Copy args to kernel memory.
-    void* stack_top = (void*) USTACK_TOP;
+    void * stack_top = (void *) USTACK_TOP;
     stack_top = process_set_args(stack_top, argv, envp);
 
     // Initialize process.
@@ -156,34 +156,34 @@ void process_exec_tail(const char* pname, char* const* argv, char* const* envp)
     scheduler_context_switch();
 }
 
-void* process_set_args(void* sp, char* const argv[], char* const envp[])
+void * process_set_args(void * sp, char * const argv[], char * const envp[])
 {
     // @TODO: Add limits on array and string lengths.
 
     // Location for new strings.
-    char* char_ptr = (char*) sp;
+    char * char_ptr = (char *) sp;
 
     // Find size of argv.
     unsigned argv_size = 0;
-    for (char* const* iter = argv; *iter != 0; ++iter) {
+    for (char * const * iter = argv; *iter != 0; ++iter) {
         ++argv_size;
         char_ptr = char_ptr - strlen(*iter) - 1;
     }
 
     // Find size of envp.
     unsigned envp_size = 0;
-    for (char* const* iter = envp; *iter != 0; ++iter) {
+    for (char * const * iter = envp; *iter != 0; ++iter) {
         ++envp_size;
         char_ptr = char_ptr - strlen(*iter) - 1;
     }
 
     // Adjust stack alignment.
-    char_ptr = (char*) STACK_ALIGN((long unsigned) char_ptr);
+    char_ptr = (char *) STACK_ALIGN((long unsigned) char_ptr);
 
     // Locations for new arrays.
-    char** envp_ptr = (char**) char_ptr - envp_size - 1;
-    char** argv_ptr = (char**) envp_ptr - argv_size - 1;
-    int* argc_ptr = (int*) ((char**) argv_ptr - 1);
+    char ** envp_ptr = (char **) char_ptr - envp_size - 1;
+    char ** argv_ptr = (char **) envp_ptr - argv_size - 1;
+    int * argc_ptr = (int *) ((char **) argv_ptr - 1);
 
     // Copy argc.
     argc_ptr[0] = argv_size;
@@ -202,5 +202,5 @@ void* process_set_args(void* sp, char* const argv[], char* const envp[])
         char_ptr += strlen(char_ptr) + 1;
     }
 
-    return (void*) argc_ptr;
+    return (void *) argc_ptr;
 }

@@ -4,7 +4,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-int main(int argc, char* argv[], char* envp[])
+int main(int argc, char * argv[], char * envp[])
 {
     (void) argc;
 
@@ -18,7 +18,7 @@ int main(int argc, char* argv[], char* envp[])
 
         fgets(cmd, 1024, stdin);
 
-        char* pos = strchr(cmd, '\n');
+        char * pos = strchr(cmd, '\n');
         if (pos != 0) {
             *pos = '\0';
         }

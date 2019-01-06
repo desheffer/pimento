@@ -49,8 +49,8 @@
 
 #define PT_ATTR(n) ((n) << 2)
 
-#define pa_to_kva(ptr) ((void*) ((long unsigned) (ptr) | VA_START))
-#define kva_to_pa(ptr) ((void*) ((long unsigned) (ptr) & ~VA_START))
+#define pa_to_kva(ptr) ((void *) ((long unsigned) (ptr) | VA_START))
+#define kva_to_pa(ptr) ((void *) ((long unsigned) (ptr) & ~VA_START))
 
 #define PG_VM   1
 #define PG_USER 2
@@ -65,28 +65,28 @@
 
 typedef long unsigned va_table_t[VA_TABLE_LENGTH];
 
-typedef long unsigned* pgd_t;
+typedef long unsigned * pgd_t;
 
 struct page {
-    void* pa;
-    void* va;
+    void * pa;
+    void * va;
     unsigned flags;
 };
 
 struct mm_context {
     pgd_t pgd;
     unsigned asid;
-    struct list* pages;
+    struct list * pages;
 };
 
 void mm_init(void);
-void mm_copy_from(struct process*, struct process*);
-void mm_create(struct process*);
-void mm_create_kstack(struct process*);
-void mm_map_page(struct process*, void*, void*);
-void mm_switch_to(struct process*);
+void mm_copy_from(struct process *, struct process *);
+void mm_create(struct process *);
+void mm_create_kstack(struct process *);
+void mm_map_page(struct process *, void *, void *);
+void mm_switch_to(struct process *);
 
-void data_abort_handler(void*);
+void data_abort_handler(void *);
 void ttbr_switch_to(long unsigned);
 
 #endif

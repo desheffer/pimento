@@ -15,9 +15,9 @@ void debug_process_regs(struct registers * state, long unsigned reason, long uns
 
     _in_debug_process_regs = 1;
 
-    const char* type = "Unknown";
-    const char* ec = "Unknown";
-    const char* fs = "Unknown";
+    const char * type = "Unknown";
+    const char * ec = "Unknown";
+    const char * fs = "Unknown";
 
     kputs(
         "\n"

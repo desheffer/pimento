@@ -3,23 +3,23 @@
 #include <kstdlib.h>
 
 struct vsnprintf_putc_data {
-    char* dest;
+    char * dest;
     size_t num_chars;
     size_t max_chars;
 };
 
-static void vsnprintf_putc(void* data, char c)
+static void vsnprintf_putc(void * data, char c)
 {
-    struct vsnprintf_putc_data* putc_data = (struct vsnprintf_putc_data*) data;
+    struct vsnprintf_putc_data * putc_data = (struct vsnprintf_putc_data *) data;
 
     if (putc_data->num_chars < putc_data->max_chars) {
         putc_data->dest[putc_data->num_chars++] = c;
     }
 }
 
-size_t vsnprintf(char* s, size_t max, const char* format, va_list arg)
+size_t vsnprintf(char * s, size_t max, const char * format, va_list arg)
 {
-    struct vsnprintf_putc_data* putc_data = (struct vsnprintf_putc_data*) kmalloc(sizeof(struct vsnprintf_putc_data));
+    struct vsnprintf_putc_data * putc_data = (struct vsnprintf_putc_data *) kmalloc(sizeof(struct vsnprintf_putc_data));
 
     putc_data->dest = s;
     putc_data->num_chars = 0;
@@ -35,7 +35,7 @@ size_t vsnprintf(char* s, size_t max, const char* format, va_list arg)
     return num_chars;
 }
 
-size_t snprintf(char* s, size_t size, const char* format, ...)
+size_t snprintf(char * s, size_t size, const char * format, ...)
 {
     va_list args;
     size_t retval;

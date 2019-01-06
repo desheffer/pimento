@@ -17,7 +17,7 @@ void timer_init(void)
     *CORE_TIMERS_PRESCALER = 0x80000000;
 }
 
-void timer_connect(interrupt_handler_t* handler, void* handler_data)
+void timer_connect(interrupt_handler_t * handler, void * handler_data)
 {
     interrupt_connect(local_irq_cntpnsirq, handler, handler_data);
 }

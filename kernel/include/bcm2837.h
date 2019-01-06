@@ -3,7 +3,7 @@
 #include <mm.h>
 #include <stdint.h>
 
-#define BCM2837(address, size) ((volatile uint ## size ## _t*) ((address) | VA_START))
+#define BCM2837(address, size) ((volatile uint ## size ## _t *) ((address) | VA_START))
 
 #define SYSTEM_TIMER_CS         BCM2837(0x3F003000, 32)     // System Timer Control/Status
 #define SYSTEM_TIMER_CLO        BCM2837(0x3F003004, 32)     // System Timer Counter Lower 32 Bits

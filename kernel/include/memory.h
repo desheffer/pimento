@@ -5,13 +5,13 @@ struct memory_page {
 };
 
 void memory_init(void);
-void memory_reserve_range(void*, void*);
+void memory_reserve_range(void *, void *);
 
-void* alloc_page(void);
-void* alloc_kernel_page(void);
+void * alloc_page(void);
+void * alloc_kernel_page(void);
 
-void free_page(void*);
-void free_kernel_page(void*);
+void free_page(void *);
+void free_kernel_page(void *);
 
 extern char __start;
 extern char __text_start;

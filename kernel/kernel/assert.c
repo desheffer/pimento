@@ -1,9 +1,9 @@
 #include <assert.h>
 #include <kstdio.h>
 
-void do_hexdump(const char* debug, const void* src, size_t length)
+void do_hexdump(const char * debug, const void * src, size_t length)
 {
-    const char* csrc = (const char*) src;
+    const char * csrc = (const char *) src;
 
     kputs("\n");
     kputs(debug);

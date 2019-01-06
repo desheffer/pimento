@@ -1,6 +1,6 @@
 #include <string.h>
 
-char* strcpy(char* dest, const char* src)
+char * strcpy(char * dest, const char * src)
 {
-    return (char*) memcpy(dest, src, strlen(src) + 1);
+    return (char *) memcpy(dest, src, strlen(src) + 1);
 }

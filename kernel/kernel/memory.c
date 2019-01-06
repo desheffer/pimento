@@ -5,40 +5,40 @@
 #include <synchronize.h>
 
 static unsigned _page_count = 0;
-static struct memory_page* _pages = 0;
+static struct memory_page * _pages = 0;
 static unsigned _last_index = 0;
 
-static int page_index(void* start)
+static int page_index(void * start)
 {
-    return ((char*) start - (char*) 0) / PAGE_SIZE;
+    return ((char *) start - (char *) 0) / PAGE_SIZE;
 }
 
-static void* page_start(unsigned index)
+static void * page_start(unsigned index)
 {
-    return (char*) 0 + index * PAGE_SIZE;
+    return (char *) 0 + index * PAGE_SIZE;
 }
 
 void memory_init(void)
 {
     // @TODO: Get from hardware.
-    void* alloc_end = (void*) 0x3F000000;
+    void * alloc_end = (void *) 0x3F000000;
 
-    _page_count = ((char*) alloc_end - (char*) 0) / PAGE_SIZE;
+    _page_count = ((char *) alloc_end - (char *) 0) / PAGE_SIZE;
 
     // Create pages without using malloc.
-    _pages = (struct memory_page*) &__end;
+    _pages = (struct memory_page *) &__end;
 
     for (unsigned i = 0; i < _page_count; ++i) {
         _pages[i].allocated = 0;
     }
 
-    void* pages_end = kva_to_pa((char*) &_pages[_page_count] - 1);
+    void * pages_end = kva_to_pa((char *) &_pages[_page_count] - 1);
     memory_reserve_range(0, pages_end);
 
     _last_index = page_index(pages_end);
 }
 
-void memory_reserve_range(void* start, void* end)
+void memory_reserve_range(void * start, void * end)
 {
     unsigned index = page_index(start);
     unsigned page_end = page_index(end);
@@ -48,9 +48,9 @@ void memory_reserve_range(void* start, void* end)
     }
 }
 
-void* alloc_page(void)
+void * alloc_page(void)
 {
-    void* pa = 0;
+    void * pa = 0;
 
     enter_critical();
 
@@ -73,14 +73,14 @@ void* alloc_page(void)
     return pa;
 }
 
-void* alloc_kernel_page(void)
+void * alloc_kernel_page(void)
 {
-    void* pa = alloc_page();
+    void * pa = alloc_page();
 
     return pa_to_kva(pa);
 }
 
-void free_page(void* pa)
+void free_page(void * pa)
 {
     unsigned index = page_index(pa);
 
@@ -94,7 +94,7 @@ void free_page(void* pa)
     leave_critical();
 }
 
-void free_kernel_page(void* va)
+void free_kernel_page(void * va)
 {
     free_page(kva_to_pa(va));
 }

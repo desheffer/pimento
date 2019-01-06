@@ -6,12 +6,12 @@
 #include <serial.h>
 #include <timer.h>
 
-const char* const argv[] = {"/bin/sh", 0};
-const char* const envp[] = {"PWD=/", 0};
+const char * const argv[] = {"/bin/sh", 0};
+const char * const envp[] = {"PWD=/", 0};
 
 static void run_init(void)
 {
-    process_exec("/bin/sh", (char* const*) argv, (char* const*) envp);
+    process_exec("/bin/sh", (char * const *) argv, (char * const *) envp);
 }
 
 void kernel_main(void)
