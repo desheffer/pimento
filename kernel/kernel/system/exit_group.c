@@ -6,7 +6,7 @@ void sys_exit_group(int status)
     // @TODO
     (void) status;
 
-    process_t* process = scheduler_current();
+    struct process* process = scheduler_current();
     scheduler_exit(process);
 
     scheduler_context_switch();

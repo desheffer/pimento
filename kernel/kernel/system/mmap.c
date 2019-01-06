@@ -18,7 +18,7 @@ void* sys_mmap(void* addr, size_t length, int prot, int flags, int fd, off_t off
         return addr;
     }
 
-    process_t* process = scheduler_current();
+    struct process* process = scheduler_current();
 
     enter_critical();
 
@@ -27,11 +27,11 @@ void* sys_mmap(void* addr, size_t length, int prot, int flags, int fd, off_t off
 
     // Locate an available range.
     while (1) {
-        list_item_t* page_item = process->mm_context->pages->front;
+        struct list_item* page_item = process->mm_context->pages->front;
         va_end = va_start + length;
 
         while (page_item != 0) {
-            page_t* page = (page_t*) page_item->item;
+            struct page* page = (struct page*) page_item->item;
 
             if (va_start <= (long unsigned) page->va && va_end >= (long unsigned) page->va) {
                 va_start += PAGE_SIZE;

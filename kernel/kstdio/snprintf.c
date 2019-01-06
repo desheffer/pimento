@@ -2,15 +2,15 @@
 #include <kstdio.h>
 #include <kstdlib.h>
 
-typedef struct vsnprintf_putc_data_t {
+struct vsnprintf_putc_data {
     char* dest;
     size_t num_chars;
     size_t max_chars;
-} vsnprintf_putc_data_t;
+};
 
 static void vsnprintf_putc(void* data, char c)
 {
-    vsnprintf_putc_data_t* putc_data = (vsnprintf_putc_data_t*) data;
+    struct vsnprintf_putc_data* putc_data = (struct vsnprintf_putc_data*) data;
 
     if (putc_data->num_chars < putc_data->max_chars) {
         putc_data->dest[putc_data->num_chars++] = c;
@@ -19,7 +19,7 @@ static void vsnprintf_putc(void* data, char c)
 
 size_t vsnprintf(char* s, size_t max, const char* format, va_list arg)
 {
-    vsnprintf_putc_data_t* putc_data = (vsnprintf_putc_data_t*) kmalloc(sizeof(vsnprintf_putc_data_t));
+    struct vsnprintf_putc_data* putc_data = (struct vsnprintf_putc_data*) kmalloc(sizeof(struct vsnprintf_putc_data));
 
     putc_data->dest = s;
     putc_data->num_chars = 0;

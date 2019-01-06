@@ -27,4 +27,4 @@ ssize_t sys_write(int, const char*, size_t);
 ssize_t sys_writev(int, const struct iovec*, int);
 
 int sys_ni(unsigned);
-void system_handler(registers_t*, unsigned);
+void system_handler(struct registers *, unsigned);

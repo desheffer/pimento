@@ -42,11 +42,11 @@
 
 #ifndef __ASSEMBLY__
 
-typedef struct registers_t {
+struct registers {
     long unsigned regs[31]; // x0 - x30
     long unsigned sp;       // sp_el0
     long unsigned pc;       // elr_el1
     long unsigned pstate;   // spsr_el1
-} registers_t;
+};
 
 #endif

@@ -2,7 +2,7 @@
 
 #define NUM_IRQS 10
 
-typedef enum {
+enum irq_number {
     local_irq_cntpsirq  = 0,
     local_irq_cntpnsirq = 1,
     local_irq_cnthpirq  = 2,
@@ -13,13 +13,13 @@ typedef enum {
     local_irq_mailbox3  = 7,
     local_irq_gpu_fast  = 8,
     local_irq_pmu_fast  = 9,
-} irq_number_t;
+};
 
 typedef void interrupt_handler_t(void*);
 
 void interrupt_init(void);
-void interrupt_connect(irq_number_t, interrupt_handler_t*, void*);
-void interrupt_disconnect(irq_number_t);
+void interrupt_connect(enum irq_number, interrupt_handler_t*, void*);
+void interrupt_disconnect(enum irq_number);
 void interrupt_handler(void);
 
 void disable_interrupts(void);

@@ -2,6 +2,6 @@
 
 #include <entry.h>
 
-void debug_process_regs(registers_t*, long unsigned, long unsigned, long unsigned);
+void debug_process_regs(struct registers *, long unsigned, long unsigned, long unsigned);
 void halt(void);
 void panic(void);

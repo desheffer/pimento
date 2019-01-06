@@ -4,9 +4,9 @@
 
 void* elf_load(const char* start, size_t length)
 {
-    failif(length < sizeof(elf64_hdr_t));
+    failif(length < sizeof(struct elf64_hdr));
 
-    elf64_hdr_t* header = (elf64_hdr_t*) start;
+    struct elf64_hdr* header = (struct elf64_hdr*) start;
 
     // Verify the magic number.
     failif(header->e_ident[EI_MAG0] != 0x7F);
@@ -37,7 +37,7 @@ void* elf_load(const char* start, size_t length)
 
     for (int i = 0; i < header->e_phnum; ++i) {
         failif(length < header->e_phoff + header->e_phentsize * i);
-        elf64_phdr_t* pheader = (elf64_phdr_t*) (start + header->e_phoff + header->e_phentsize * i);
+        struct elf64_phdr* pheader = (struct elf64_phdr*) (start + header->e_phoff + header->e_phentsize * i);
 
         failif(length < pheader->p_offset + pheader->p_filesz);
         memcpy((void*) pheader->p_vaddr, start + pheader->p_offset, pheader->p_filesz);

@@ -2,15 +2,6 @@
 
 #include <stdint.h>
 
-typedef uint64_t elf64_addr_t;
-typedef uint16_t elf64_half_t;
-typedef int16_t  elf64_shalf_t;
-typedef uint64_t elf64_off_t;
-typedef int32_t  elf64_sword_t;
-typedef uint32_t elf64_word_t;
-typedef uint64_t elf64_xword_t;
-typedef int64_t  elf64_sxword_t;
-
 #define EI_MAG0       0x00
 #define EI_MAG1       0x01
 #define EI_MAG2       0x02
@@ -23,45 +14,45 @@ typedef int64_t  elf64_sxword_t;
 #define EI_PAD        0x09
 #define EI_NIDENT     0x10
 
-typedef struct elf64_hdr_t {
+struct elf64_hdr {
     unsigned char e_ident[EI_NIDENT]; // Various indentifying information
-    elf64_half_t e_type;              // Object type
-    elf64_half_t e_machine;           // Target architecture
-    elf64_word_t e_version;           // Version
-    elf64_addr_t e_entry;             // Entry point virtual address
-    elf64_off_t e_phoff;              // Program header table offset
-    elf64_off_t e_shoff;              // Section header table offset
-    elf64_word_t e_flags;             // Flags
-    elf64_half_t e_ehsize;            // Header size
-    elf64_half_t e_phentsize;         // Program header table entry size
-    elf64_half_t e_phnum;             // Program header table entry count
-    elf64_half_t e_shentsize;         // Section header table entry size
-    elf64_half_t e_shnum;             // Section header table entry count
-    elf64_half_t e_shstrndx;          // Section header table
-} elf64_hdr_t;
+    uint16_t e_type;                  // Object type
+    uint16_t e_machine;               // Target architecture
+    uint32_t e_version;               // Version
+    uint64_t e_entry;                 // Entry point virtual address
+    uint64_t e_phoff;                 // Program header table offset
+    uint64_t e_shoff;                 // Section header table offset
+    uint32_t e_flags;                 // Flags
+    uint16_t e_ehsize;                // Header size
+    uint16_t e_phentsize;             // Program header table entry size
+    uint16_t e_phnum;                 // Program header table entry count
+    uint16_t e_shentsize;             // Section header table entry size
+    uint16_t e_shnum;                 // Section header table entry count
+    uint16_t e_shstrndx;              // Section header table
+};
 
-typedef struct elf64_phdr_t {
-    elf64_word_t p_type;    // Segment type
-    elf64_word_t p_flags;   // Segment flags
-    elf64_off_t p_offset;   // Segment offset
-    elf64_addr_t p_vaddr;   // Segment virtual address
-    elf64_addr_t p_paddr;   // Segment physical address
-    elf64_xword_t p_filesz; // Segment size in the file image
-    elf64_xword_t p_memsz;  // Segment size in memory
-    elf64_xword_t p_align;  // Segment alignment
-} elf64_phdr_t;
+struct elf64_phdr {
+    uint32_t p_type;   // Segment type
+    uint32_t p_flags;  // Segment flags
+    uint64_t p_offset; // Segment offset
+    uint64_t p_vaddr;  // Segment virtual address
+    uint64_t p_paddr;  // Segment physical address
+    uint64_t p_filesz; // Segment size in the file image
+    uint64_t p_memsz;  // Segment size in memory
+    uint64_t p_align;  // Segment alignment
+};
 
-typedef struct elf64_shdr_t {
-    elf64_word_t sh_name;       // Section name
-    elf64_word_t sh_type;       // Section type
-    elf64_xword_t sh_flags;     // Section flags
-    elf64_addr_t sh_addr;       // Section virtual address
-    elf64_off_t sh_offset;      // Section offset in the file image
-    elf64_xword_t sh_size;      // Section size in the file image
-    elf64_word_t sh_link;       // Section index
-    elf64_word_t sh_info;       // Section additional information
-    elf64_xword_t sh_addralign; // Section alignment
-    elf64_xword_t sh_entsize;   // Section size
-} elf64_shdr_t;
+struct elf64_shdr {
+    uint32_t sh_name;      // Section name
+    uint32_t sh_type;      // Section type
+    uint64_t sh_flags;     // Section flags
+    uint64_t sh_addr;      // Section virtual address
+    uint64_t sh_offset;    // Section offset in the file image
+    uint64_t sh_size;      // Section size in the file image
+    uint32_t sh_link;      // Section index
+    uint32_t sh_info;      // Section additional information
+    uint64_t sh_addralign; // Section alignment
+    uint64_t sh_entsize;   // Section size
+};
 
 void* elf_load(const char*, size_t);

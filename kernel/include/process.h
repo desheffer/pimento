@@ -11,44 +11,42 @@
 #include <entry.h>
 #include <list.h>
 
-typedef enum {
+enum process_state {
     created,
     running,
     sleeping,
     stopped,
     zombie,
-} process_state_t;
+};
 
-typedef struct cpu_context_t {
+struct cpu_context {
     long unsigned regs[11]; // x19 - x29
     long unsigned sp;
     long unsigned pc;
-} cpu_context_t;
+};
 
-typedef struct mm_context_t mm_context_t;
-
-typedef struct process_t {
+struct process {
     unsigned pid;
-    process_state_t state;
+    enum process_state state;
     char pname[PNAME_LENGTH];
-    cpu_context_t* cpu_context;
-    mm_context_t* mm_context;
-} process_t;
+    struct cpu_context* cpu_context;
+    struct mm_context* mm_context;
+};
 
 typedef void process_function_t(void*);
 
-process_t* process_create_kernel(void);
+struct process* process_create_kernel(void);
 int process_create(void*, const char*, void*);
 void process_create_tail(process_function_t, void*);
 void process_create_tail_wrapper(void);
-int process_clone(process_t*);
-void process_destroy(process_t*);
+int process_clone(struct process*);
+void process_destroy(struct process*);
 int process_exec(const char*, char* const[], char* const[]);
 void process_exec_tail(const char*, char* const*, char* const*);
 void process_exec_tail_wrapper(void);
 void* process_set_args(void*, char* const[], char* const[]);
 
-void do_exec(registers_t*);
+void do_exec(struct registers *);
 void process_clone_tail(void);
 
 #endif

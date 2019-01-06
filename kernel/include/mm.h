@@ -67,24 +67,24 @@ typedef long unsigned va_table_t[VA_TABLE_LENGTH];
 
 typedef long unsigned* pgd_t;
 
-typedef struct page_t {
+struct page {
     void* pa;
     void* va;
     unsigned flags;
-} page_t;
+};
 
-typedef struct mm_context_t {
+struct mm_context {
     pgd_t pgd;
     unsigned asid;
-    list_t* pages;
-} mm_context_t;
+    struct list* pages;
+};
 
 void mm_init(void);
-void mm_copy_from(process_t*, process_t*);
-void mm_create(process_t*);
-void mm_create_kstack(process_t*);
-void mm_map_page(process_t*, void*, void*);
-void mm_switch_to(process_t*);
+void mm_copy_from(struct process*, struct process*);
+void mm_create(struct process*);
+void mm_create_kstack(struct process*);
+void mm_map_page(struct process*, void*, void*);
+void mm_switch_to(struct process*);
 
 void data_abort_handler(void*);
 void ttbr_switch_to(long unsigned);

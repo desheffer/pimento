@@ -8,10 +8,10 @@
 #include <synchronize.h>
 #include <timer.h>
 
-static process_t* _current_process = 0;
+static struct process* _current_process = 0;
 static unsigned _next_pid = 0;
-static list_t* _process_list = 0;
-static list_t* _process_queue = 0;
+static struct list* _process_list = 0;
+static struct list* _process_queue = 0;
 
 static void scheduler_tick(void* data)
 {
@@ -44,7 +44,7 @@ unsigned scheduler_assign_pid(void)
     return pid;
 }
 
-static void switch_to(process_t* prev, process_t* next)
+static void switch_to(struct process* prev, struct process* next)
 {
     if (prev == next) {
         return;
@@ -58,7 +58,7 @@ void scheduler_context_switch(void)
 {
     disable_interrupts();
 
-    process_t* prev = scheduler_current();
+    struct process* prev = scheduler_current();
 
     if (prev->state == running) {
         prev->state = sleeping;
@@ -69,7 +69,7 @@ void scheduler_context_switch(void)
 
     assert(list_count(_process_queue) > 0);
 
-    process_t* next = (process_t*) list_pop_front(_process_queue);
+    struct process* next = (struct process*) list_pop_front(_process_queue);
     next->state = running;
 
     _current_process = next;
@@ -90,20 +90,20 @@ unsigned scheduler_count(void)
     return count;
 }
 
-process_t* scheduler_current(void)
+struct process* scheduler_current(void)
 {
     enter_critical();
 
     assert(_current_process != 0);
 
-    process_t* process = _current_process;
+    struct process* process = _current_process;
 
     leave_critical();
 
     return process;
 }
 
-void scheduler_destroy(process_t* process)
+void scheduler_destroy(struct process* process)
 {
     enter_critical();
 
@@ -115,7 +115,7 @@ void scheduler_destroy(process_t* process)
     leave_critical();
 }
 
-void scheduler_enqueue(process_t* process)
+void scheduler_enqueue(struct process* process)
 {
     enter_critical();
 
@@ -125,7 +125,7 @@ void scheduler_enqueue(process_t* process)
     leave_critical();
 }
 
-void scheduler_exit(process_t* process)
+void scheduler_exit(struct process* process)
 {
     enter_critical();
 
@@ -134,15 +134,15 @@ void scheduler_exit(process_t* process)
     leave_critical();
 }
 
-process_t* scheduler_get_pid(unsigned pid)
+struct process* scheduler_get_pid(unsigned pid)
 {
     enter_critical();
 
-    list_item_t* process_item = _process_list->front;
-    process_t* process = 0;
+    struct list_item* process_item = _process_list->front;
+    struct process* process = 0;
 
     while (process_item != 0) {
-        process = (process_t*) process_item->item;
+        process = (struct process*) process_item->item;
         if (process->pid == pid) {
             break;
         }

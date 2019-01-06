@@ -8,7 +8,7 @@ static syscall_t* _calls[__NR_syscalls] = {
 #include <system/syscalls.h>
 };
 
-void system_handler(registers_t* regs, unsigned nr)
+void system_handler(struct registers * regs, unsigned nr)
 {
     assert(nr < __NR_syscalls);
 

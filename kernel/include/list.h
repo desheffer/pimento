@@ -1,22 +1,22 @@
 #pragma once
 
-typedef struct list_item_t {
+struct list_item {
     void* item;
-    struct list_item_t* prev;
-    struct list_item_t* next;
-} list_item_t;
+    struct list_item* prev;
+    struct list_item* next;
+};
 
-typedef struct list_t {
-    list_item_t* front;
-    list_item_t* back;
-} list_t;
+struct list {
+    struct list_item* front;
+    struct list_item* back;
+};
 
-void list_clear(list_t*);
-unsigned list_count(list_t*);
-void list_delete(list_t*);
-list_t* list_new(void);
-void* list_pop_back(list_t*);
-void* list_pop_front(list_t*);
-void list_push_back(list_t*, void*);
-void list_push_front(list_t*, void*);
-void list_remove(list_t*, void*);
+void list_clear(struct list*);
+unsigned list_count(struct list*);
+void list_delete(struct list*);
+struct list* list_new(void);
+void* list_pop_back(struct list*);
+void* list_pop_front(struct list*);
+void list_push_back(struct list*, void*);
+void list_push_front(struct list*, void*);
+void list_remove(struct list*, void*);

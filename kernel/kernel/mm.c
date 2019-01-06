@@ -87,9 +87,9 @@ void mm_init(void)
     asm volatile("msr ttbr1_el1, %0" :: "r" (tables));
 }
 
-static void record_alloc(process_t* process, void* pa, void* va, unsigned flags)
+static void record_alloc(struct process* process, void* pa, void* va, unsigned flags)
 {
-    page_t* page = kzalloc(sizeof(page_t));
+    struct page* page = kzalloc(sizeof(struct page));
     page->pa = pa;
     page->va = va;
     page->flags = flags;
@@ -97,12 +97,12 @@ static void record_alloc(process_t* process, void* pa, void* va, unsigned flags)
     list_push_back(process->mm_context->pages, page);
 }
 
-void mm_copy_from(process_t* parent, process_t* child)
+void mm_copy_from(struct process* parent, struct process* child)
 {
-    list_item_t* page_item = parent->mm_context->pages->front;
+    struct list_item* page_item = parent->mm_context->pages->front;
 
     while (page_item != 0) {
-        page_t* page = (page_t*) page_item->item;
+        struct page* page = (struct page*) page_item->item;
 
         if ((page->flags & PG_VM) != 0) {
             assert(page->va != 0);
@@ -130,9 +130,9 @@ static unsigned assign_asid(void)
     return asid;
 }
 
-void mm_create(process_t* process)
+void mm_create(struct process* process)
 {
-    process->mm_context = kzalloc(sizeof(mm_context_t));
+    process->mm_context = kzalloc(sizeof(struct mm_context));
 
     // Initialize list of allocated pages.
     process->mm_context->pages = list_new();
@@ -144,7 +144,7 @@ void mm_create(process_t* process)
     record_alloc(process, (void*) process->mm_context->pgd, 0, 0);
 }
 
-void mm_create_kstack(process_t* process)
+void mm_create_kstack(struct process* process)
 {
     // @TODO: Don't allow PT_USER access.
     for (unsigned i = KSTACK_SIZE; i > 0; --i) {
@@ -161,7 +161,7 @@ static unsigned va_table_index(void* va, unsigned level)
 
 #define va_table_access(pa) (*((va_table_t*) pa_to_kva(pa)))
 
-static va_table_t* add_table(process_t* process, va_table_t* tab, void* va, unsigned level)
+static va_table_t* add_table(struct process* process, va_table_t* tab, void* va, unsigned level)
 {
     unsigned index = va_table_index(va, level);
 
@@ -179,7 +179,7 @@ static va_table_t* add_table(process_t* process, va_table_t* tab, void* va, unsi
     return (va_table_t*) (row & VA_TABLE_TABLE_ADDR_MASK);
 }
 
-static void* add_page(process_t* process, va_table_t* tab, void* va, void* pa)
+static void* add_page(struct process* process, va_table_t* tab, void* va, void* pa)
 {
     unsigned index = va_table_index(va, 3);
 
@@ -200,7 +200,7 @@ static void* page_addr(void* addr)
     return (void*) ((long unsigned) addr & PAGE_MASK);
 }
 
-void mm_map_page(process_t* process, void* va, void* pa)
+void mm_map_page(struct process* process, void* va, void* pa)
 {
     va = page_addr(va);
 
@@ -213,7 +213,7 @@ void mm_map_page(process_t* process, void* va, void* pa)
     add_page(process, tab, va, kva_to_pa(pa));
 }
 
-void mm_switch_to(process_t* process)
+void mm_switch_to(struct process* process)
 {
     long unsigned asid = (long unsigned) process->mm_context->asid;
     long unsigned pgd = (long unsigned) process->mm_context->pgd;
@@ -223,7 +223,7 @@ void mm_switch_to(process_t* process)
 
 void data_abort_handler(void* va)
 {
-    process_t* process = scheduler_current();
+    struct process* process = scheduler_current();
 
     mm_map_page(process, va, alloc_page());
 }

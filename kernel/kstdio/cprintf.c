@@ -5,7 +5,7 @@
 
 #define BUF_MAX 13
 
-typedef struct vcprintf_specifiers_t {
+struct vcprintf_specifiers {
     char* buf;
     unsigned alt;
     unsigned base;
@@ -14,15 +14,15 @@ typedef struct vcprintf_specifiers_t {
     unsigned uppercase;
     unsigned width;
     char sign;
-} vcprintf_specifiers_t;
+};
 
-static void vcprintf_char(vcprintf_specifiers_t* sp, char c)
+static void vcprintf_char(struct vcprintf_specifiers* sp, char c)
 {
     *sp->buf = c;
     *(sp->buf + 1) = 0;
 }
 
-static void vcprintf_int(vcprintf_specifiers_t* sp, int i)
+static void vcprintf_int(struct vcprintf_specifiers* sp, int i)
 {
     unsigned digit;
 
@@ -41,7 +41,7 @@ static void vcprintf_int(vcprintf_specifiers_t* sp, int i)
     } while (i);
 }
 
-static void vcprintf_uint(vcprintf_specifiers_t* sp, unsigned i)
+static void vcprintf_uint(struct vcprintf_specifiers* sp, unsigned i)
 {
     unsigned digit;
 
@@ -55,7 +55,7 @@ static void vcprintf_uint(vcprintf_specifiers_t* sp, unsigned i)
     } while (i);
 }
 
-static void vcprintf_sp(void* data, putc_t putc_f, vcprintf_specifiers_t* sp)
+static void vcprintf_sp(void* data, putc_t putc_f, struct vcprintf_specifiers* sp)
 {
     const char* buf = sp->buf;
     size_t len;
@@ -106,7 +106,7 @@ static void vcprintf_sp(void* data, putc_t putc_f, vcprintf_specifiers_t* sp)
 
 void vcprintf(void* data, putc_t putc_f, const char* format, va_list arg)
 {
-    vcprintf_specifiers_t* sp = (vcprintf_specifiers_t*) kzalloc(sizeof(vcprintf_specifiers_t));
+    struct vcprintf_specifiers* sp = (struct vcprintf_specifiers*) kzalloc(sizeof(struct vcprintf_specifiers));
 
     char* buf = (char*) kzalloc(BUF_MAX);
 

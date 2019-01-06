@@ -3,7 +3,7 @@
 
 pid_t sys_gettid(void)
 {
-    process_t* process = scheduler_current();
+    struct process* process = scheduler_current();
 
     return process->pid;
 }

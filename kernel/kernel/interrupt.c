@@ -6,14 +6,14 @@
 static interrupt_handler_t* _handlers[NUM_IRQS] = {0};
 static void* _handlers_data[NUM_IRQS] = {0};
 
-static void interrupt_disable(irq_number_t num)
+static void interrupt_disable(enum irq_number num)
 {
     assert(num < NUM_IRQS);
 
     *CORE0_TIMERS_CNTL ^= (0b1 << num);
 }
 
-static void interrupt_enable(irq_number_t num)
+static void interrupt_enable(enum irq_number num)
 {
     assert(num < NUM_IRQS);
 
@@ -37,7 +37,7 @@ void interrupt_init(void)
     enable_interrupts();
 }
 
-void interrupt_connect(irq_number_t num, interrupt_handler_t* handler, void* handler_data)
+void interrupt_connect(enum irq_number num, interrupt_handler_t* handler, void* handler_data)
 {
     assert(num < NUM_IRQS);
 
@@ -47,7 +47,7 @@ void interrupt_connect(irq_number_t num, interrupt_handler_t* handler, void* han
     interrupt_enable(num);
 }
 
-void interrupt_disconnect(irq_number_t num)
+void interrupt_disconnect(enum irq_number num)
 {
     assert(num < NUM_IRQS);
 

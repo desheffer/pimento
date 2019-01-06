@@ -1,8 +1,8 @@
 #pragma once
 
-typedef struct memory_page_t {
+struct memory_page {
     unsigned allocated: 1;
-} memory_page_t;
+};
 
 void memory_init(void);
 void memory_reserve_range(void*, void*);

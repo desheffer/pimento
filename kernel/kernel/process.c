@@ -12,10 +12,10 @@
 extern char __shell_start;
 extern char __shell_end;
 
-static process_t* process_create_common(const char* pname, int pid, bool init_kstack)
+static struct process* process_create_common(const char* pname, int pid, bool init_kstack)
 {
     // Create a new process control block.
-    process_t* child = kzalloc(sizeof(process_t));
+    struct process* child = kzalloc(sizeof(struct process));
 
     // Assign a pid.
     if (pid >= 0) {
@@ -35,14 +35,14 @@ static process_t* process_create_common(const char* pname, int pid, bool init_ks
     }
 
     // Initialize execution.
-    child->cpu_context = kzalloc(sizeof(cpu_context_t));
+    child->cpu_context = kzalloc(sizeof(struct cpu_context));
 
     return child;
 }
 
-process_t* process_create_kernel(void)
+struct process* process_create_kernel(void)
 {
-    process_t* process = process_create_common("kernel", -1, false);
+    struct process* process = process_create_common("kernel", -1, false);
 
     return process;
 }
@@ -51,7 +51,7 @@ int process_create(void* fn, const char* pname, void* data)
 {
     enter_critical();
 
-    process_t* child = process_create_common(pname, -1, true);
+    struct process* child = process_create_common(pname, -1, true);
 
     // Initialize execution.
     child->cpu_context->sp = (long unsigned) KSTACK_TOP;
@@ -73,17 +73,17 @@ void process_create_tail(process_function_t fn, void* data)
     fn(data);
 
     // Exit the process when it is finished.
-    process_t* process = scheduler_current();
+    struct process* process = scheduler_current();
     scheduler_exit(process);
 
     scheduler_context_switch();
 }
 
-int process_clone(process_t* parent)
+int process_clone(struct process* parent)
 {
     enter_critical();
 
-    process_t* child = process_create_common(parent->pname, -1, false);
+    struct process* child = process_create_common(parent->pname, -1, false);
 
     // Copy the memory map.
     mm_copy_from(parent, child);
@@ -101,7 +101,7 @@ int process_clone(process_t* parent)
     return child->pid;
 }
 
-void process_destroy(process_t* process)
+void process_destroy(struct process* process)
 {
     (void) process;
 
@@ -115,9 +115,9 @@ int process_exec(const char* pname, char* const argv[], char* const envp[])
     // @TODO: Support arbitrary files.
     failif(strcmp("/bin/sh", pname) != 0);
 
-    process_t* parent = scheduler_current();
+    struct process* parent = scheduler_current();
 
-    process_t* child = process_create_common(pname, parent->pid, true);
+    struct process* child = process_create_common(pname, parent->pid, true);
 
     // Initialize execution.
     child->cpu_context->sp = (long unsigned) KSTACK_TOP - PROCESS_REGS_SIZE;
@@ -146,7 +146,7 @@ void process_exec_tail(const char* pname, char* const* argv, char* const* envp)
     stack_top = process_set_args(stack_top, argv, envp);
 
     // Initialize process.
-    registers_t* new_regs = (registers_t*) ((long unsigned) KSTACK_TOP - PROCESS_REGS_SIZE);
+    struct registers * new_regs = (struct registers *) ((long unsigned) KSTACK_TOP - PROCESS_REGS_SIZE);
     new_regs->sp = (long unsigned) stack_top;
     new_regs->pc = (long unsigned) elf_load(&__shell_start, &__shell_end - &__shell_start);
     new_regs->pstate = PSR_MODE_USER;

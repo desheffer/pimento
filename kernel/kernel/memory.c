@@ -5,7 +5,7 @@
 #include <synchronize.h>
 
 static unsigned _page_count = 0;
-static memory_page_t* _pages = 0;
+static struct memory_page* _pages = 0;
 static unsigned _last_index = 0;
 
 static int page_index(void* start)
@@ -26,7 +26,7 @@ void memory_init(void)
     _page_count = ((char*) alloc_end - (char*) 0) / PAGE_SIZE;
 
     // Create pages without using malloc.
-    _pages = (memory_page_t*) &__end;
+    _pages = (struct memory_page*) &__end;
 
     for (unsigned i = 0; i < _page_count; ++i) {
         _pages[i].allocated = 0;

@@ -4,7 +4,7 @@
 
 void test_list(void)
 {
-    list_t* list = list_new();
+    struct list* list = list_new();
 
     int one = 1;
     int two = 2;
