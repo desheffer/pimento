@@ -4,7 +4,7 @@
 
 void test_list(void)
 {
-    struct list * list = list_new();
+    struct list * list = list_create();
 
     int one = 1;
     int two = 2;
@@ -84,5 +84,5 @@ void test_list(void)
     assert(list_count(list) == 0);
     list_clear(list);
 
-    list_delete(list);
+    list_destroy(list);
 }

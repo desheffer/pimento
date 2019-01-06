@@ -22,8 +22,8 @@ static void scheduler_tick(void * data)
 
 void scheduler_init(void)
 {
-    _process_list = list_new();
-    _process_queue = list_new();
+    _process_list = list_create();
+    _process_queue = list_create();
 
     _current_process = process_create_kernel();
     _current_process->state = running;

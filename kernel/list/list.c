@@ -26,19 +26,19 @@ unsigned list_count(struct list * list)
     return count;
 }
 
-void list_delete(struct list * list)
+struct list * list_create(void)
+{
+    struct list * list = kzalloc(sizeof(struct list));
+
+    return list;
+}
+
+void list_destroy(struct list * list)
 {
     assert(list != 0);
 
     list_clear(list);
     kfree(list);
-}
-
-struct list * list_new(void)
-{
-    struct list * list = kzalloc(sizeof(struct list));
-
-    return list;
 }
 
 void list_push_back(struct list * list, void * item)

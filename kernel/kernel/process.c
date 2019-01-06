@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <elf.h>
+#include <fs.h>
 #include <kstdlib.h>
 #include <memory.h>
 #include <mm.h>
@@ -29,10 +30,13 @@ static struct process * process_create_common(const char * pname, int pid, bool 
     strncpy(child->pname, pname, PNAME_LENGTH);
 
     // Initialize a new memory map.
-    mm_create(child);
+    mm_process_create(child);
     if (init_kstack) {
         mm_create_kstack(child);
     }
+
+    // Copy filesystem information.
+    fs_process_create(child);
 
     // Initialize execution.
     child->cpu_context = kzalloc(sizeof(struct cpu_context));
@@ -42,9 +46,7 @@ static struct process * process_create_common(const char * pname, int pid, bool 
 
 struct process * process_create_kernel(void)
 {
-    struct process * process = process_create_common("kernel", -1, false);
-
-    return process;
+    return process_create_common("kernel", -1, false);
 }
 
 int process_create(void * fn, const char * pname, void * data)
@@ -103,9 +105,12 @@ int process_clone(struct process * parent)
 
 void process_destroy(struct process * process)
 {
-    (void) process;
+    fs_process_destroy(process);
+    mm_process_destroy(process);
+    kfree(process->cpu_context);
 
-    // @TODO: Free process and all linked data.
+    // @TODO
+    /* kfree(process); */
 }
 
 int process_exec(const char * pname, char * const argv[], char * const envp[])

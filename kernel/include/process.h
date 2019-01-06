@@ -31,6 +31,7 @@ struct process {
     char pname[PNAME_LENGTH];
     struct cpu_context * cpu_context;
     struct mm_context * mm_context;
+    struct fs_context * fs_context;
 };
 
 typedef void process_function_t(void *);

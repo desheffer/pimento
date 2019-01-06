@@ -13,8 +13,8 @@ struct list {
 
 void list_clear(struct list *);
 unsigned list_count(struct list *);
-void list_delete(struct list *);
-struct list * list_new(void);
+struct list * list_create(void);
+void list_destroy(struct list *);
 void * list_pop_back(struct list *);
 void * list_pop_front(struct list *);
 void list_push_back(struct list *, void *);

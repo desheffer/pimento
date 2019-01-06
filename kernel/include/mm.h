@@ -82,9 +82,10 @@ struct mm_context {
 
 void mm_init(void);
 void mm_copy_from(struct process *, struct process *);
-void mm_create(struct process *);
 void mm_create_kstack(struct process *);
 void mm_map_page(struct process *, void *, void *);
+void mm_process_create(struct process *);
+void mm_process_destroy(struct process *);
 void mm_switch_to(struct process *);
 
 void data_abort_handler(void *);

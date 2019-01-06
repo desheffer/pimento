@@ -130,23 +130,6 @@ static unsigned assign_asid(void)
     return asid;
 }
 
-void mm_create(struct process * process)
-{
-    process->mm_context = kzalloc(sizeof(struct mm_context));
-
-    // Initialize list of allocated pages.
-    process->mm_context->pages = list_new();
-
-    // Allocate page global directory.
-    process->mm_context->asid = assign_asid();
-    process->mm_context->pgd = alloc_page();
-
-    record_alloc(process, (void *) process->mm_context->pgd, 0, 0);
-
-    // @TODO: Set reasonable value.
-    process->mm_context->brk = (void *) 0x500000;
-}
-
 void mm_create_kstack(struct process * process)
 {
     // @TODO: Don't allow PT_USER access.
@@ -214,6 +197,28 @@ void mm_map_page(struct process * process, void * va, void * pa)
     }
 
     add_page(process, tab, va, kva_to_pa(pa));
+}
+
+void mm_process_create(struct process * process)
+{
+    process->mm_context = kzalloc(sizeof(struct mm_context));
+
+    // Initialize list of allocated pages.
+    process->mm_context->pages = list_create();
+
+    // Allocate page global directory.
+    process->mm_context->asid = assign_asid();
+    process->mm_context->pgd = alloc_page();
+
+    record_alloc(process, (void *) process->mm_context->pgd, 0, 0);
+
+    // @TODO: Set reasonable value.
+    process->mm_context->brk = (void *) 0x500000;
+}
+
+void mm_process_destroy(struct process * process)
+{
+    kfree(process->mm_context);
 }
 
 void mm_switch_to(struct process * process)

@@ -67,6 +67,7 @@ long sys_clone(int, void *, void *, pid_t *, void *, pid_t *);
 long sys_execve(const char *, char * const[], char * const[]);
 long sys_exit(int);
 long sys_exit_group(int);
+long sys_getcwd(char *, size_t);
 long sys_geteuid(void);
 long sys_gettid(void);
 long sys_getuid(void);

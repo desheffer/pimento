@@ -29,7 +29,18 @@ int main(int argc, char * argv[], char * envp[])
             printf("env  - display environment\n");
             printf("exit - quit the shell\n");
             printf("help - show this message\n");
+            printf("pwd  - print the current directory\n");
             printf("sh   - test fork() and execve()\n");
+        } else if (strcmp("env", cmd) == 0) {
+            for (int i = 0; envp[i] != 0; ++i) {
+                printf("%s\n", envp[i]);
+            }
+        } else if (strcmp("exit", cmd) == 0) {
+            break;
+        } else if (strcmp("pwd", cmd) == 0) {
+            char cwd[1024];
+            getcwd(cwd, sizeof(cwd));
+            printf("%s\n", cwd);
         } else if (strcmp("sh", cmd) == 0) {
             unsigned pid = fork();
 
@@ -39,12 +50,6 @@ int main(int argc, char * argv[], char * envp[])
             }
 
             waitpid(pid, 0, 0);
-        } else if (strcmp("env", cmd) == 0) {
-            for (int i = 0; envp[i] != 0; ++i) {
-                printf("%s\n", envp[i]);
-            }
-        } else if (strcmp("exit", cmd) == 0) {
-            break;
         } else {
             printf("%s: %s: unknown command\n", argv[0], cmd);
         }

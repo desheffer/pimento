@@ -11,7 +11,7 @@ SYSCALL_DEFINE3(read, int, fd, char *, buf, size_t, count)
     while (count--) {
         char c = serial_getc();
 
-        if ((c >= 0x32 && c < 0x7F) || c == '\n') {
+        if ((c >= 0x20 && c < 0x7F) || c == '\n') {
             // Printable characters and line feed
             *(buf++) = c;
             ++ret;

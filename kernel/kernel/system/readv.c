@@ -15,7 +15,7 @@ SYSCALL_DEFINE3(readv, int, fd, const struct iovec *, iov, int, iovcnt)
         while (count--) {
             char c = serial_getc();
 
-            if ((c >= 0x32 && c < 0x7F) || c == '\n') {
+            if ((c >= 0x20 && c < 0x7F) || c == '\n') {
                 // Printable characters and line feed
                 *(buf++) = c;
                 ++ret;

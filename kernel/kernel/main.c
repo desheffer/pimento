@@ -1,3 +1,4 @@
+#include <fs.h>
 #include <interrupt.h>
 #include <kstdio.h>
 #include <memory.h>
@@ -21,6 +22,7 @@ void kernel_main(void)
     interrupt_init();
     timer_init();
     scheduler_init();
+    fs_init();
 
     kputs(
         "\n"
