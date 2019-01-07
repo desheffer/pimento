@@ -2,9 +2,9 @@
 #include <serial.h>
 #include <system.h>
 
-ssize_t sys_readv(int fd, const struct iovec * iov, int iovcnt)
+long sys_readv(int fd, const struct iovec * iov, int iovcnt)
 {
-    ssize_t ret = 0;
+    long ret = 0;
 
     failif(fd != 0);
 

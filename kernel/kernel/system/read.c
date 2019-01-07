@@ -2,9 +2,9 @@
 #include <serial.h>
 #include <system.h>
 
-ssize_t sys_read(int fd, char * buf, size_t count)
+long sys_read(int fd, char * buf, size_t count)
 {
-    ssize_t ret = 0;
+    long ret = 0;
 
     failif(fd != 0);
 

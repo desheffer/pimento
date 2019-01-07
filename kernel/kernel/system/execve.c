@@ -32,7 +32,7 @@ static char ** copy_args(char * const src[])
     return dest;
 }
 
-int sys_execve(const char * pname, char * const argv[], char * const envp[])
+long sys_execve(const char * pname, char * const argv[], char * const envp[])
 {
     char * kpname = copy_string(pname);
     char ** kargv = copy_args(argv);

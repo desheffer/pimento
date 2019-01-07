@@ -1,7 +1,7 @@
 #include <scheduler.h>
 #include <system.h>
 
-void sys_exit(int status)
+long sys_exit(int status)
 {
     // @TODO
     (void) status;
@@ -10,4 +10,6 @@ void sys_exit(int status)
     scheduler_exit(process);
 
     scheduler_context_switch();
+
+    return -1;
 }

@@ -2,7 +2,7 @@
 #include <scheduler.h>
 #include <system.h>
 
-int sys_clone(int flags, void * child_stack, void * arg, pid_t * ptid, void * newtls, pid_t * ctid)
+long sys_clone(int flags, void * child_stack, void * arg, pid_t * ptid, void * newtls, pid_t * ctid)
 {
     // @TODO
     (void) flags;
@@ -12,7 +12,7 @@ int sys_clone(int flags, void * child_stack, void * arg, pid_t * ptid, void * ne
     (void) newtls;
     (void) ctid;
 
-    int cpid = process_clone(scheduler_current());
+    long cpid = process_clone(scheduler_current());
 
     return cpid;
 }

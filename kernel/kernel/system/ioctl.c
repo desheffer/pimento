@@ -1,6 +1,6 @@
 #include <system.h>
 
-int sys_ioctl(int fd, long unsigned request)
+long sys_ioctl(int fd, long unsigned request)
 {
     // @TODO
     (void) fd;

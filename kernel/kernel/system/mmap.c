@@ -5,7 +5,7 @@
 #include <synchronize.h>
 #include <system.h>
 
-void * sys_mmap(void * addr, size_t length, int prot, int flags, int fd, off_t offset)
+long sys_mmap(void * addr, size_t length, int prot, int flags, int fd, off_t offset)
 {
     // @TODO
     (void) length;
@@ -15,7 +15,7 @@ void * sys_mmap(void * addr, size_t length, int prot, int flags, int fd, off_t o
     failif(offset != 0);
 
     if (addr != 0) {
-        return addr;
+        return (long) addr;
     }
 
     struct process * process = scheduler_current();
@@ -53,5 +53,5 @@ void * sys_mmap(void * addr, size_t length, int prot, int flags, int fd, off_t o
 
     leave_critical();
 
-    return (void *) va_start;
+    return va_start;
 }
