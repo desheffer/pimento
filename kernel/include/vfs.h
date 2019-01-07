@@ -43,7 +43,9 @@ struct inode_operations {
 };
 
 struct file {
+    unsigned fd;
     struct dentry * dentry;
+    unsigned pos;
     struct file_operations * file_operations;
 };
 

@@ -212,8 +212,7 @@ void mm_process_create(struct process * process)
 
     record_alloc(process, (void *) process->mm_context->pgd, 0, 0);
 
-    // @TODO: Set reasonable value.
-    process->mm_context->brk = (void *) 0x500000;
+    process->mm_context->brk = (void *) BRK_START;
 }
 
 void mm_process_destroy(struct process * process)

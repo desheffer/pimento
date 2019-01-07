@@ -11,6 +11,7 @@ SYSCALL_DEFINE6(mmap, void *, addr, size_t, length, int, prot, int, flags, int, 
     (void) length;
     (void) prot;
     (void) flags;
+
     failif(fd != -1);
     failif(offset != 0);
 
@@ -22,7 +23,7 @@ SYSCALL_DEFINE6(mmap, void *, addr, size_t, length, int, prot, int, flags, int, 
 
     enter_critical();
 
-    long unsigned va_start = PAGE_SIZE;
+    long unsigned va_start = MMAP_START;
     long unsigned va_end;
 
     // Locate an available range.

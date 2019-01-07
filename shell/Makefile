@@ -16,7 +16,7 @@ WARNFLAGS := -Wall -Wextra -Wformat=2 -Wcast-align -Wpointer-arith
 WARNFLAGS += -Wredundant-decls -Wshadow -Wwrite-strings
 WARNFLAGS += -Werror=implicit-function-declaration
 CFLAGS    := $(BASEFLAGS) $(WARNFLAGS)
-LDFLAGS   := $(BASEFLAGS) -lgcc -static
+LDFLAGS   := $(BASEFLAGS) -static
 
 .PHONY: all clean
 

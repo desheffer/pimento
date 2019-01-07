@@ -55,9 +55,12 @@
 #define PG_VM   1
 #define PG_USER 2
 
-#define KSTACK_TOP  0x40000000
+#define KSTACK_TOP  0x100000000
 #define KSTACK_SIZE 2
 #define USTACK_TOP  (KSTACK_TOP - KSTACK_SIZE * PAGE_SIZE)
+
+#define BRK_START  0x10000000
+#define MMAP_START 0x20000000
 
 #ifndef __ASSEMBLY__
 

@@ -32,10 +32,12 @@ enter_el1:
     // Do not trap SIMD/FP.
     ldr x4, =CPACR_CP10
     msr cpacr_el1, x4
+    isb
 
     // Set up memory attributes.
     ldr x4, =MAIR_EL1
     msr mair_el1, x4
+    isb
 
     // Set TTBR0 and TTBR1.
     bl mm_init
