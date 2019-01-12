@@ -1,6 +1,6 @@
 #include <system.h>
 
-long sys_set_tid_address(int * tidptr)
+SYSCALL_DEFINE1(set_tid_address, int *, tidptr)
 {
     // @TODO
     (void) tidptr;

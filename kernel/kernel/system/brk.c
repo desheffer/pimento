@@ -2,7 +2,7 @@
 #include <scheduler.h>
 #include <system.h>
 
-long sys_brk(void * addr)
+SYSCALL_DEFINE1(brk, void *, addr)
 {
     struct process * process = scheduler_current();
 

@@ -1,7 +1,7 @@
 #include <scheduler.h>
 #include <system.h>
 
-long sys_exit(int status)
+SYSCALL_DEFINE1(exit, int, status)
 {
     // @TODO
     (void) status;

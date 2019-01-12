@@ -1,6 +1,6 @@
 #include <system.h>
 
-long sys_getuid(void)
+SYSCALL_DEFINE0(getuid)
 {
     return 0;
 }

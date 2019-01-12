@@ -1,6 +1,6 @@
 #include <system.h>
 
-long sys_rt_sigprocmask(int how, const sigset_t * set, sigset_t * oldset, size_t sigsetsize)
+SYSCALL_DEFINE4(rt_sigprocmask, int, how, const sigset_t *, set, sigset_t *, oldset, size_t, sigsetsize)
 {
     // @TODO
     (void) how;

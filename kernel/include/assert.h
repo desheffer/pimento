@@ -2,7 +2,7 @@
 
 #include <kstdio.h>
 
-#define breakpoint asm volatile("brk #0");
+#define breakpoint asm volatile("brk #0")
 
 #define STRINGIZE_DETAIL(x) #x
 #define STRINGIZE(x) STRINGIZE_DETAIL(x)

@@ -1,6 +1,6 @@
 #include <system.h>
 
-long sys_ioctl(int fd, long unsigned request)
+SYSCALL_DEFINE2(ioctl, int, fd, long unsigned, request)
 {
     // @TODO
     (void) fd;

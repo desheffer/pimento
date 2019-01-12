@@ -1,7 +1,7 @@
 #include <scheduler.h>
 #include <system.h>
 
-long sys_gettid(void)
+SYSCALL_DEFINE0(gettid)
 {
     struct process * process = scheduler_current();
 

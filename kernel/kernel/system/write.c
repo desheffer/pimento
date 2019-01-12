@@ -2,7 +2,7 @@
 #include <serial.h>
 #include <system.h>
 
-long sys_write(int fd, const char * buf, size_t count)
+SYSCALL_DEFINE3(write, int, fd, const char *, buf, size_t, count)
 {
     long ret = 0;
 

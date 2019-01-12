@@ -2,7 +2,7 @@
 #include <serial.h>
 #include <system.h>
 
-long sys_read(int fd, char * buf, size_t count)
+SYSCALL_DEFINE3(read, int, fd, char *, buf, size_t, count)
 {
     long ret = 0;
 

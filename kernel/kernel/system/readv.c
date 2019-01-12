@@ -2,7 +2,7 @@
 #include <serial.h>
 #include <system.h>
 
-long sys_readv(int fd, const struct iovec * iov, int iovcnt)
+SYSCALL_DEFINE3(readv, int, fd, const struct iovec *, iov, int, iovcnt)
 {
     long ret = 0;
 

@@ -2,7 +2,7 @@
 #include <serial.h>
 #include <system.h>
 
-long sys_writev(int fd, const struct iovec * iov, int iovcnt)
+SYSCALL_DEFINE3(writev, int, fd, const struct iovec *, iov, int, iovcnt)
 {
     long ret = 0;
 

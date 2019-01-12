@@ -17,6 +17,11 @@ OBJECTS += $(BUILD)/shell.bin
 
 BASEFLAGS := -O2 -nostdlib -nostartfiles
 BASEFLAGS += -ffreestanding -fomit-frame-pointer
+
+ifdef DEBUG_SYSCALL
+    BASEFLAGS += -DDEBUG_SYSCALL
+endif
+
 WARNFLAGS := -Wall -Wextra -Wformat=2 -Wcast-align -Wpointer-arith
 WARNFLAGS += -Wredundant-decls -Wshadow -Wwrite-strings
 WARNFLAGS += -Werror=implicit-function-declaration

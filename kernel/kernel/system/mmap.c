@@ -5,7 +5,7 @@
 #include <synchronize.h>
 #include <system.h>
 
-long sys_mmap(void * addr, size_t length, int prot, int flags, int fd, off_t offset)
+SYSCALL_DEFINE6(mmap, void *, addr, size_t, length, int, prot, int, flags, int, fd, off_t, offset)
 {
     // @TODO
     (void) length;
