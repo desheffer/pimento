@@ -77,6 +77,7 @@ struct mm_context {
     pgd_t pgd;
     unsigned asid;
     struct list * pages;
+    void * brk;
 };
 
 void mm_init(void);

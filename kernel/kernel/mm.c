@@ -142,6 +142,9 @@ void mm_create(struct process * process)
     process->mm_context->pgd = alloc_page();
 
     record_alloc(process, (void *) process->mm_context->pgd, 0, 0);
+
+    // @TODO: Set reasonable value.
+    process->mm_context->brk = (void *) 0x500000;
 }
 
 void mm_create_kstack(struct process * process)
