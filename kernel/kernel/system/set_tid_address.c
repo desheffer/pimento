@@ -1,9 +1,11 @@
+#include <scheduler.h>
 #include <system.h>
 
 SYSCALL_DEFINE1(set_tid_address, int *, tidptr)
 {
-    // @TODO
-    (void) tidptr;
+    struct process * process = scheduler_current();
 
-    return 0;
+    *tidptr = process->pid;
+
+    return process->pid;
 }
