@@ -177,11 +177,15 @@ void * process_set_args(void * sp, char * const argv[], char * const envp[])
         char_ptr = char_ptr - strlen(*iter) - 1;
     }
 
+    // Size of auxv.
+    unsigned auxv_size = 1;
+
     // Adjust stack alignment.
     char_ptr = (char *) STACK_ALIGN((long unsigned) char_ptr);
 
     // Locations for new arrays.
-    char ** envp_ptr = (char **) char_ptr - envp_size - 1;
+    long unsigned * auxv_ptr = (long unsigned *) char_ptr - (auxv_size * 2) - 1;
+    char ** envp_ptr = (char **) auxv_ptr - envp_size - 1;
     char ** argv_ptr = (char **) envp_ptr - argv_size - 1;
     int * argc_ptr = (int *) ((char **) argv_ptr - 1);
 
@@ -201,6 +205,10 @@ void * process_set_args(void * sp, char * const argv[], char * const envp[])
         strcpy(envp_ptr[i], envp[i]);
         char_ptr += strlen(char_ptr) + 1;
     }
+
+    // Set auxv.
+    auxv_ptr[0] = AT_PAGESZ;
+    auxv_ptr[1] = PAGE_SIZE;
 
     return (void *) argc_ptr;
 }

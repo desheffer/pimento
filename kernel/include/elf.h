@@ -14,6 +14,8 @@
 #define EI_PAD        0x09
 #define EI_NIDENT     0x10
 
+#define AT_PAGESZ 6
+
 struct elf64_hdr {
     unsigned char e_ident[EI_NIDENT]; // Various indentifying information
     uint16_t e_type;                  // Object type
