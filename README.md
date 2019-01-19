@@ -27,7 +27,7 @@ kernel.
 
 ### QEMU
 
-Launch the Docker environment by running `docker.sh`. Next, run `make run`
+Launch the Docker environment by running `make dkr-sh`. Next, run `make run`
 inside the Docker container. This will compile the kernel and start QEMU.
 
 That's it! The kernel is now running.
@@ -37,7 +37,7 @@ That's it! The kernel is now running.
 Please note the specific model of Pi that I am using. This code will likely
 experience compatibility issues wth older versions of the Pi.
 
-Launch the Docker environment by running `docker.sh`. Next, run `make` inside
+Launch the Docker environment by running `make dkr-sh`. Next, run `make` inside
 the Docker container. This will compile the kernel and generate a kernel image,
 `kernel/build/kernel8.img`. Copy this image to the SD card for your Pi,
 overwriting the existing `/boot/kernel8.img` file. Boot the Pi and the kernel

@@ -1,3 +1,5 @@
+.DEFAULT_GOAL := all
+
 PREFIX  ?=
 CC      := $(PREFIX)gcc
 OBJCOPY := $(PREFIX)objcopy
@@ -18,10 +20,10 @@ WARNFLAGS += -Werror=implicit-function-declaration
 CFLAGS    := $(BASEFLAGS) $(WARNFLAGS)
 LDFLAGS   := $(BASEFLAGS) -static
 
-.PHONY: all clean
-
+.PHONY: all
 all: $(BUILD)/$(BIN).elf $(BUILD)/$(BIN).list
 
+.PHONY: clean
 clean:
 	rm -rf $(BUILD)
 

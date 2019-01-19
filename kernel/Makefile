@@ -1,3 +1,5 @@
+.DEFAULT_GOAL := all
+
 PREFIX  ?=
 CC      := $(PREFIX)gcc
 OBJCOPY := $(PREFIX)objcopy
@@ -30,10 +32,10 @@ ASFLAGS   := $(INCFLAGS) -D__ASSEMBLY__
 CFLAGS    := $(BASEFLAGS) $(WARNFLAGS) $(INCFLAGS)
 LDFLAGS   := $(BASEFLAGS) -lgcc
 
-.PHONY: all clean
-
+.PHONY: all
 all: $(BUILD)/$(IMG).img $(BUILD)/$(IMG).list
 
+.PHONY: all
 clean:
 	rm -rf $(BUILD)
 

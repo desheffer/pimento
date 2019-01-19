@@ -3,4 +3,5 @@ FROM muslcc/x86_64:aarch64-linux-musleabi
 RUN apk add \
     entr \
     make \
-    qemu-system-aarch64
+    qemu-system-aarch64 \
+    util-linux
