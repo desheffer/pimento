@@ -174,7 +174,7 @@ static void * add_page(struct process * process, va_table_t * tab, void * va, vo
     va_table_access(tab)[index] = (long unsigned) pa |
         PT_PAGE |
         PT_AF |
-        PT_NG |
+        PT_nG |
         PT_USER |
         PT_ATTR(MT_NORMAL);
 

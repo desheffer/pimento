@@ -43,7 +43,7 @@
 #define PT_OSH   (0b10UL <<  8) // Outer Shareable
 #define PT_ISH   (0b11UL <<  8) // Inner Shareable
 #define PT_AF    (0b1UL  << 10) // Access flag
-#define PT_NG    (0b1UL  << 11) // Not global
+#define PT_nG    (0b1UL  << 11) // Not global
 #define PT_PXN   (0b1UL  << 53) // Privileged execute-never
 #define PT_XN    (0b1UL  << 54) // Execute-never
 
