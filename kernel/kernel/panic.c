@@ -1,4 +1,3 @@
-#include <entry.h>
 #include <interrupt.h>
 #include <kstdio.h>
 #include <panic.h>

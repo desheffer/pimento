@@ -1,6 +1,5 @@
-#include <boot.h>
-#include <mm.h>
-#include <process.h>
+#include <asm/boot.h>
+#include <asm/memory.h>
 
 .section ".text.boot"
 

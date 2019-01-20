@@ -1,14 +1,8 @@
 #pragma once
 
-#define PSR_MODE_INIT    0x3C5
-#define PSR_MODE_KTHREAD 0x305
-#define PSR_MODE_USER    0x300
-
 #define PNAME_LENGTH 32
 
-#ifndef __ASSEMBLY__
-
-#include <entry.h>
+#include <asm/entry.h>
 #include <list.h>
 #include <stdbool.h>
 
@@ -45,5 +39,3 @@ void process_destroy(struct process *);
 
 void do_exec(struct registers *);
 void process_tail_wrapper(void);
-
-#endif

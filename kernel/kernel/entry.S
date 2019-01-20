@@ -1,5 +1,5 @@
-#include <entry.h>
-#include <mm.h>
+#include <asm/entry.h>
+#include <asm/memory.h>
 
 .macro vector label
     .balign 0x80

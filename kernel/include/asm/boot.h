@@ -7,3 +7,7 @@
 #define CPACR_CP10 (0b11 << 20) // Full access to FP and SIMD
 
 #define SCTLR_M (0b1 << 0) // Enable MMU
+
+#define PSR_MODE_INIT    0x3C5
+#define PSR_MODE_KTHREAD 0x305
+#define PSR_MODE_USER    0x300

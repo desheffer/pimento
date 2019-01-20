@@ -2,38 +2,12 @@
 
 #define STACK_ALIGN(addr) (((addr) + 15) & ~15)
 
-#define PAGE_SIZE 4096
 #define PAGE_MASK (0xFFFFFFFFFFFFFFFF - (PAGE_SIZE - 1))
-
-#define VA_BITS  48
-#define VA_START (0xFFFFFFFFFFFFFFFF - ((0x1UL << VA_BITS) - 1))
 
 #define VA_TABLE_LENGTH 512
 
 #define VA_TABLE_TABLE_ADDR_MASK 0xFFFFFFFFF000
 #define VA_TABLE_PAGE_ADDR_MASK  0xFFFFFFFFF000
-
-#define TCR_ASID16     (0b1UL  << 36) // Use 16 bits of ASID
-#define TCR_TG1_4KB    (0b10UL << 30) // 4KB granule size
-#define TCR_TG0_4KB    (0b00UL << 14) // 4KB granule size
-#define TCR_TxSZ(bits) (((64 - bits) << 16) | ((64 - bits) << 0))
-
-#define TCR_EL1 \
-    ( \
-        TCR_TxSZ(VA_BITS) | \
-        TCR_ASID16 | TCR_TG1_4KB | TCR_TG0_4KB \
-    )
-
-#define MT_DEVICE_nGnRnE 0
-#define MT_NORMAL        1
-#define MT_NORMAL_NC     2
-
-#define MAIR_EL1 \
-    ( \
-        (0x00UL << (8 * MT_DEVICE_nGnRnE)) | \
-        (0xFFUL << (8 * MT_NORMAL)) | \
-        (0x44UL << (8 * MT_NORMAL_NC)) \
-    )
 
 #define PT_BLOCK (0b01UL <<  0) // Block descriptor
 #define PT_TABLE (0b11UL <<  0) // Table descriptor
@@ -62,8 +36,7 @@
 #define BRK_START  0x10000000
 #define MMAP_START 0x20000000
 
-#ifndef __ASSEMBLY__
-
+#include <asm/memory.h>
 #include <process.h>
 
 typedef long unsigned va_table_t[VA_TABLE_LENGTH];
@@ -93,5 +66,3 @@ void mm_switch_to(struct process *);
 
 void data_abort_handler(void *);
 void ttbr_switch_to(long unsigned);
-
-#endif

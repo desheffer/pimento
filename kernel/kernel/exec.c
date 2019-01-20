@@ -1,3 +1,4 @@
+#include <asm/boot.h>
 #include <assert.h>
 #include <elf.h>
 #include <exec.h>

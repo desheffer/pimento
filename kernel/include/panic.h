@@ -1,6 +1,6 @@
 #pragma once
 
-#include <entry.h>
+#include <asm/entry.h>
 
 void debug_process_regs(struct registers *, long unsigned, long unsigned, long unsigned);
 void halt(void);
