@@ -8,8 +8,11 @@
 
 SYSCALL_DEFINE4(openat, int, dirfd, const char *, pathname, int, flags, mode_t, mode)
 {
+    if (strcmp(".", pathname) != 0) {
+        return -1;
+    }
+
     failif(dirfd != -100);
-    failif(strcmp(".", pathname) != 0);
     failif(flags != 0xA4000);
     failif(mode != 0);
 

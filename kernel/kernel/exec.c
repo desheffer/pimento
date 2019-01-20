@@ -9,8 +9,8 @@
 #include <string.h>
 #include <synchronize.h>
 
-extern char __shell_start;
-extern char __shell_end;
+extern char __dash_start;
+extern char __dash_end;
 
 static char ** copy_args(char * const * args)
 {
@@ -102,7 +102,7 @@ static void process_exec_tail(struct binprm * bprm)
     // Initialize process.
     struct registers * new_regs = (struct registers *) ((long unsigned) KSTACK_TOP - PROCESS_REGS_SIZE);
     new_regs->sp = (long unsigned) sp;
-    new_regs->pc = (long unsigned) elf_load(&__shell_start, &__shell_end - &__shell_start);
+    new_regs->pc = (long unsigned) elf_load(&__dash_start, &__dash_end - &__dash_start);
     new_regs->pstate = PSR_MODE_USER;
 
     kfree(bprm->filename);

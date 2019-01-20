@@ -15,7 +15,7 @@ INCLUDES := $(shell find $(INCLUDE) -name '*.h')
 
 OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.S.o, $(shell find $(SRC) -name '*.S'))
 OBJECTS += $(patsubst $(SRC)/%.c, $(BUILD)/%.c.o, $(shell find $(SRC) -name '*.c'))
-OBJECTS += $(BUILD)/shell.bin
+OBJECTS += $(BUILD)/dash.bin
 
 BASEFLAGS := -O2 -nostdlib -nostartfiles
 BASEFLAGS += -ffreestanding -fomit-frame-pointer
@@ -56,5 +56,8 @@ $(BUILD)/%.c.o: $(SRC)/%.c $(INCLUDES)
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-$(BUILD)/%.bin: ../*/build/%.elf
+$(BUILD)/%.bin: $(BUILD)/%.elf
 	$(OBJCOPY) --input-target binary --output-target elf64-littleaarch64 --binary-architecture aarch64 $< $@
+
+$(BUILD)/dash.elf:
+	curl -o $@ https://xstatic.musl.cc/dash/aarch64-linux-musleabi/bin/dash

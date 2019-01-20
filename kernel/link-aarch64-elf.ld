@@ -13,12 +13,12 @@ SECTIONS
     . = ALIGN(4096);
     __text_end = .;
 
-    __shell_start = .;
-    .text.shell : {
-        */shell.bin(.data)
+    __dash_start = .;
+    .text.dash : {
+        */dash.bin(.data)
     }
     . = ALIGN(4096);
-    __shell_end = .;
+    __dash_end = .;
 
     __rodata_start = .;
     .rodata : {

@@ -2,15 +2,17 @@
 
 .PHONY: all
 all: #! Build the kernel (default)
-	$(MAKE) -C shell all
 	$(MAKE) -C kernel all
 	$(MAKE) -C test all
 
 .PHONY: clean
 clean: #! Clean generated files
-	$(MAKE) -C shell clean
 	$(MAKE) -C kernel clean
 	$(MAKE) -C test clean
+
+.PHONY: dkr-build
+dkr-build: #! Build the Docker container
+	docker-compose build
 
 .PHONY: dkr-sh
 dkr-sh: #! Start a Docker shell

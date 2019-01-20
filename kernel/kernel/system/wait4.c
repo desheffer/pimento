@@ -4,7 +4,10 @@
 
 SYSCALL_DEFINE4(wait4, pid_t, pid, int *, wstatus, int, options, struct rusage *, rusage)
 {
-    failif(pid <= 0);
+    if (pid <= 0) {
+        return -1;
+    }
+
     failif(wstatus != 0);
     failif(options != 0);
     failif(rusage != 0);
