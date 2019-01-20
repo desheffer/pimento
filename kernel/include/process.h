@@ -10,6 +10,7 @@
 
 #include <entry.h>
 #include <list.h>
+#include <stdbool.h>
 
 enum process_state {
     created,
@@ -36,18 +37,13 @@ struct process {
 
 typedef void process_function_t(void *);
 
+struct process * process_create_common(const char *, int, bool);
 struct process * process_create_kernel(void);
 int process_create(void *, const char *, void *);
-void process_create_tail(process_function_t, void *);
-void process_create_tail_wrapper(void);
 int process_clone(struct process *);
 void process_destroy(struct process *);
-int process_exec(const char *, char * const[], char * const[]);
-void process_exec_tail(const char *, char * const *, char * const *);
-void process_exec_tail_wrapper(void);
-void * process_set_args(void *, char * const[], char * const[]);
 
 void do_exec(struct registers *);
-void process_clone_tail(void);
+void process_tail_wrapper(void);
 
 #endif
