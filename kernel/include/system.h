@@ -75,6 +75,7 @@ long sys_fcntl(int, int, int);
 long sys_getcwd(char *, size_t);
 long sys_getdents64(unsigned, struct dirent *, unsigned);
 long sys_geteuid(void);
+long sys_getpid(void);
 long sys_gettid(void);
 long sys_getuid(void);
 long sys_ioctl(int, long unsigned);
