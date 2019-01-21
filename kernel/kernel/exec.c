@@ -122,7 +122,7 @@ int process_exec(const char * pname, char * const * argv, char * const * envp)
 
     struct process * parent = scheduler_current();
 
-    struct process * child = process_create_common(pname, parent->pid, true);
+    struct process * child = process_create_common(pname, parent->ppid, parent->pid, true);
 
     struct binprm * bprm = kzalloc(sizeof(struct binprm));
 

@@ -12,8 +12,10 @@ void system_handler(struct registers * regs, unsigned nr)
 {
     assert(nr < __NR_syscalls);
 
+    long unsigned ret = -1;
+
     if (_calls[nr] != 0) {
-        long unsigned ret = _calls[nr](
+        ret = _calls[nr](
             regs->regs[0],
             regs->regs[1],
             regs->regs[2],
@@ -21,9 +23,9 @@ void system_handler(struct registers * regs, unsigned nr)
             regs->regs[4],
             regs->regs[5]
         );
-
-        regs->regs[0] = ret;
     } else {
         sys_ni(nr);
     }
+
+    regs->regs[0] = ret;
 }

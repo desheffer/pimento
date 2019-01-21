@@ -134,7 +134,7 @@ void scheduler_exit(struct process * process)
     leave_critical();
 }
 
-struct process * scheduler_get_pid(unsigned pid)
+struct process * scheduler_get_by_pid(unsigned pid)
 {
     enter_critical();
 
@@ -144,6 +144,28 @@ struct process * scheduler_get_pid(unsigned pid)
     while (process_item != 0) {
         process = (struct process *) process_item->item;
         if (process->pid == pid) {
+            break;
+        }
+
+        process_item = process_item->next;
+        process = 0;
+    }
+
+    leave_critical();
+
+    return process;
+}
+
+struct process * scheduler_get_by_ppid(unsigned ppid)
+{
+    enter_critical();
+
+    struct list_item * process_item = _process_list->front;
+    struct process * process = 0;
+
+    while (process_item != 0) {
+        process = (struct process *) process_item->item;
+        if (process->ppid == ppid) {
             break;
         }
 

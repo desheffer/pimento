@@ -22,6 +22,7 @@ struct cpu_context {
 
 struct process {
     unsigned pid;
+    unsigned ppid;
     enum process_state state;
     char pname[PNAME_LENGTH];
     struct cpu_context * cpu_context;
@@ -31,7 +32,7 @@ struct process {
 
 typedef void process_function_t(void *);
 
-struct process * process_create_common(const char *, int, bool);
+struct process * process_create_common(const char *, int, int, bool);
 struct process * process_create_kernel(void);
 int process_create(void *, const char *, void *);
 int process_clone(struct process *);

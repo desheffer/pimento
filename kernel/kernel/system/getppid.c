@@ -1,7 +1,9 @@
+#include <scheduler.h>
 #include <system.h>
 
 SYSCALL_DEFINE0(getppid)
 {
-    // @TODO
-    return 0;
+    struct process * process = scheduler_current();
+
+    return process->ppid;
 }

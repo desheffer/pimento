@@ -8,7 +8,7 @@
 #include <string.h>
 #include <synchronize.h>
 
-struct process * process_create_common(const char * pname, int pid, bool init_kstack)
+struct process * process_create_common(const char * pname, int ppid, int pid, bool init_kstack)
 {
     // Create a new process control block.
     struct process * child = kzalloc(sizeof(struct process));
@@ -22,6 +22,7 @@ struct process * process_create_common(const char * pname, int pid, bool init_ks
 
     // Assign basic information.
     child->state = created;
+    child->ppid = ppid;
     strncpy(child->pname, pname, PNAME_LENGTH);
 
     // Initialize a new memory map.
@@ -41,7 +42,7 @@ struct process * process_create_common(const char * pname, int pid, bool init_ks
 
 struct process * process_create_kernel(void)
 {
-    return process_create_common("kernel", -1, false);
+    return process_create_common("kernel", 0, -1, false);
 }
 
 static void process_create_tail(process_function_t fn, void * data)
@@ -61,7 +62,7 @@ int process_create(void * fn, const char * pname, void * data)
 {
     enter_critical();
 
-    struct process * child = process_create_common(pname, -1, true);
+    struct process * child = process_create_common(pname, 0, -1, true);
 
     // Initialize execution.
     child->cpu_context->sp = (long unsigned) KSTACK_TOP;
@@ -81,7 +82,7 @@ int process_clone(struct process * parent)
 {
     enter_critical();
 
-    struct process * child = process_create_common(parent->pname, -1, false);
+    struct process * child = process_create_common(parent->pname, parent->pid, -1, false);
 
     // Copy the memory map.
     mm_copy_from(parent, child);
