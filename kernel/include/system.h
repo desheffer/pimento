@@ -82,6 +82,7 @@ long sys_mmap(void *, size_t, int, int, int, off_t);
 long sys_openat(int, const char *, int, mode_t);
 long sys_read(int, char *, size_t);
 long sys_readv(int, const struct iovec *, int);
+long sys_rt_sigaction(int, const struct sigaction *, struct sigaction *);
 long sys_rt_sigprocmask(int, const sigset_t *, sigset_t *, size_t);
 long sys_set_tid_address(int *);
 long sys_wait4(pid_t, int *, int, struct rusage *);
