@@ -8,8 +8,8 @@ struct vfsmount {
 };
 
 enum file_system_type {
-    ramfs,
-    devicefs,
+    file_system_type_ramfs,
+    file_system_type_devicefs,
 };
 
 struct superblock {
@@ -33,7 +33,13 @@ struct dentry {
 struct dentry_operations {
 };
 
+enum inode_type {
+    inode_type_directory,
+    inode_type_file,
+};
+
 struct inode {
+    enum inode_type type;
     struct superblock * superblock;
     struct file_operations * file_operations;
     struct inode_operations * inode_operations;

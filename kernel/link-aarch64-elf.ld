@@ -20,6 +20,13 @@ SECTIONS
     . = ALIGN(4096);
     __dash_end = .;
 
+    __toybox_start = .;
+    .text.toybox : {
+        */toybox.bin(.data)
+    }
+    . = ALIGN(4096);
+    __toybox_end = .;
+
     __rodata_start = .;
     .rodata : {
         *(.rodata)

@@ -12,6 +12,10 @@ SYSCALL_DEFINE1(chdir, const char *, path)
         return -ENOENT;
     }
 
+    if (dir->inode->type != inode_type_directory) {
+        return -ENOTDIR;
+    }
+
     process->fs_context->cwd = dir;
 
     return 0;

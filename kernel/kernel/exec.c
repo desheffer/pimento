@@ -12,6 +12,9 @@
 extern char __dash_start;
 extern char __dash_end;
 
+extern char __toybox_start;
+extern char __toybox_end;
+
 static char ** copy_args(char * const * args)
 {
     // Find args count.
@@ -99,10 +102,21 @@ static void process_exec_tail(struct binprm * bprm)
     void * sp = (void *) USTACK_TOP;
     sp = set_args(sp, bprm->argv, bprm->envp);
 
+    void * elf_start = 0;
+    size_t elf_size = 0;
+
+    if (strcmp("/bin/sh", bprm->filename) == 0) {
+        elf_start = &__dash_start;
+        elf_size = &__dash_end - &__dash_start;
+    } else {
+        elf_start = &__toybox_start;
+        elf_size = &__toybox_end - &__toybox_start;
+    }
+
     // Initialize process.
     struct registers * new_regs = (struct registers *) ((long unsigned) KSTACK_TOP - PROCESS_REGS_SIZE);
     new_regs->sp = (long unsigned) sp;
-    new_regs->pc = (long unsigned) elf_load(&__dash_start, &__dash_end - &__dash_start);
+    new_regs->pc = (long unsigned) elf_load(elf_start, elf_size);
     new_regs->pstate = PSR_MODE_USER;
 
     kfree(bprm->filename);
@@ -116,9 +130,6 @@ static void process_exec_tail(struct binprm * bprm)
 int process_exec(const char * pname, char * const * argv, char * const * envp)
 {
     enter_critical();
-
-    // @TODO: Support arbitrary files.
-    failif(strcmp("/bin/sh", pname) != 0);
 
     struct process * parent = scheduler_current();
 

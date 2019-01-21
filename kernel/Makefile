@@ -15,7 +15,7 @@ INCLUDES := $(shell find $(INCLUDE) -name '*.h')
 
 OBJECTS := $(patsubst $(SRC)/%.S, $(BUILD)/%.S.o, $(shell find $(SRC) -name '*.S'))
 OBJECTS += $(patsubst $(SRC)/%.c, $(BUILD)/%.c.o, $(shell find $(SRC) -name '*.c'))
-OBJECTS += $(BUILD)/dash.bin
+OBJECTS += $(BUILD)/dash.bin $(BUILD)/toybox.bin
 
 BASEFLAGS := -O2 -nostdlib -nostartfiles
 BASEFLAGS += -ffreestanding -fomit-frame-pointer
@@ -61,3 +61,6 @@ $(BUILD)/%.bin: $(BUILD)/%.elf
 
 $(BUILD)/dash.elf:
 	curl -o $@ https://xstatic.musl.cc/dash/aarch64-linux-musleabi/bin/dash
+
+$(BUILD)/toybox.elf:
+	curl -o $@ https://xstatic.musl.cc/toybox/aarch64-linux-musleabi/bin/toybox
