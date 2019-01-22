@@ -70,9 +70,10 @@ struct dentry * ramfs_create(void)
 
     // Files: /bin/*
     const char * const utils[] = {
-        "help",
+        "echo",
+        "env",
         "ls",
-        "toybox",
+        "pwd",
         0
     };
 

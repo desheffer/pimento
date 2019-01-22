@@ -12,7 +12,7 @@
 static void run_init(void)
 {
     const char * const argv[] = {"/bin/sh", 0};
-    const char * const envp[] = {"PWD=/", 0};
+    const char * const envp[] = {"HOME=/root", 0};
 
     process_exec("/bin/sh", (char * const *) argv, (char * const *) envp);
 }
