@@ -1,6 +1,7 @@
 #include <fcntl.h>
 #include <fs.h>
 #include <scheduler.h>
+#include <string.h>
 #include <system.h>
 
 SYSCALL_DEFINE4(fstatat64, int, dirfd, const char *, pathname, struct stat *, statbuf, int, flags)
@@ -31,10 +32,8 @@ SYSCALL_DEFINE4(fstatat64, int, dirfd, const char *, pathname, struct stat *, st
     }
 
     // @TODO
+    memset(statbuf, 0, sizeof(struct stat));
     statbuf->st_mode = dentry->inode->mode;
-    statbuf->st_uid = 0;
-    statbuf->st_gid = 0;
-    statbuf->st_size = 0;
 
     return 0;
 }
