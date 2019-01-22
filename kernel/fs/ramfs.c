@@ -15,7 +15,7 @@ struct dentry * ramfs_create(void)
 
     // Directory: /
     struct inode * inode_root = kzalloc(sizeof(struct inode));
-    inode_root->type = inode_type_directory;
+    inode_root->mode = S_IFDIR | 0777;
     inode_root->superblock = superblock;
 
     struct dentry * dentry_root = kzalloc(sizeof(struct dentry));
@@ -29,7 +29,7 @@ struct dentry * ramfs_create(void)
 
     // Directory: /root
     struct inode * inode_root_root = kzalloc(sizeof(struct inode));
-    inode_root_root->type = inode_type_directory;
+    inode_root_root->mode = S_IFDIR | 0777;
     inode_root_root->superblock = superblock;
 
     struct dentry * dentry_root_root = kzalloc(sizeof(struct dentry));
@@ -43,7 +43,7 @@ struct dentry * ramfs_create(void)
 
     // Directory: /bin
     struct inode * inode_root_bin = kzalloc(sizeof(struct inode));
-    inode_root_bin->type = inode_type_directory;
+    inode_root_bin->mode = S_IFDIR | 0777;
     inode_root_bin->superblock = superblock;
 
     struct dentry * dentry_root_bin = kzalloc(sizeof(struct dentry));
@@ -57,7 +57,7 @@ struct dentry * ramfs_create(void)
 
     // File: /bin/sh
     struct inode * inode_root_bin_sh = kzalloc(sizeof(struct inode));
-    inode_root_bin_sh->type = inode_type_file;
+    inode_root_bin_sh->mode = S_IFREG | 0777;
     inode_root_bin_sh->superblock = superblock;
 
     struct dentry * dentry_root_bin_sh = kzalloc(sizeof(struct dentry));
@@ -71,12 +71,13 @@ struct dentry * ramfs_create(void)
     // Files: /bin/*
     const char * const utils[] = {
         "help",
+        "ls",
         "toybox",
         0
     };
 
     struct inode * inode_root_bin_toybox = kzalloc(sizeof(struct inode));
-    inode_root_bin_toybox->type = inode_type_file;
+    inode_root_bin_toybox->mode = S_IFREG | 0777;
     inode_root_bin_toybox->superblock = superblock;
 
     for (const char * const * iter = utils; *iter != 0; ++iter) {

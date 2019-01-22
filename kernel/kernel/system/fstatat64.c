@@ -6,7 +6,6 @@
 SYSCALL_DEFINE4(fstatat64, int, dirfd, const char *, pathname, struct stat *, statbuf, int, flags)
 {
     // @TODO
-    (void) statbuf;
     (void) flags;
 
     struct process * process = scheduler_current();
@@ -16,17 +15,23 @@ SYSCALL_DEFINE4(fstatat64, int, dirfd, const char *, pathname, struct stat *, st
     if (dirfd == AT_FDCWD) {
         cwd = process->fs_context->cwd;
     } else {
-        // @TODO
-        return -ENOENT;
+        struct file * file = fs_get_file(process, dirfd);
+
+        if (file == 0) {
+            return -EBADF;
+        }
+
+        cwd = file->dentry;
     }
 
-    struct dentry * file = fs_dentry(pathname, cwd);
+    struct dentry * dentry = fs_dentry(pathname, cwd);
 
-    if (file == 0) {
+    if (dentry == 0) {
         return -ENOENT;
     }
 
     // @TODO
+    statbuf->st_mode = dentry->inode->mode;
     statbuf->st_uid = 0;
     statbuf->st_gid = 0;
     statbuf->st_size = 0;

@@ -8,18 +8,34 @@
 
 SYSCALL_DEFINE4(openat, int, dirfd, const char *, pathname, int, flags, mode_t, mode)
 {
-    if (strcmp(".", pathname) != 0) {
-        return -1;
-    }
-
-    failif(dirfd != -100);
-    failif(flags != 0xA4000);
-    failif(mode != 0);
+    // @TODO
+    (void) flags;
+    (void) mode;
 
     struct process * process = scheduler_current();
 
+    struct dentry * cwd;
+
+    if (dirfd == AT_FDCWD) {
+        cwd = process->fs_context->cwd;
+    } else {
+        struct file * file = fs_get_file(process, dirfd);
+
+        if (file == 0) {
+            return -EBADF;
+        }
+
+        cwd = file->dentry;
+    }
+
+    struct dentry * dentry = fs_dentry(pathname, cwd);
+
+    if (dentry == 0) {
+        return -ENOENT;
+    }
+
     struct file * file = kzalloc(sizeof(struct file));
-    file->dentry = process->fs_context->cwd;
+    file->dentry = dentry;
     file->pos = 0;
 
     enter_critical();

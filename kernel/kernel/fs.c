@@ -15,6 +15,10 @@ void fs_init(void)
 
 static struct dentry * fs_dentry_single(const char * path, struct dentry * cwd)
 {
+    if (strcmp(".", path) == 0) {
+        return cwd;
+    }
+
     if (strcmp("..", path) == 0) {
         if (cwd->dentry_parent == 0) {
             return 0;
@@ -84,13 +88,20 @@ struct file * fs_get_file(struct process * process, unsigned fd)
     return 0;
 }
 
-void fs_process_create(struct process * process)
+void fs_process_create(struct process * process, struct process * copy_from)
 {
     process->fs_context = kzalloc(sizeof(struct process));
-    process->fs_context->root = _dentry_root;
-    // @TODO: Copy cwd from parent process.
-    process->fs_context->cwd = _dentry_root;
+
     process->fs_context->file_list = list_create();
+
+    if (copy_from != 0) {
+        process->fs_context->root = copy_from->fs_context->root;
+        process->fs_context->cwd = copy_from->fs_context->cwd;
+        // @TODO: Copy files?
+    } else {
+        process->fs_context->root = _dentry_root;
+        process->fs_context->cwd = _dentry_root;
+    }
 
     // Reserve stdin, stdout, and stderr.
     // @TODO: Allocate these as files.

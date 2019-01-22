@@ -1,3 +1,4 @@
+#include <fcntl.h>
 #include <fs.h>
 #include <scheduler.h>
 #include <system.h>
@@ -12,7 +13,7 @@ SYSCALL_DEFINE1(chdir, const char *, path)
         return -ENOENT;
     }
 
-    if (dir->inode->type != inode_type_directory) {
+    if ((dir->inode->mode & S_IFDIR) == 0) {
         return -ENOTDIR;
     }
 

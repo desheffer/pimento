@@ -31,9 +31,6 @@ struct process * process_create_common(const char * pname, int ppid, int pid, bo
         mm_create_kstack(child);
     }
 
-    // Copy filesystem information.
-    fs_process_create(child);
-
     // Initialize execution.
     child->cpu_context = kzalloc(sizeof(struct cpu_context));
 
@@ -71,6 +68,9 @@ int process_create(void * fn, const char * pname, void * data)
     child->cpu_context->regs[1] = (long unsigned) fn;
     child->cpu_context->regs[2] = (long unsigned) data;
 
+    // Copy filesystem information.
+    fs_process_create(child, 0);
+
     scheduler_enqueue(child);
 
     leave_critical();
@@ -93,6 +93,9 @@ int process_clone(struct process * parent)
     child->cpu_context->regs[0] = (long unsigned) process_create_tail;
     child->cpu_context->regs[1] = (long unsigned) do_exec;
     child->cpu_context->regs[2] = (long unsigned) KSTACK_TOP - PROCESS_REGS_SIZE;
+
+    // Copy filesystem information.
+    fs_process_create(child, parent);
 
     scheduler_enqueue(child);
 

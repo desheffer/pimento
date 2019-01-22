@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <elf.h>
 #include <exec.h>
+#include <fs.h>
 #include <kstdlib.h>
 #include <mm.h>
 #include <process.h>
@@ -148,6 +149,9 @@ int process_exec(const char * pname, char * const * argv, char * const * envp)
     child->cpu_context->pc = (long unsigned) process_tail_wrapper;
     child->cpu_context->regs[0] = (long unsigned) process_exec_tail;
     child->cpu_context->regs[1] = (long unsigned) bprm;
+
+    // Copy filesystem information.
+    fs_process_create(child, parent);
 
     scheduler_enqueue(child);
     scheduler_exit(parent);

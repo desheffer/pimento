@@ -1,6 +1,10 @@
 #pragma once
 
+#include <fcntl.h>
 #include <list.h>
+
+#define S_IFDIR 0040000 // Directory
+#define S_IFREG 0100000 // Regular file
 
 struct vfsmount {
     struct dentry * dentry_mountpoint;
@@ -33,13 +37,8 @@ struct dentry {
 struct dentry_operations {
 };
 
-enum inode_type {
-    inode_type_directory,
-    inode_type_file,
-};
-
 struct inode {
-    enum inode_type type;
+    mode_t mode;
     struct superblock * superblock;
     struct file_operations * file_operations;
     struct inode_operations * inode_operations;

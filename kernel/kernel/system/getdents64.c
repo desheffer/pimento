@@ -9,7 +9,7 @@ SYSCALL_DEFINE3(getdents64, unsigned, fd, struct dirent *, buf, unsigned, count)
 
     struct file * file = fs_get_file(process, fd);
     if (file == 0) {
-        return -1;
+        return -EBADF;
     }
 
     struct list_item * subdir_item = file->dentry->dentry_children->front;
