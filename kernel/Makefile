@@ -60,7 +60,7 @@ $(BUILD)/%.bin: $(BUILD)/%.elf
 	$(OBJCOPY) --input-target binary --output-target elf64-littleaarch64 --binary-architecture aarch64 $< $@
 
 $(BUILD)/dash.elf:
-	curl -o $@ https://xstatic.musl.cc/dash/aarch64-linux-musleabi/bin/dash
+	curl -fSL -o $@ https://pkg.musl.cc/dash-0.5.10.2/aarch64-linux-musl/bin/dash
 
 $(BUILD)/toybox.elf:
-	curl -o $@ https://xstatic.musl.cc/toybox/aarch64-linux-musleabi/bin/toybox
+	curl -fSL -o $@ https://pkg.musl.cc/toybox-master/aarch64-linux-musl/bin/toybox

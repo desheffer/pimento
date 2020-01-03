@@ -1,4 +1,4 @@
-FROM muslcc/x86_64:aarch64-linux-musleabi
+FROM muslcc/x86_64:aarch64-linux-musl
 
 RUN apk add \
     curl \
