@@ -20,13 +20,10 @@ static void * page_start(unsigned index)
 
 void memory_init(void)
 {
-    // @TODO: Get from hardware.
-    void * alloc_end = (void *) 0x3F000000;
-
-    _page_count = ((char *) alloc_end - (char *) 0) / PAGE_SIZE;
+    _page_count = ((char *) kva_to_pa(&__dynamic_end) - (char *) 0) / PAGE_SIZE;
 
     // Create pages without using malloc.
-    _pages = (struct memory_page *) &__end;
+    _pages = (struct memory_page *) &__dynamic_start;
 
     for (unsigned i = 0; i < _page_count; ++i) {
         _pages[i].allocated = 0;

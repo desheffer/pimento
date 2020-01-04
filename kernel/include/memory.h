@@ -24,4 +24,6 @@ extern char __va_table_start;
 extern char __va_table_end;
 extern char __bss_start;
 extern char __bss_end;
+extern char __dynamic_start;
+extern char __dynamic_end;
 extern char __end;

@@ -55,6 +55,10 @@ SECTIONS
     . = ALIGN(4096);
     __bss_end = .;
 
+    __dynamic_start = .;
+    . = 0xFFFF00003F000000;
+    __dynamic_end = .;
+
     __end = .;
 
     /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
