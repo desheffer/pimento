@@ -20,9 +20,9 @@ void debug_process_regs(struct registers * state, long unsigned reason, long uns
 
     kputs(
         "\n"
-        "[41m[97m                          [0m\n"
-        "[41m[97m     Kernel Exception     [0m\n"
-        "[41m[97m                          [0m\n"
+        "\e[41m\e[97m                          \e[0m\n"
+        "\e[41m\e[97m     Kernel Exception     \e[0m\n"
+        "\e[41m\e[97m                          \e[0m\n"
         "\n"
     );
 
@@ -98,9 +98,9 @@ void panic(void)
 
     kputs(
         "\n"
-        "[41m[97m                      [0m\n"
-        "[41m[97m     Kernel Panic     [0m\n"
-        "[41m[97m                      [0m\n"
+        "\e[41m\e[97m                      \e[0m\n"
+        "\e[41m\e[97m     Kernel Panic     \e[0m\n"
+        "\e[41m\e[97m                      \e[0m\n"
         "\n"
     );
 

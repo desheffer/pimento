@@ -16,9 +16,9 @@ void kernel_main(void)
 
     kputs(
         "\n"
-        "[42m[97m                           [0m\n"
-        "[42m[97m     All tests passed!     [0m\n"
-        "[42m[97m                           [0m\n"
+        "\e[42m\e[97m                           \e[0m\n"
+        "\e[42m\e[97m     All tests passed!     \e[0m\n"
+        "\e[42m\e[97m                           \e[0m\n"
         "\n"
     );
 }

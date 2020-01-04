@@ -28,9 +28,9 @@ void kernel_main(void)
 
     kputs(
         "\n"
-        "[44m[97m                          [0m\n"
-        "[44m[97m     Welcome to PI-OS     [0m\n"
-        "[44m[97m                          [0m\n"
+        "\e[44m\e[97m                          \e[0m\n"
+        "\e[44m\e[97m     Welcome to PI-OS     \e[0m\n"
+        "\e[44m\e[97m                          \e[0m\n"
         "\n\n"
     );
 
