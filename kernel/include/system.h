@@ -8,6 +8,7 @@
 #include <signal.h>
 #include <sys/stat.h>
 #include <sys/uio.h>
+#include <sys/utsname.h>
 #include <sys/wait.h>
 
 #define MAP_ARG0(...)
@@ -94,6 +95,7 @@ long sys_rt_sigsuspend(const sigset_t *, size_t);
 long sys_set_tid_address(int *);
 long sys_setpgid(pid_t, pid_t);
 long sys_umask(int);
+long sys_uname(struct utsname *);
 long sys_wait4(pid_t, int *, int, struct rusage *);
 long sys_write(int, const char *, size_t);
 long sys_writev(int, const struct iovec *, int);

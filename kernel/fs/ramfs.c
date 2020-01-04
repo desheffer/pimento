@@ -74,6 +74,7 @@ struct dentry * ramfs_create(void)
         "env",
         "ls",
         "pwd",
+        "uname",
         0
     };
 
