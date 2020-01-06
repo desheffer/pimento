@@ -61,7 +61,7 @@ void scheduler_context_switch(void)
     struct process * prev = scheduler_current();
 
     if (prev->state == running) {
-        prev->state = sleeping;
+        prev->state = waiting;
         list_push_back(_process_queue, prev);
     } else if (prev->state == stopped) {
         scheduler_destroy(prev);

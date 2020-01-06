@@ -7,11 +7,9 @@
 #include <stdbool.h>
 
 enum process_state {
-    created,
     running,
-    sleeping,
     stopped,
-    zombie,
+    waiting,
 };
 
 struct cpu_context {

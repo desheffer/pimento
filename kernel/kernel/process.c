@@ -21,7 +21,7 @@ struct process * process_create_common(const char * pname, int ppid, int pid, bo
     }
 
     // Assign basic information.
-    child->state = created;
+    child->state = waiting;
     child->ppid = ppid;
     strncpy(child->pname, pname, PNAME_LENGTH);
 
