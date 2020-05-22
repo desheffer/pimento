@@ -1,3 +1,4 @@
+#include <errno.h>
 #include <fcntl.h>
 #include <fs.h>
 #include <scheduler.h>

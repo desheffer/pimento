@@ -1,8 +1,9 @@
 #include <assert.h>
+#include <errno.h>
 #include <scheduler.h>
 #include <system.h>
+#include <sys/wait.h>
 
-#include <kstdio.h>
 SYSCALL_DEFINE4(wait4, pid_t, pid, int *, wstatus, int, options, struct rusage *, rusage)
 {
     // @TODO

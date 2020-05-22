@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <serial.h>
+#include <sys/uio.h>
 #include <system.h>
 
 SYSCALL_DEFINE3(writev, int, fd, const struct iovec *, iov, int, iovcnt)

@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <errno.h>
 #include <fs.h>
 #include <kstdlib.h>
 #include <scheduler.h>

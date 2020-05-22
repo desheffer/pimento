@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <dirent.h>
 #include <memory.h>
 #include <mm.h>
 #include <scheduler.h>

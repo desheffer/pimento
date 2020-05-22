@@ -1,3 +1,4 @@
+#include <signal.h>
 #include <system.h>
 
 SYSCALL_DEFINE2(setpgid, pid_t, pid, pid_t, pgid)

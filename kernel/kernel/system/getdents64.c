@@ -1,3 +1,5 @@
+#include <dirent.h>
+#include <errno.h>
 #include <fs.h>
 #include <scheduler.h>
 #include <string.h>

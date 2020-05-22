@@ -1,5 +1,6 @@
 #include <process.h>
 #include <scheduler.h>
+#include <signal.h>
 #include <system.h>
 
 SYSCALL_DEFINE6(clone, int, flags, void *, child_stack, void *, arg, pid_t *, ptid, void *, newtls, pid_t *, ctid)

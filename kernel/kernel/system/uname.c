@@ -1,4 +1,5 @@
 #include <string.h>
+#include <sys/utsname.h>
 #include <system.h>
 
 SYSCALL_DEFINE1(uname, struct utsname *, buf)

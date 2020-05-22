@@ -1,7 +1,9 @@
+#include <errno.h>
 #include <fcntl.h>
 #include <fs.h>
 #include <scheduler.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <system.h>
 
 SYSCALL_DEFINE2(fstat64, int, fd, struct stat *, statbuf)

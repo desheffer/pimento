@@ -1,3 +1,4 @@
+#include <signal.h>
 #include <system.h>
 
 SYSCALL_DEFINE3(rt_sigaction, int, signum, const struct sigaction *, act, struct sigaction *, oldact)

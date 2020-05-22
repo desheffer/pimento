@@ -1,3 +1,4 @@
+#include <signal.h>
 #include <system.h>
 
 SYSCALL_DEFINE4(rt_sigprocmask, int, how, const sigset_t *, set, sigset_t *, oldset, size_t, sigsetsize)
