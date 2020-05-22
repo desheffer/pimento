@@ -16,7 +16,7 @@ dkr-build: #! Build the Docker container
 
 .PHONY: dkr-sh
 dkr-sh: #! Start a Docker shell
-	docker-compose run --rm app sh
+	docker-compose run --rm app
 
 .PHONY: help
 help: #! Show this help message
