@@ -3,12 +3,10 @@
 .PHONY: all
 all: #! Build the kernel (default)
 	$(MAKE) -C kernel all
-	$(MAKE) -C test all
 
 .PHONY: clean
 clean: #! Clean generated files
 	$(MAKE) -C kernel clean
-	$(MAKE) -C test clean
 
 .PHONY: dkr-build
 dkr-build: #! Build the Docker container
@@ -29,11 +27,6 @@ help: #! Show this help message
 run: #! Run the kernel
 run: all
 	qemu-system-aarch64 -M raspi3 -kernel kernel/build/kernel8.img -serial null -serial stdio
-
-.PHONY: test
-test: #! Run the tests
-test: all
-	qemu-system-aarch64 -M raspi3 -kernel test/build/kernel8.img -serial null -serial stdio
 
 .PHONY: watch
 watch: #! Build the kernel and watch for changes
