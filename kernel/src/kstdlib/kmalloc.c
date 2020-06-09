@@ -12,5 +12,5 @@ void * kmalloc(size_t size)
 
     struct page * page = page_alloc();
 
-    return page->addr;
+    return page->vaddr;
 }

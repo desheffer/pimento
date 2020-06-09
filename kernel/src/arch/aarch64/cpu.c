@@ -21,7 +21,7 @@ void cpu_context_create(struct task * task, task_function_t fn, void * data)
     // @TODO: Ensure page is freed when task is finished.
     struct page * page = page_alloc();
 
-    task->cpu_context->sp = (uint64_t) page->addr + page_size();
+    task->cpu_context->sp = (uint64_t) page->vaddr + page_size();
     task->cpu_context->pc = (uint64_t) task_entry;
     task->cpu_context->x[0] = (uint64_t) fn;
     task->cpu_context->x[1] = (uint64_t) data;

@@ -52,6 +52,3 @@ $(BUILD)/%.S.o: $(SRC)/%.S $(INCLUDES)
 $(BUILD)/%.c.o: $(SRC)/%.c $(INCLUDES)
 	@mkdir -p $(@D)
 	$(CC) $(CFLAGS) -c $< -o $@
-
-$(BUILD)/%.bin: $(BUILD)/%.elf
-	$(OBJCOPY) --input-target binary --binary-architecture $(ARCH) $< $@

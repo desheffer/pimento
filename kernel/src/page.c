@@ -21,7 +21,7 @@ void page_init(void * start, void * end, size_t page_size)
     char * first_free = (char *) &_pages[_page_count];
 
     for (unsigned index = 0; index < _page_count; ++index) {
-        _pages[index].addr = addr;
+        _pages[index].vaddr = addr;
         _pages[index].count = addr < first_free ? 1 : 0;
 
         addr += page_size;
@@ -61,6 +61,14 @@ struct page * page_alloc(void)
 }
 
 /**
+ * Get the count of pages being managed.
+ */
+unsigned page_count(void)
+{
+    return _page_count;
+}
+
+/**
  * Free a page.
  */
 void page_free(struct page * page)
@@ -70,6 +78,14 @@ void page_free(struct page * page)
     --page->count;
 
     critical_end();
+}
+
+/**
+ * Get the array of pages.
+ */
+struct page * page_pages(void)
+{
+    return _pages;
 }
 
 /**
