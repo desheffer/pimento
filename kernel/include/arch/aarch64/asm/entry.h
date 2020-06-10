@@ -30,4 +30,6 @@ void interrupts_handler(void);
 void timer_set(void);
 void set_interrupts_handler(interrupts_handler_t);
 
+void load_regs(void);
+
 #endif

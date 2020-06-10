@@ -1,4 +1,6 @@
 #include <asm/cpu.h>
+#include <asm/head.h>
+#include <asm/entry.h>
 #include <kstdlib.h>
 #include <page.h>
 #include <task.h>
@@ -6,25 +8,51 @@
 /**
  * Create the CPU context for the "init" task.
  */
-void cpu_context_create_init(struct task * task)
+struct cpu_context * cpu_context_create_init(void)
 {
-    task->cpu_context = kcalloc(sizeof(struct cpu_context));
+    struct cpu_context * cpu_context = kcalloc(sizeof(struct cpu_context));
+
+    return cpu_context;
 }
 
 /**
  * Create the CPU context to execute the given function.
  */
-void cpu_context_create(struct task * task, task_function_t fn, void * data)
+struct cpu_context * cpu_context_create(struct task * task, task_function_t fn,
+                                        void * data)
 {
-    task->cpu_context = kcalloc(sizeof(struct cpu_context));
+    struct cpu_context * cpu_context = kcalloc(sizeof(struct cpu_context));
 
-    // @TODO: Ensure page is freed when task is finished.
-    struct page * page = page_alloc();
+    struct page * page = mm_context_page_alloc(task->mm_context);
 
-    task->cpu_context->sp = (uint64_t) page->vaddr + page_size();
-    task->cpu_context->pc = (uint64_t) task_entry;
-    task->cpu_context->x[0] = (uint64_t) fn;
-    task->cpu_context->x[1] = (uint64_t) data;
+    cpu_context->sp = (uint64_t) page->vaddr + page_size();
+    cpu_context->pc = (uint64_t) task_entry;
+    cpu_context->x[0] = (uint64_t) fn;
+    cpu_context->x[1] = (uint64_t) data;
+
+    return cpu_context;
+}
+
+/**
+ * Create the CPU context to execute a user program.
+ */
+struct cpu_context * cpu_context_create_user(struct task * task, void * entry)
+{
+    struct cpu_context * cpu_context = kcalloc(sizeof(struct cpu_context));
+
+    struct page * page = mm_context_page_alloc(task->mm_context);
+
+    struct registers * registers = (struct registers *) ((uint64_t) page->vaddr + page_size()) - 1;
+
+    cpu_context->sp = (uint64_t) registers;
+    cpu_context->pc = (uint64_t) task_entry;
+    cpu_context->x[0] = (uint64_t) load_regs;
+
+    registers->sp = STACK_TOP_USER;
+    registers->pc = (uint64_t) entry;
+    registers->pstate = PSR_MODE_USER;
+
+    return cpu_context;
 }
 
 /**

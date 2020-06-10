@@ -31,6 +31,9 @@
 
 #define VA_TABLE_LENGTH 512
 
+#define VA_TABLE_TABLE_ADDR_MASK 0xFFFFFFFFF000
+#define VA_TABLE_PAGE_ADDR_MASK  0xFFFFFFFFF000
+
 #define PT_BLOCK (0b01UL <<  0) // Block descriptor
 #define PT_TABLE (0b11UL <<  0) // Table descriptor
 #define PT_PAGE  (0b11UL <<  0) // Page descriptor
@@ -45,12 +48,22 @@
 
 #define PT_ATTR(n) ((n) << 2)
 
+#define ASID_SHIFT 48
+
 #ifndef __ASSEMBLER__
 
+#include <list.h>
 #include <stdint.h>
 
-typedef uint64_t va_table_t[VA_TABLE_LENGTH];
+typedef uintptr_t va_table_t;
+
+struct mm_context {
+    void * pgd;
+    unsigned asid;
+    struct list * pages;
+};
 
 void mm_init(void);
+void mm_switch_to(struct mm_context *);
 
 #endif

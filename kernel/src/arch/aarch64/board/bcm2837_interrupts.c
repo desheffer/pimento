@@ -2,15 +2,15 @@
 #include <board/armv8_timer.h>
 #include <board/bcm2837_interrupts.h>
 
-static interrupt_handler_t _handlers[NUM_IRQS] = {0};
-static void * _handlers_data[NUM_IRQS] = {0};
+static interrupt_handler_t _handlers[BCM2837_NUM_IRQS] = {0};
+static void * _handlers_data[BCM2837_NUM_IRQS] = {0};
 
 /**
  * Enable an interrupt.
  */
 inline void _interrupts_enable(unsigned num)
 {
-    *CORE0_TIMERS_CNTL |= (0b1 << num);
+    *BCM2837_CORE0_TIMERS_CNTL |= (0b1 << num);
 }
 
 /**
@@ -18,7 +18,7 @@ inline void _interrupts_enable(unsigned num)
  */
 inline void _interrupts_disable(unsigned num)
 {
-    *CORE0_TIMERS_CNTL ^= (0b1 << num);
+    *BCM2837_CORE0_TIMERS_CNTL ^= (0b1 << num);
 }
 
 /**
@@ -26,7 +26,7 @@ inline void _interrupts_disable(unsigned num)
  */
 inline int _interrupts_pending(unsigned num)
 {
-    return *CORE0_IRQ & (0b1 << num);
+    return *BCM2837_CORE0_IRQ & (0b1 << num);
 }
 
 /**
@@ -35,12 +35,12 @@ inline int _interrupts_pending(unsigned num)
 static void _interrupts_timer_init(void)
 {
     // Use Crystal clock and increment by 1.
-    *CORE_TIMERS_CONTROL = 0;
+    *BCM2837_CORE_TIMERS_CONTROL = 0;
 
     // Set timer prescaler 1:1 (timer freq = 2^31 / prescaler * input).
-    *CORE_TIMERS_PRESCALER = 0x80000000;
+    *BCM2837_CORE_TIMERS_PRESCALER = 0x80000000;
 
-    bcm2837_interrupts_connect(LOCAL_IRQ_CNTPNSIRQ, armv8_timer_tick, 0);
+    bcm2837_interrupts_connect(BCM2837_LOCAL_IRQ_CNTPNSIRQ, armv8_timer_tick, 0);
 }
 
 /**
@@ -48,7 +48,7 @@ static void _interrupts_timer_init(void)
  */
 void bcm2837_interrupts_init(void)
 {
-    for (unsigned i = 0; i < NUM_IRQS; ++i) {
+    for (unsigned i = 0; i < BCM2837_NUM_IRQS; ++i) {
         _handlers[i] = 0;
         _handlers_data[i] = 0;
     }
@@ -64,7 +64,7 @@ void bcm2837_interrupts_init(void)
 void bcm2837_interrupts_connect(unsigned num, interrupt_handler_t handler,
                                 void * handler_data)
 {
-    if (num < NUM_IRQS) {
+    if (num < BCM2837_NUM_IRQS) {
         _handlers[num] = handler;
         _handlers_data[num] = handler_data;
 
@@ -77,7 +77,7 @@ void bcm2837_interrupts_connect(unsigned num, interrupt_handler_t handler,
  */
 void bcm2837_interrupts_disconnect(unsigned num)
 {
-    if (num < NUM_IRQS) {
+    if (num < BCM2837_NUM_IRQS) {
         _interrupts_disable(num);
 
         _handlers[num] = 0;
@@ -90,7 +90,7 @@ void bcm2837_interrupts_disconnect(unsigned num)
  */
 void bcm2837_interrupts_handler(void)
 {
-    for (unsigned num = 0; num < NUM_IRQS; ++num) {
+    for (unsigned num = 0; num < BCM2837_NUM_IRQS; ++num) {
         if (_handlers[num] && _interrupts_pending(num)) {
             _handlers[num](_handlers_data[num]);
             break;

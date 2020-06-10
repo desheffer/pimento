@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#define STACK_TOP_USER 0x100000000
+
 struct cpu_context {
     uint64_t x[11]; // x19 - x29
     uint64_t sp;

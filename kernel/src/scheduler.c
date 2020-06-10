@@ -45,6 +45,22 @@ void scheduler_enqueue(struct task * task)
 }
 
 /**
+ * Replace a task in the scheduling queue.
+ */
+void scheduler_replace(struct task * old_task, struct task * new_task)
+{
+    critical_start();
+
+    old_task->state = stopped;
+
+    new_task->state = running;
+
+    list_push_back(_task_queue, new_task);
+
+    critical_end();
+}
+
+/**
  * Trigger the scheduler to switch from the current task to a new task.
  */
 void schedule(void)

@@ -17,6 +17,7 @@
 
 #define PSR_MODE_INIT \
     (PSR_MODE_D | PSR_MODE_A | PSR_MODE_I | PSR_MODE_F | PSR_MODE_M_EL1h)
+#define PSR_MODE_USER (PSR_MODE_M_EL0)
 
 #ifndef __ASSEMBLER__
 

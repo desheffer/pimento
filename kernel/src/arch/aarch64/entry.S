@@ -133,6 +133,8 @@ el0_sync_done:
 el0_irq:
     save_regs
     bl interrupts_handler
+.globl load_regs
+load_regs:
     load_regs
     eret
 
