@@ -12,6 +12,11 @@
 #define DAIF_I (0b1 << 1)
 #define DAIF_F (0b1 << 0)
 
+#define ESR_ELx_EC_SHIFT 26
+#define ESR_ELx_EC_MASK  (0b111111UL << ESR_ELx_EC_SHIFT)
+
+#define ESR_ELx_EC_SVC64 0b010101
+
 #ifndef __ASSEMBLER__
 
 #include <stdint.h>

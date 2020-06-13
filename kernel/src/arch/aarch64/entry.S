@@ -124,7 +124,19 @@ el1_irq:
 
 el0_sync:
     save_regs
+    interrupts_enable
+    mrs x21, esr_el1
+    and x21, x21, #ESR_ELx_EC_MASK
+    lsr x21, x21, #ESR_ELx_EC_SHIFT
+    cmp x21, #ESR_ELx_EC_SVC64
+    beq el0_sync_svc
     debug_entry #BAD_SYNC
+    b el0_sync_done
+el0_sync_svc:
+    mov x0, sp
+    mov x1, x8
+    bl abi_handler
+    b el0_sync_done
 el0_sync_done:
     interrupts_disable
     load_regs

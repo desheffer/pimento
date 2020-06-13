@@ -21,8 +21,14 @@ static struct binprm * _binprm_init(const char * pathname, char * const * argv,
     // @TODO: Copy ELF content into user memory
     // @TODO: Copy `argv` and `envp` into user memory
 
-    unsigned svc[] = { 0xd4000001 };
-    mm_copy_to_user(binprm->mm_context, (void *) 0x10, svc, 4);
+    unsigned bin[] = {
+        0xd2800008, // mov x8, #0x0
+        0xd4000001, // svc #0
+        0xd503201f, // nop
+        0x17ffffff, // b -1
+    };
+
+    mm_copy_to_user(binprm->mm_context, (void *) 0x10, bin, sizeof(bin));
 
     binprm->entry = (void *) 0x10;
 
