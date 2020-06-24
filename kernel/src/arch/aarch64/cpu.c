@@ -1,8 +1,8 @@
 #include <asm/cpu.h>
 #include <asm/head.h>
 #include <asm/entry.h>
-#include <kstdlib.h>
 #include <page.h>
+#include <pimento.h>
 #include <task.h>
 
 /**

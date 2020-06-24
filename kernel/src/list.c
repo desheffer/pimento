@@ -1,5 +1,5 @@
-#include <kstdlib.h>
 #include <list.h>
+#include <pimento.h>
 
 /**
  * Create a list.
@@ -35,15 +35,7 @@ void list_clear(struct list * list)
  */
 unsigned list_count(struct list * list)
 {
-    struct list_item * list_item = list->front;
-    unsigned count = 0;
-
-    while (list_item != 0) {
-        ++count;
-        list_item = list_item->next;
-    }
-
-    return count;
+    return list->count;
 }
 
 /**
@@ -56,13 +48,15 @@ void list_push_back(struct list * list, void * item)
     list_item->prev = list->back;
     list_item->next = 0;
 
-    if (list->back) {
+    if (list->back != 0) {
         list->back->next = list_item;
     } else {
         list->front = list_item;
     }
 
     list->back = list_item;
+
+    ++list->count;
 }
 
 /**
@@ -75,13 +69,39 @@ void list_push_front(struct list * list, void * item)
     list_item->prev = 0;
     list_item->next = list->front;
 
-    if (list->front) {
+    if (list->front != 0) {
         list->front->prev = list_item;
     } else {
         list->back = list_item;
     }
 
     list->front = list_item;
+
+    ++list->count;
+}
+
+/**
+ * View an item from the end of the list.
+ */
+void * list_peek_back(struct list * list)
+{
+    if (list->back != 0) {
+        return list->back->item;
+    }
+
+    return 0;
+}
+
+/**
+ * View an item from the beginning of the list.
+ */
+void * list_peek_front(struct list * list)
+{
+    if (list->front != 0) {
+        return list->front->item;
+    }
+
+    return 0;
 }
 
 /**
@@ -98,13 +118,15 @@ void * list_pop_back(struct list * list)
 
     list->back = list_item->prev;
 
-    if (list->back) {
+    if (list->back != 0) {
         list->back->next = 0;
     } else {
         list->front = 0;
     }
 
     kfree(list_item);
+
+    --list->count;
 
     return item;
 }
@@ -123,13 +145,15 @@ void * list_pop_front(struct list * list)
 
     list->front = list_item->next;
 
-    if (list->front) {
+    if (list->front != 0) {
         list->front->prev = 0;
     } else {
         list->back = 0;
     }
 
     kfree(list_item);
+
+    --list->count;
 
     return item;
 }
@@ -154,6 +178,8 @@ void list_remove(struct list * list, void * item)
                 list_item->next->prev = list_item->prev;
 
                 kfree(list_item);
+
+                --list->count;
             }
         }
 

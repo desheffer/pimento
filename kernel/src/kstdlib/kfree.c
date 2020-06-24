@@ -1,5 +1,5 @@
-#include <kstdlib.h>
 #include <page.h>
+#include <pimento.h>
 
 /**
  * Free memory in the kernel address space.

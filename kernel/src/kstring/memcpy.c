@@ -1,5 +1,4 @@
-#include <kstring.h>
-#include <stddef.h>
+#include <pimento.h>
 
 void * memcpy(void * dest, const void * src, size_t num)
 {

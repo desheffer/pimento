@@ -2,9 +2,7 @@
 #include <asm/entry.h>
 #include <asm/head.h>
 #include <interrupts.h>
-#include <kstdio.h>
-#include <messages.h>
-#include <stdint.h>
+#include <pimento.h>
 
 /**
  * Output debug information when an unhandled exception occurs.

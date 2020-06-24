@@ -1,7 +1,7 @@
 #pragma once
 
 #include <page.h>
-#include <stddef.h>
+#include <pimento.h>
 
 typedef unsigned pid_t;
 
@@ -28,7 +28,7 @@ struct binprm {
     void * entry;
 };
 
-typedef void task_function_t(void *);
+typedef void (* task_function_t)(void *);
 
 struct task * task_create_init(void);
 struct task * task_create(const char *, task_function_t, void *);

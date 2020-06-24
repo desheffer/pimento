@@ -1,11 +1,8 @@
 #include <asm/mm.h>
 #include <critical.h>
-#include <kstdlib.h>
-#include <kstring.h>
 #include <list.h>
 #include <page.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <pimento.h>
 #include <task.h>
 
 static va_table_t _kernel_l0[PAGE_SIZE] __attribute__((aligned (PAGE_SIZE))) = {0};

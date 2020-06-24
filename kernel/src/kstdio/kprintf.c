@@ -1,6 +1,5 @@
 #include <critical.h>
-#include <kstdio.h>
-#include <stdarg.h>
+#include <pimento.h>
 
 static putc_t _kputc = 0;
 

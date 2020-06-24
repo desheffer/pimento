@@ -1,6 +1,5 @@
 #include <critical.h>
-#include <kstdlib.h>
-#include <kstring.h>
+#include <pimento.h>
 #include <task.h>
 
 static unsigned _next_pid = 1;

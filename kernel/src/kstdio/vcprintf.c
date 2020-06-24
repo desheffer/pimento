@@ -1,8 +1,4 @@
-#include <kstdio.h>
-#include <kstring.h>
-#include <stdarg.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <pimento.h>
 
 #define BUF_MAX 17
 

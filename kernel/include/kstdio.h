@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdarg.h>
+#include <pimento.h>
 
 typedef void (* putc_t)(void *, char);
 

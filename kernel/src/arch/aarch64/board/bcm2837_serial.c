@@ -1,5 +1,5 @@
 #include <board/bcm2837_serial.h>
-#include <kstdio.h>
+#include <pimento.h>
 
 /**
  * Output a single character on the serial device.

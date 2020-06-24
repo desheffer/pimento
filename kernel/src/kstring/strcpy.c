@@ -1,11 +1,11 @@
 #include <pimento.h>
 
-char * strncpy(char * dest, const char * src, size_t num)
+char * strcpy(char * dest, const char * src)
 {
     char * cdest = dest;
     const char * csrc = src;
 
-    while (num--) {
+    while (1) {
         if (*csrc == '\0') {
             *(cdest++) = '\0';
             break;

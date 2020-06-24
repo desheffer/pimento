@@ -1,3 +1,5 @@
 #pragma once
 
-void exec(const char *, char * const *, char * const *);
+#define EXEC_BUFFER 1024
+
+int exec(const char *, char * const *, char * const *);

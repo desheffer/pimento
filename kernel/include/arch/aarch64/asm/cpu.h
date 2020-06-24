@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdint.h>
+#include <pimento.h>
 
 #define STACK_TOP_USER 0x100000000
 

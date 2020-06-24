@@ -1,1 +1,1 @@
-// SYSCALL(X)
+SYSCALL(write)

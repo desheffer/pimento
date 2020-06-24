@@ -1,6 +1,4 @@
-#include <kstdlib.h>
-#include <kstring.h>
-#include <stddef.h>
+#include <pimento.h>
 
 void * kcalloc(size_t size)
 {

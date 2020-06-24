@@ -2,10 +2,12 @@
 
 .PHONY: all
 all: #! Build the kernel (default)
+	$(MAKE) -C initrd all
 	$(MAKE) -C kernel all
 
 .PHONY: clean
 clean: #! Clean generated files
+	$(MAKE) -C initrd clean
 	$(MAKE) -C kernel clean
 
 .PHONY: dkr-build

@@ -53,7 +53,7 @@
 #ifndef __ASSEMBLER__
 
 #include <list.h>
-#include <stdint.h>
+#include <pimento.h>
 
 typedef uintptr_t va_table_t;
 

@@ -1,5 +1,4 @@
-#include <kstring.h>
-#include <stddef.h>
+#include <pimento.h>
 
 size_t strlen(const char * str)
 {

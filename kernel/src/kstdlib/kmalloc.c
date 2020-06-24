@@ -1,5 +1,5 @@
-#include <kstdlib.h>
 #include <page.h>
+#include <pimento.h>
 
 /**
  * Allocate memory in the kernel address space.

@@ -1,6 +1,6 @@
 #include <critical.h>
 #include <page.h>
-#include <stddef.h>
+#include <pimento.h>
 
 static unsigned _page_alloc_next = 0;
 static unsigned _page_count = 0;
