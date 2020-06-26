@@ -66,4 +66,6 @@ struct mm_context {
 void mm_init(void);
 void mm_switch_to(struct mm_context *);
 
+void data_abort_handler(void *);
+
 #endif

@@ -15,7 +15,8 @@
 #define ESR_ELx_EC_SHIFT 26
 #define ESR_ELx_EC_MASK  (0b111111UL << ESR_ELx_EC_SHIFT)
 
-#define ESR_ELx_EC_SVC64 0b010101
+#define ESR_ELx_EC_SVC64    0b010101
+#define ESR_ELx_EC_DABT_LOW 0b100100
 
 #ifndef __ASSEMBLER__
 

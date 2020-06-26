@@ -15,9 +15,9 @@ clean:
 $(BUILD)/$(IMG).tar: $(BUILD)/rootfs/bin/hello
 	tar -cvf - -C $(BUILD)/rootfs bin > $@
 
-$(BUILD)/rootfs/bin/hello: hello/build/hello.img
+$(BUILD)/rootfs/bin/hello: hello/build/hello.elf
 	@mkdir -p $(@D)
 	cp $< $@
 
-hello/build/hello.img:
+hello/build/hello.elf:
 	$(MAKE) -C hello all

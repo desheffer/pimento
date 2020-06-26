@@ -3,6 +3,7 @@
 #include <list.h>
 #include <page.h>
 #include <pimento.h>
+#include <scheduler.h>
 #include <task.h>
 
 static va_table_t _kernel_l0[PAGE_SIZE] __attribute__((aligned (PAGE_SIZE))) = {0};
@@ -162,6 +163,8 @@ static va_table_t * _va_table_traverse(va_table_t * parent, unsigned level,
         ? VA_TABLE_TABLE_ADDR_MASK
         : VA_TABLE_PAGE_ADDR_MASK;;
 
+    parent = _paddr_to_vaddr(parent);
+
     return (va_table_t *) (parent[idx] & mask);
 }
 
@@ -268,4 +271,15 @@ void mm_switch_to(struct mm_context * mm_context)
     asm volatile("msr ttbr1_el1, %0" :: "r" (ttbr1));
     asm volatile("msr ttbr0_el1, %0" :: "r" (ttbr0));
     asm volatile("isb");
+}
+
+/**
+ * Handle data aborts.
+ */
+void data_abort_handler(void * vaddr)
+{
+    struct task * task = scheduler_current_task();
+    struct mm_context * mm_context = task->mm_context;
+
+    _page_write_address(mm_context, vaddr);
 }

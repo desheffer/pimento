@@ -1,3 +1,4 @@
+#include <elf.h>
 #include <exec.h>
 #include <interrupts.h>
 #include <pimento.h>
@@ -8,7 +9,7 @@
 /**
  * Create a `binprm` to facilitate execution of a new program.
  */
-static int _binprm_init(struct binprm * binprm, const char * pathname,
+static int _binprm_load(struct binprm * binprm, const char * pathname,
                         char * const * argv, char * const * envp)
 {
     (void) argv;
@@ -16,38 +17,34 @@ static int _binprm_init(struct binprm * binprm, const char * pathname,
 
     binprm->mm_context = mm_context_create();
 
-    // @TODO: Copy ELF content into user memory
     // @TODO: Copy `argv` and `envp` into user memory
 
-    struct path * path = kcalloc(sizeof(struct path));
-    struct file * file = kcalloc(sizeof(struct file));
+    struct path * path = vfs_path_create();
+    struct file * file = vfs_file_create();
 
     vfs_resolve_path(path, vfs_root(), pathname);
 
+    // Open the executable file.
+    // @TODO: Check for executable bit.
     int res = vfs_open(path, file);
     if (res < 0) {
-        kfree(path);
-        kfree(file);
+        vfs_path_destroy(path);
+        vfs_file_destroy(file);
 
-        return -ENOENT;
+        return res;
     }
 
-    char * bin = kmalloc(EXEC_BUFFER);
-    loff_t pos = 0;
-    void * entry = (void *) 0x400078;
-    char * dest = entry;
-    ssize_t num;
+    // Load using the ELF format.
+    res = elf_load(binprm, file);
+    if (res < 0) {
+        vfs_path_destroy(path);
+        vfs_file_destroy(file);
 
-    while ((num = vfs_read(file, bin, EXEC_BUFFER, &pos))) {
-        mm_copy_to_user(binprm->mm_context, dest, bin, num);
-        dest += num;
+        return res;
     }
 
-    binprm->entry = (void *) 0x400078;
-
-    kfree(path);
-    kfree(file);
-    kfree(bin);
+    vfs_path_destroy(path);
+    vfs_file_destroy(file);
 
     return 0;
 }
@@ -59,7 +56,7 @@ int exec(const char * pathname, char * const * argv, char * const * envp)
 {
     struct binprm * binprm = kcalloc(sizeof(struct binprm));
 
-    int res = _binprm_init(binprm, pathname, argv, envp);
+    int res = _binprm_load(binprm, pathname, argv, envp);
     if (res < 0) {
         return res;
     }

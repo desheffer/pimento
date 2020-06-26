@@ -32,7 +32,7 @@ static struct file_operations _file_operations = {
 struct superblock * ramfs_create(void)
 {
     struct inode * i_root = kcalloc(sizeof(struct inode));
-    struct dentry * d_root = kcalloc(sizeof(struct dentry));
+    struct dentry * d_root = vfs_dentry_create();
     struct superblock * superblock = kcalloc(sizeof(struct superblock));
 
     superblock->file_system = &_file_system;

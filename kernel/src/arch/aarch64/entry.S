@@ -130,12 +130,18 @@ el0_sync:
     lsr x21, x21, #ESR_ELx_EC_SHIFT
     cmp x21, #ESR_ELx_EC_SVC64
     beq el0_sync_svc
+    cmp x21, #ESR_ELx_EC_DABT_LOW
+    beq el0_sync_dabt
     debug_entry #BAD_SYNC
     b el0_sync_done
 el0_sync_svc:
     mov x0, sp
     mov x1, x8
     bl abi_handler
+    b el0_sync_done
+el0_sync_dabt:
+    mrs x0, far_el1
+    bl data_abort_handler
     b el0_sync_done
 el0_sync_done:
     interrupts_disable

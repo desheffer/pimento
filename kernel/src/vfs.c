@@ -23,6 +23,38 @@ void vfs_init(void)
 }
 
 /**
+ * Create a dentry.
+ */
+struct dentry * vfs_dentry_create(void)
+{
+    return kcalloc(sizeof(struct dentry));
+}
+
+/**
+ * Destroy a dentry.
+ */
+void vfs_dentry_destroy(struct dentry * dentry)
+{
+    kfree(dentry);
+}
+
+/**
+ * Create a file.
+ */
+struct file * vfs_file_create(void)
+{
+    return kcalloc(sizeof(struct file));
+}
+
+/**
+ * Destroy a file.
+ */
+void vfs_file_destroy(struct file * file)
+{
+    kfree(file);
+}
+
+/**
  * Create a mount point.
  */
 void vfs_mount(struct superblock * superblock, struct dentry * mountpoint)
@@ -70,7 +102,7 @@ int vfs_mkdir(struct path * path, int mode)
         return -EPERM;
     }
 
-    struct dentry * d_child = kcalloc(sizeof(struct dentry));
+    struct dentry * d_child = vfs_dentry_create();
     d_child->name = kmalloc(path->last.length);
     strncpy(d_child->name, path->last.token, path->last.length);
 
@@ -83,7 +115,7 @@ int vfs_mkdir(struct path * path, int mode)
 }
 
 /**
- * Create a file.
+ * Create a node.
  */
 int vfs_mknod(struct path * path, int mode)
 {
@@ -99,7 +131,7 @@ int vfs_mknod(struct path * path, int mode)
         return -EPERM;
     }
 
-    struct dentry * d_child = kcalloc(sizeof(struct dentry));
+    struct dentry * d_child = vfs_dentry_create();
     d_child->name = kmalloc(path->last.length);
     strncpy(d_child->name, path->last.token, path->last.length);
 
@@ -128,6 +160,22 @@ int vfs_open(struct path * path, struct file * file)
     i_child->file_operations->open(i_child, file);
 
     return 0;
+}
+
+/**
+ * Create a path.
+ */
+struct path * vfs_path_create(void)
+{
+    return kcalloc(sizeof(struct path));
+}
+
+/**
+ * Destroy a path.
+ */
+void vfs_path_destroy(struct path * path)
+{
+    kfree(path);
 }
 
 /**

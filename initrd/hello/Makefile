@@ -25,14 +25,11 @@ CFLAGS    := $(BASEFLAGS) $(WARNFLAGS) $(INCFLAGS)
 LDFLAGS   := $(BASEFLAGS) -lgcc
 
 .PHONY: all
-all: $(BUILD)/$(IMG).img
+all: $(BUILD)/$(IMG).elf
 
 .PHONY: clean
 clean:
 	rm -rf $(BUILD)
-
-$(BUILD)/$(IMG).img: $(BUILD)/$(IMG).elf
-	$(PREFIX)objcopy $< -O binary $@
 
 $(BUILD)/$(IMG).elf: $(OBJECTS)
 	$(CC) $(LDFLAGS) $(OBJECTS) -o $@

@@ -36,22 +36,22 @@ static void _copy_tar_contents(struct ustar_header * header)
         }
 
         if (header->typeflag == TAR_TYPEFLAG_FILE) {
-            struct path * path = kcalloc(sizeof(struct path));
-            struct file * file = kcalloc(sizeof(struct file));
+            struct path * path = vfs_path_create();
+            struct file * file = vfs_file_create();
 
             vfs_resolve_path(path, vfs_root(), header->name);
 
             int res = vfs_mknod(path, 0644);
             if (res < 0) {
-                kfree(path);
-                kfree(file);
+                vfs_path_destroy(path);
+                vfs_file_destroy(file);
                 break;
             }
 
             res = vfs_open(path, file);
             if (res < 0) {
-                kfree(path);
-                kfree(file);
+                vfs_path_destroy(path);
+                vfs_file_destroy(file);
                 break;
             }
 
@@ -59,20 +59,20 @@ static void _copy_tar_contents(struct ustar_header * header)
             loff_t off = 0;
             vfs_write(file, content, strtoul(header->size, 0, 8), &off);
 
-            kfree(path);
-            kfree(file);
+            vfs_path_destroy(path);
+            vfs_file_destroy(file);
         } else if (header->typeflag == TAR_TYPEFLAG_DIR) {
-            struct path * path = kcalloc(sizeof(struct path));
+            struct path * path = vfs_path_create();
 
             vfs_resolve_path(path, vfs_root(), header->name);
 
             int res = vfs_mkdir(path, 0755);
             if (res < 0) {
-                kfree(path);
+                vfs_path_destroy(path);
                 break;
             }
 
-            kfree(path);
+            vfs_path_destroy(path);
         }
 
         header = _next_header(header);

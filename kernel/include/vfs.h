@@ -76,10 +76,16 @@ struct path {
 };
 
 void vfs_init(void);
+struct dentry * vfs_dentry_create(void);
+void vfs_dentry_destroy(struct dentry *);
+struct file * vfs_file_create(void);
+void vfs_file_destroy(struct file *);
 void vfs_mount(struct superblock *, struct dentry *);
 int vfs_mkdir(struct path *, int);
 int vfs_mknod(struct path *, int);
 int vfs_open(struct path *, struct file *);
+struct path * vfs_path_create(void);
+void vfs_path_destroy(struct path *);
 ssize_t vfs_read(struct file *, char *, size_t, loff_t *);
 void vfs_resolve_path(struct path *, struct dentry *, const char *);
 struct dentry * vfs_root(void);
