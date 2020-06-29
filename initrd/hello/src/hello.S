@@ -1,7 +1,8 @@
 .globl _start
 _start:
-    adr x0, msg
-    mov x1, #22
+    mov x0, 1
+    adr x1, msg
+    mov x2, #22
     mov x8, #0x40
     svc #0
 hang:

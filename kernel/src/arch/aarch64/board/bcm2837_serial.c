@@ -1,5 +1,6 @@
 #include <board/bcm2837_serial.h>
 #include <pimento.h>
+#include <vfs.h>
 
 /**
  * Output a single character on the serial device.
@@ -19,9 +20,42 @@ static void _bcm2837_serial_putc(void * data, const char c)
 }
 
 /**
- * Initialize serial I/O on the BCM2837.
+ * Open the serial device.
  */
-void bcm2837_serial_init(void)
+static int _bcm2837_serial_file_open(struct inode * inode, struct file * file)
+{
+    (void) inode;
+    (void) file;
+
+    return 0;
+}
+
+/**
+ * Write to the serial device.
+ */
+static ssize_t _bcm2837_serial_file_write(struct file * file, const char * buf,
+                                          size_t num, loff_t * off)
+{
+    (void) file;
+    (void) off;
+
+    for (size_t i = num; i > 0; --i) {
+        _bcm2837_serial_putc(0, *(buf++));
+    }
+
+    return num;
+}
+
+static struct file_operations _bcm2837_serial_file_operations = {
+    .open = _bcm2837_serial_file_open,
+    .read = 0,
+    .write = _bcm2837_serial_file_write,
+};
+
+/**
+ * Configure the serial device.
+ */
+static void _bcm2837_serial_configure(void)
 {
     // Enable the mini UART.
     *BCM2837_AUX_ENABLES |= BCM2837_AUX_ENABLES_MU;
@@ -70,6 +104,28 @@ void bcm2837_serial_init(void)
     // Enable the receiver and transmitter.
     *BCM2837_AUX_MU_CNTL = BCM2837_AUX_MU_CNTL_RX | BCM2837_AUX_MU_CNTL_TX;
     *BCM2837_AUX_MU_IIR = BCM2837_AUX_MU_IIR_RX | BCM2837_AUX_MU_IIR_TX;
+}
+
+/**
+ * Initialize serial I/O on the BCM2837.
+ */
+void bcm2837_serial_init(void)
+{
+    _bcm2837_serial_configure();
+
+    struct path * path = vfs_path_create();
+
+    vfs_resolve_path(path, 0, "/dev/ttyS0");
+
+    int res = vfs_mknod(path, 0644);
+    if (res < 0) {
+        vfs_path_destroy(path);
+        return;
+    }
+
+    path->child->inode->file_operations = &_bcm2837_serial_file_operations;
+
+    vfs_path_destroy(path);
 
     set_kputc(_bcm2837_serial_putc);
 }

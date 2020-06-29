@@ -80,7 +80,7 @@ struct dentry * vfs_dentry_create(void);
 void vfs_dentry_destroy(struct dentry *);
 struct file * vfs_file_create(void);
 void vfs_file_destroy(struct file *);
-void vfs_mount(struct superblock *, struct dentry *);
+int vfs_mount(struct path *, struct superblock *);
 int vfs_mkdir(struct path *, int);
 int vfs_mknod(struct path *, int);
 int vfs_open(struct path *, struct file *);

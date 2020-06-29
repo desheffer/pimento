@@ -1,5 +1,7 @@
 #include <exec.h>
+#include <fs/devfs.h>
 #include <initrd.h>
+#include <modules.h>
 #include <pimento.h>
 #include <scheduler.h>
 #include <vfs.h>
@@ -24,13 +26,14 @@ static void _exec_init(void)
  */
 void kernel_main(void)
 {
-    kputs(WELCOME_MSG);
-
     schedule();
 
     vfs_init();
-
     initrd_init();
+    devfs_init();
+    modules_init();
+
+    kputs(WELCOME_MSG);
 
     _exec_init();
 }

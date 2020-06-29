@@ -41,7 +41,6 @@ struct superblock * ramfs_create(void)
 
     d_root->name = kmalloc(2);
     strncpy(d_root->name, "/", 2);
-    d_root->children = list_create();
     d_root->inode = i_root;
     d_root->superblock = superblock;
     d_root->operations = &_dentry_operations;
@@ -62,9 +61,8 @@ struct superblock * ramfs_create(void)
  */
 int ramfs_file_open(struct inode * inode, struct file * file)
 {
-    file->inode = inode;
-    file->pos = 0;
-    file->operations = &_file_operations;
+    (void) inode;
+    (void) file;
 
     return 0;
 }
@@ -113,7 +111,6 @@ int ramfs_inode_create(struct inode * dir, struct dentry * d_child, int mode)
         struct inode * i_child = kcalloc(sizeof(struct inode));
 
         d_child->parent = d_parent;
-        d_child->children = list_create();
         d_child->inode = i_child;
         d_child->superblock = dir->superblock;
         d_child->operations = &_dentry_operations;
@@ -129,6 +126,8 @@ int ramfs_inode_create(struct inode * dir, struct dentry * d_child, int mode)
         list_push_back(d_parent->children, d_child);
 
         res = 0;
+
+        break;
     }
 
     return res;
@@ -145,7 +144,6 @@ int ramfs_inode_mkdir(struct inode * dir, struct dentry * d_child, int mode)
         struct inode * i_child = kcalloc(sizeof(struct inode));
 
         d_child->parent = d_parent;
-        d_child->children = list_create();
         d_child->inode = i_child;
         d_child->superblock = dir->superblock;
         d_child->operations = &_dentry_operations;
@@ -160,6 +158,8 @@ int ramfs_inode_mkdir(struct inode * dir, struct dentry * d_child, int mode)
         list_push_back(d_parent->children, d_child);
 
         res = 0;
+
+        break;
     }
 
     return res;

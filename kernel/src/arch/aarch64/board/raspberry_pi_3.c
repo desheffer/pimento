@@ -11,15 +11,22 @@
 extern char LD_PAGE_START;
 
 /**
- * Initialize the Raspberry Pi 3.
+ * Initialize the Raspberry Pi 3 board.
  */
 void board_init(void)
 {
     page_init(&LD_PAGE_START, RASPBERRY_PI_3_MEMORY_END, PAGE_SIZE);
-    bcm2837_serial_init();
     bcm2837_interrupts_init();
     armv8_timer_init();
     scheduler_init(armv8_timer_set);
+}
+
+/**
+ * Initialize the Raspberry Pi 3 modules.
+ */
+void modules_init(void)
+{
+    bcm2837_serial_init();
 }
 
 #endif

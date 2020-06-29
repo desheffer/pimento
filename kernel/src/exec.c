@@ -22,7 +22,7 @@ static int _binprm_load(struct binprm * binprm, const char * pathname,
     struct path * path = vfs_path_create();
     struct file * file = vfs_file_create();
 
-    vfs_resolve_path(path, vfs_root(), pathname);
+    vfs_resolve_path(path, 0, pathname);
 
     // Open the executable file.
     // @TODO: Check for executable bit.

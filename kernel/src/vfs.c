@@ -14,10 +14,9 @@ void vfs_init(void)
 {
     _file_systems = list_create();
 
-    _dentry_root = kcalloc(sizeof(struct dentry));
+    _dentry_root = vfs_dentry_create();
     _dentry_root->name = kmalloc(2);
     strncpy(_dentry_root->name, "/", 2);
-    _dentry_root->children = list_create();
 
     _mounts = list_create();
 }
@@ -27,7 +26,10 @@ void vfs_init(void)
  */
 struct dentry * vfs_dentry_create(void)
 {
-    return kcalloc(sizeof(struct dentry));
+    struct dentry * dentry = kcalloc(sizeof(struct dentry));
+    dentry->children = list_create();
+
+    return dentry;
 }
 
 /**
@@ -35,6 +37,7 @@ struct dentry * vfs_dentry_create(void)
  */
 void vfs_dentry_destroy(struct dentry * dentry)
 {
+    list_destroy(dentry->children);
     kfree(dentry);
 }
 
@@ -43,7 +46,9 @@ void vfs_dentry_destroy(struct dentry * dentry)
  */
 struct file * vfs_file_create(void)
 {
-    return kcalloc(sizeof(struct file));
+    struct file * file = kcalloc(sizeof(struct file));
+
+    return file;
 }
 
 /**
@@ -57,10 +62,14 @@ void vfs_file_destroy(struct file * file)
 /**
  * Create a mount point.
  */
-void vfs_mount(struct superblock * superblock, struct dentry * mountpoint)
+int vfs_mount(struct path * path, struct superblock * superblock)
 {
+    if (path->child == 0) {
+        return -ENOENT;
+    }
+
     struct vfsmount * vfsmount = kcalloc(sizeof(struct vfsmount));
-    vfsmount->mountpoint = mountpoint;
+    vfsmount->mountpoint = path->child;
     vfsmount->superblock = superblock;
     vfsmount->root = superblock->root;
 
@@ -69,6 +78,8 @@ void vfs_mount(struct superblock * superblock, struct dentry * mountpoint)
     list_push_back(_mounts, vfsmount);
 
     critical_end();
+
+    return 0;
 }
 
 /**
@@ -157,6 +168,8 @@ int vfs_open(struct path * path, struct file * file)
     }
 
     struct inode * i_child = path->child->inode;
+    file->inode = i_child;
+    file->operations = i_child->file_operations;
     i_child->file_operations->open(i_child, file);
 
     return 0;
@@ -213,7 +226,7 @@ static struct list * _path_token_list(const char * path)
         path_token->length = end - path;
         list_push_back(path_tokens, path_token);
 
-        path = end + 1;
+        path = end;
 
         while (*path == '/') {
             ++path;
@@ -280,6 +293,12 @@ void vfs_resolve_path(struct path * path, struct dentry * d_parent,
         }
 
         path->child = d_child;
+    }
+
+    // Special case for the root directory.
+    if (list_count(path_tokens) == 0) {
+        path->parent = d_parent;
+        path->child = d_parent;
     }
 
     // Record the last token in the pathname.

@@ -86,10 +86,13 @@ static void _copy_tar_contents(struct ustar_header * header)
 void initrd_init(void)
 {
     struct superblock * ramfs = ramfs_create();
+    struct path * path = vfs_path_create();
 
-    struct dentry * dentry = vfs_root();
+    vfs_resolve_path(path, vfs_root(), "/");
 
-    vfs_mount(ramfs, dentry);
+    vfs_mount(path, ramfs);
+
+    vfs_path_destroy(path);
 
     _copy_tar_contents((struct ustar_header *) &_binary_build_initrd_tar_start);
 }
