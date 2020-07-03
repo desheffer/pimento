@@ -6,13 +6,14 @@
 /**
  * Exit from inside of a task.
  */
-void exit(void)
+void exit(int code)
 {
     interrupts_disable();
 
     struct task * current_task = scheduler_current_task();
 
     current_task->state = stopped;
+    current_task->exit_code = code;
 
     schedule();
 }

@@ -45,6 +45,7 @@ static void _copy_tar_contents(struct ustar_header * header)
             if (res < 0) {
                 vfs_path_destroy(path);
                 vfs_file_destroy(file);
+
                 break;
             }
 
@@ -52,6 +53,7 @@ static void _copy_tar_contents(struct ustar_header * header)
             if (res < 0) {
                 vfs_path_destroy(path);
                 vfs_file_destroy(file);
+
                 break;
             }
 
@@ -69,6 +71,7 @@ static void _copy_tar_contents(struct ustar_header * header)
             int res = vfs_mkdir(path, 0755);
             if (res < 0) {
                 vfs_path_destroy(path);
+
                 break;
             }
 

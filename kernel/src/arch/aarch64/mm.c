@@ -147,7 +147,7 @@ struct page * mm_context_page_alloc(struct mm_context * mm_context)
 /**
  * Calculate the index of `dest` for a lookup table of the given `level`.
  */
-static unsigned _va_table_index(unsigned level, void * dest)
+static unsigned _va_table_index(unsigned level, const void * dest)
 {
     return ((uintptr_t) dest >> (39 - 9 * level)) & (VA_TABLE_LENGTH - 1);
 }
@@ -156,7 +156,7 @@ static unsigned _va_table_index(unsigned level, void * dest)
  * Given a lookup table and level, find an entry that corresponds to `dest`.
  */
 static va_table_t * _va_table_traverse(va_table_t * parent, unsigned level,
-                                       void * dest)
+                                       const void * dest)
 {
     unsigned idx = _va_table_index(level, dest);
     uintptr_t mask = level < 3
@@ -172,7 +172,7 @@ static va_table_t * _va_table_traverse(va_table_t * parent, unsigned level,
  * Given a lookup table and level, add an entry that corresponds to `dest`.
  */
 static va_table_t * _va_table_add(va_table_t * parent, unsigned level,
-                                  void * dest, struct page * page)
+                                  const void * dest, struct page * page)
 {
     unsigned idx = _va_table_index(level, dest);
     uintptr_t flags = level < 3
@@ -188,10 +188,52 @@ static va_table_t * _va_table_add(va_table_t * parent, unsigned level,
 
 /**
  * Find the kernel virtual address that corresponds to a user virtual address.
+ */
+static void * _page_read_address(struct mm_context * mm_context,
+                                 const void * dest)
+{
+    // Begin with the level 0 table.
+    va_table_t * l0 = mm_context->pgd;
+
+    // Traverse to level 1.
+    va_table_t * l1 = _va_table_traverse(l0, 0, dest);
+    if (l1 == 0) {
+        return 0;
+    }
+    l1 = (va_table_t *) _paddr_to_vaddr(l1);
+
+    // Traverse to level 2.
+    va_table_t * l2 = _va_table_traverse(l1, 1, dest);
+    if (l2 == 0) {
+        return 0;
+    }
+    l2 = (va_table_t *) _paddr_to_vaddr(l2);
+
+    // Traverse to level 3.
+    va_table_t * l3 = _va_table_traverse(l2, 2, dest);
+    if (l3 == 0) {
+        return 0;
+    }
+    l3 = (va_table_t *) _paddr_to_vaddr(l3);
+
+    // Traverse to the final page.
+    uintptr_t page_start = (uintptr_t) _va_table_traverse(l3, 3, dest);
+    if (page_start == 0) {
+        return 0;
+    }
+
+    uintptr_t page_offset = (uintptr_t) dest & (PAGE_SIZE - 1);
+
+    return _paddr_to_vaddr((void *) (page_start | page_offset));
+}
+
+/**
+ * Find the kernel virtual address that corresponds to a user virtual address.
  * If the given address is not mapped, then mapping tables will be created
  * along the way.
  */
-static void * _page_write_address(struct mm_context * mm_context, void * dest)
+static void * _page_write_address(struct mm_context * mm_context,
+                                  const void * dest)
 {
     // Begin with the level 0 table.
     va_table_t * l0 = mm_context->pgd;
@@ -233,6 +275,36 @@ static void * _page_write_address(struct mm_context * mm_context, void * dest)
 }
 
 /**
+ * Copy from user memory space into kernel memory space. This function is
+ * similar to `memcpy`, except that we have to maintain pointers to both the
+ * kernel and user address spaces.
+ */
+size_t mm_copy_from_user(struct mm_context * mm_context, void * dest,
+                         const void * src, size_t num)
+{
+    char * kdest = (char *) dest;
+    const char * usrc = (const char *) src;
+    char * ksrc = 0;
+    size_t count = 0;
+
+    while (num--) {
+        // If we encounter a new page, then calculate the new page address.
+        if (((uintptr_t) ksrc & (PAGE_SIZE - 1)) == 0) {
+            ksrc = (char *) _page_read_address(mm_context, usrc);
+            if (ksrc == 0) {
+                break;
+            }
+        }
+
+        *(kdest++) = *(ksrc++);
+        ++usrc;
+        ++count;
+    }
+
+    return count;
+}
+
+/**
  * Copy from kernel memory space into user memory space. This function is
  * similar to `memcpy`, except that we have to maintain pointers to both the
  * kernel and user address spaces.
@@ -249,6 +321,9 @@ size_t mm_copy_to_user(struct mm_context * mm_context, void * dest,
         // If we encounter a new page, then calculate the new page address.
         if (((uintptr_t) kdest & (PAGE_SIZE - 1)) == 0) {
             kdest = (char *) _page_write_address(mm_context, udest);
+            if (ksrc == 0) {
+                break;
+            }
         }
 
         *(kdest++) = *(ksrc++);

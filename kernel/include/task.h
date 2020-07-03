@@ -13,6 +13,7 @@ enum task_state {
 
 struct cpu_context;
 struct mm_context;
+struct vfs_context;
 
 struct task {
     pid_t pid;
@@ -21,6 +22,8 @@ struct task {
     struct task * parent;
     struct cpu_context * cpu_context;
     struct mm_context * mm_context;
+    struct vfs_context * vfs_context;
+    int exit_code;
 };
 
 struct binprm {
@@ -43,4 +46,8 @@ struct mm_context * mm_context_create_kernel(void);
 struct mm_context * mm_context_create(void);
 void mm_context_destroy(struct mm_context *);
 struct page * mm_context_page_alloc(struct mm_context *);
+size_t mm_copy_from_user(struct mm_context *, void *, const void *, size_t);
 size_t mm_copy_to_user(struct mm_context *, void *, const void *, size_t);
+
+struct vfs_context * vfs_context_create(void);
+void vfs_context_destroy(struct vfs_context *);

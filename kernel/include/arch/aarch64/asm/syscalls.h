@@ -1,1 +1,8 @@
+SYSCALL(exit)
+SYSCALL(exit_group)
+SYSCALL(ioctl)
+SYSCALL(read)
+SYSCALL(readv)
+SYSCALL(set_tid_address)
 SYSCALL(write)
+SYSCALL(writev)

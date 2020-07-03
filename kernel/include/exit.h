@@ -1,3 +1,3 @@
 #pragma once
 
-void exit(void);
+void exit(int);

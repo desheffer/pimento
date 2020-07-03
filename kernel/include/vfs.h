@@ -44,6 +44,7 @@ struct inode {
 struct file {
     struct inode * inode;
     unsigned pos;
+    unsigned references;
     struct file_operations * operations;
 };
 

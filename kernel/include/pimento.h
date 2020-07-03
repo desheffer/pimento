@@ -11,3 +11,8 @@
 #include <errno.h>
 #include <messages.h>
 #include <types.h>
+
+typedef struct {
+    uint64_t low;
+    uint64_t high;
+} uint128_t;

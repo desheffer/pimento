@@ -16,6 +16,11 @@ _start:
     msr hcr_el2, x4
     isb
 
+    // Do not trap SIMD/FP.
+    ldr x4, =CPACR_CP10
+    msr cpacr_el1, x4
+    isb
+
     // Change execution level to EL1h.
     ldr x4, =PSR_MODE_INIT
     msr spsr_el2, x4

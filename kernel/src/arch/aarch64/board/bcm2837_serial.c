@@ -5,18 +5,23 @@
 /**
  * Output a single character on the serial device.
  */
-static void _bcm2837_serial_putc(void * data, const char c)
+static void _putc(const char c)
 {
-    (void) data;
-
     // Wait until transmit FIFO is empty.
     while (!(*BCM2837_AUX_MU_LSR & BCM2837_AUX_MU_LSR_TX_EMPTY));
 
     *BCM2837_AUX_MU_IO = c;
+}
 
-    if (c == '\n') {
-        _bcm2837_serial_putc(0, '\r');
-    }
+/**
+ * Input a single character from the serial device.
+ */
+static char _getc(void)
+{
+    // Wait until receive FIFO is ready.
+    while (!(*BCM2837_AUX_MU_LSR & BCM2837_AUX_MU_LSR_RX_READY));
+
+    return *BCM2837_AUX_MU_IO;
 }
 
 /**
@@ -31,24 +36,80 @@ static int _bcm2837_serial_file_open(struct inode * inode, struct file * file)
 }
 
 /**
+ * Read from the serial device.
+ */
+static ssize_t _bcm2837_serial_file_read(struct file * file, char * buf,
+                                         size_t num, loff_t * off)
+{
+    (void) file;
+
+    size_t pos = 0;
+
+    while (pos < num) {
+        char c = _getc();
+
+        if (c == '\r') {
+            // Line feed
+            *(buf++) = '\n';
+            ++pos;
+            _putc('\n');
+
+            break;
+        } else if (c == 0x7F) {
+            // Backspace
+            if (pos > 0) {
+                --buf;
+                --pos;
+
+                _putc('\b');
+                _putc(' ');
+                _putc('\b');
+            }
+        } else {
+            *(buf++) = c;
+            ++pos;
+            _putc(c);
+        }
+
+        if (c < 0x20 || c > 0x7F) {
+            break;
+        }
+    }
+
+    *off += pos;
+
+    return pos;
+}
+
+/**
  * Write to the serial device.
  */
 static ssize_t _bcm2837_serial_file_write(struct file * file, const char * buf,
                                           size_t num, loff_t * off)
 {
     (void) file;
-    (void) off;
 
-    for (size_t i = num; i > 0; --i) {
-        _bcm2837_serial_putc(0, *(buf++));
+    size_t pos = 0;
+
+    while (pos < num) {
+        _putc(*buf);
+
+        if (*buf == '\n') {
+            _putc('\r');
+        }
+
+        ++buf;
+        ++pos;
     }
 
-    return num;
+    *off += pos;
+
+    return pos;
 }
 
 static struct file_operations _bcm2837_serial_file_operations = {
     .open = _bcm2837_serial_file_open,
-    .read = 0,
+    .read = _bcm2837_serial_file_read,
     .write = _bcm2837_serial_file_write,
 };
 
@@ -107,6 +168,20 @@ static void _bcm2837_serial_configure(void)
 }
 
 /**
+ * Output a single character on the serial device.
+ */
+static void _kputc(void * data, const char c)
+{
+    (void) data;
+
+    _putc(c);
+
+    if (c == '\n') {
+        _putc('\r');
+    }
+}
+
+/**
  * Initialize serial I/O on the BCM2837.
  */
 void bcm2837_serial_init(void)
@@ -127,5 +202,5 @@ void bcm2837_serial_init(void)
 
     vfs_path_destroy(path);
 
-    set_kputc(_bcm2837_serial_putc);
+    set_kputc(_kputc);
 }

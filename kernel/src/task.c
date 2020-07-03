@@ -35,6 +35,8 @@ struct task * task_create_init(void)
 
     task->cpu_context = cpu_context_create_init();
 
+    task->vfs_context = vfs_context_create();
+
     task->state = running;
 
     return task;
@@ -56,6 +58,8 @@ struct task * task_create(const char * name, task_function_t fn, void * data)
     task->mm_context = mm_context_create_kernel();
 
     task->cpu_context = cpu_context_create(task, fn, data);
+
+    task->vfs_context = vfs_context_create();
 
     return task;
 }
@@ -80,6 +84,8 @@ struct task * task_create_binprm(const char * name, struct binprm * binprm,
     task->mm_context = binprm->mm_context;
 
     task->cpu_context = cpu_context_create_user(task, binprm->entry);
+
+    task->vfs_context = vfs_context_create();
 
     return task;
 }

@@ -105,7 +105,7 @@ ssize_t ramfs_file_write(struct file * file, const char * buf, size_t num,
  */
 int ramfs_inode_create(struct inode * dir, struct dentry * d_child, int mode)
 {
-    int res = ENOENT;
+    int res = -ENOENT;
 
     list_foreach(dir->dentries, struct dentry *, d_parent) {
         struct inode * i_child = kcalloc(sizeof(struct inode));
@@ -138,7 +138,7 @@ int ramfs_inode_create(struct inode * dir, struct dentry * d_child, int mode)
  */
 int ramfs_inode_mkdir(struct inode * dir, struct dentry * d_child, int mode)
 {
-    int res = ENOENT;
+    int res = -ENOENT;
 
     list_foreach(dir->dentries, struct dentry *, d_parent) {
         struct inode * i_child = kcalloc(sizeof(struct inode));

@@ -4,6 +4,8 @@
 
 #define HCR_RW (0b1UL << 31) // Enable AArch64
 
+#define CPACR_CP10 (0b11 << 20) // Full access to FP and SIMD
+
 #define SCTLR_M (0b1 << 0) // Enable MMU
 
 #define PSR_MODE_M_EL0  (0b0000 << 0)

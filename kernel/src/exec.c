@@ -5,6 +5,7 @@
 #include <scheduler.h>
 #include <task.h>
 #include <vfs.h>
+#include <vfs_task.h>
 
 /**
  * Create a `binprm` to facilitate execution of a new program.
@@ -63,6 +64,8 @@ int exec(const char * pathname, char * const * argv, char * const * envp)
 
     struct task * old_task = scheduler_current_task();
     struct task * task = task_create_binprm(pathname, binprm, old_task->pid);
+
+    vfs_task_copy(task, old_task);
 
     interrupts_disable();
 

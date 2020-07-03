@@ -47,6 +47,7 @@ void vfs_dentry_destroy(struct dentry * dentry)
 struct file * vfs_file_create(void)
 {
     struct file * file = kcalloc(sizeof(struct file));
+    file->references = 1;
 
     return file;
 }
