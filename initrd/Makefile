@@ -4,20 +4,25 @@ IMG := initrd
 
 BUILD := build
 
+BIN := sh
+
 .PHONY: all
 all: $(BUILD)/$(IMG).tar
 
 .PHONY: clean
 clean:
 	rm -rf $(BUILD)
-	$(MAKE) -C hello clean
 
-$(BUILD)/$(IMG).tar: $(BUILD)/rootfs/bin/hello
+$(BUILD)/$(IMG).tar: $(patsubst %, $(BUILD)/rootfs/bin/%, $(BIN))
 	tar -cvf - -C $(BUILD)/rootfs bin > $@
 
-$(BUILD)/rootfs/bin/hello: hello/build/hello.elf
+$(BUILD)/rootfs/bin/sh:
 	@mkdir -p $(@D)
-	cp $< $@
+	curl -fSL -o $@ https://pkg.musl.cc/dash-0.5.10.2/aarch64-linux-musl/bin/dash
 
-hello/build/hello.elf:
-	$(MAKE) -C hello all
+$(BUILD)/rootfs/bin/toybox:
+	@mkdir -p $(@D)
+	curl -fSL -o $@ https://pkg.musl.cc/toybox-0.8.3/aarch64-linux-musl/bin/toybox
+
+$(BUILD)/rootfs/bin/%: $(BUILD)/rootfs/bin/toybox
+	cp $< $@

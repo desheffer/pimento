@@ -48,7 +48,7 @@ struct cpu_context * cpu_context_create_user(struct task * task, void * entry)
     cpu_context->pc = (uint64_t) task_entry;
     cpu_context->x[0] = (uint64_t) load_regs;
 
-    registers->sp = STACK_TOP_USER;
+    registers->sp = (uint64_t) mm_context_stack_top(task->mm_context);
     registers->pc = (uint64_t) entry;
     registers->pstate = PSR_MODE_USER;
 

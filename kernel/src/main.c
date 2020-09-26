@@ -31,9 +31,10 @@ static void _exec_init(void)
     const char * const envp[] = {"HOME=/", 0};
 
     _open_io();
-    exec("/bin/hello", (char * const *) argv, (char * const *) envp);
+    exec("/bin/sh", (char * const *) argv, (char * const *) envp);
 
     kputs("Failed to start init.\n");
+    while (1);
 }
 
 /**

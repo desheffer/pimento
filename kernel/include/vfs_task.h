@@ -12,6 +12,7 @@ struct vfs_task_file {
 struct vfs_context {
     struct list * files;
     unsigned next_fd;
+    struct dentry * pwd;
 };
 
 void vfs_task_copy(struct task *, struct task *);

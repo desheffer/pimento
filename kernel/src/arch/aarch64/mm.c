@@ -101,6 +101,7 @@ struct mm_context * mm_context_create(void)
 
     mm_context->pgd = _vaddr_to_paddr(pgd);
     mm_context->asid = _assign_asid();
+    mm_context->stack_top = (void *) STACK_TOP_USER;
 
     return mm_context;
 }
@@ -142,6 +143,14 @@ struct page * mm_context_page_alloc(struct mm_context * mm_context)
     critical_end();
 
     return page;
+}
+
+/**
+ * Get the stack address for the given context.
+ */
+void * mm_context_stack_top(struct mm_context * mm_context)
+{
+    return mm_context->stack_top;
 }
 
 /**

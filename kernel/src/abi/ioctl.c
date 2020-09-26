@@ -1,11 +1,17 @@
 #include <abi.h>
+#include <bits/ioctl.h>
 #include <pimento.h>
 
-SYSCALL_DEFINE2(ioctl, int, fd, long unsigned, request)
+SYSCALL_DEFINE3(ioctl, int, fd, long unsigned, request, char *, argp)
 {
-    // @TODO
-    (void) fd;
-    (void) request;
+    // @TODO: Perform the `request`.
+    if ((fd == 0 || fd == 1 || fd == 2)
+        && (request == TIOCGPGRP || request == TIOCSPGRP || request == TIOCGWINSZ)
+    ) {
+        (void) argp;
 
-    return 0;
+        return 0;
+    }
+
+    return -EINVAL;
 }

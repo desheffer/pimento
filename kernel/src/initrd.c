@@ -1,6 +1,9 @@
 #include <fs/ramfs.h>
 #include <initrd.h>
 #include <pimento.h>
+#include <scheduler.h>
+#include <task.h>
+#include <vfs_task.h>
 
 extern const char _binary_build_initrd_tar_start;
 
@@ -98,4 +101,7 @@ void initrd_init(void)
     vfs_path_destroy(path);
 
     _copy_tar_contents((struct ustar_header *) &_binary_build_initrd_tar_start);
+
+    struct task * task = scheduler_current_task();
+    task->vfs_context->pwd = vfs_root();
 }

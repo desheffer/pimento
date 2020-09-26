@@ -51,6 +51,8 @@ void vfs_task_copy(struct task * task, struct task * old_task)
 
         list_push_back(task->vfs_context->files, vfs_task_file);
     }
+
+    task->vfs_context->pwd = old_task->vfs_context->pwd;
 }
 
 /**

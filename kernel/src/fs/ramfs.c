@@ -88,7 +88,7 @@ ssize_t ramfs_file_write(struct file * file, const char * buf, size_t num,
                          loff_t * off)
 {
     if (file->inode->size > 0) {
-        // @TODO: Erase bytes starting at index `off`
+        // @TODO: Erase bytes starting at index `off`.
         return -999;
     }
 

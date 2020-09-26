@@ -18,7 +18,7 @@ static int _binprm_load(struct binprm * binprm, const char * pathname,
 
     binprm->mm_context = mm_context_create();
 
-    // @TODO: Copy `argv` and `envp` into user memory
+    // @TODO: Copy `argv` and `envp` into user memory.
 
     struct path * path = vfs_path_create();
     struct file * file = vfs_file_create();

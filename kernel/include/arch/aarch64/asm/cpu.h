@@ -2,8 +2,6 @@
 
 #include <pimento.h>
 
-#define STACK_TOP_USER 0x100000000
-
 struct fpsimd_context {
     uint128_t q[32];
     uint32_t fpsr;

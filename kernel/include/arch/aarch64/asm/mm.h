@@ -50,6 +50,8 @@
 
 #define ASID_SHIFT 48
 
+#define STACK_TOP_USER 0x100000000
+
 #ifndef __ASSEMBLER__
 
 #include <list.h>
@@ -61,6 +63,7 @@ struct mm_context {
     void * pgd;
     unsigned asid;
     struct list * pages;
+    void * stack_top;
 };
 
 void mm_init(void);

@@ -42,7 +42,7 @@ $(BUILD)/$(IMG).img: $(BUILD)/$(IMG).elf
 	$(OBJCOPY) $< -O binary $@
 
 $(BUILD)/$(IMG).list: $(BUILD)/$(IMG).elf
-	$(OBJDUMP) -D $< > $(BUILD)/$(IMG).list
+	$(OBJDUMP) -d $< > $(BUILD)/$(IMG).list
 
 $(BUILD)/$(IMG).elf: $(OBJECTS) $(SRC)/arch/$(ARCH)/link.ld
 	$(CC) $(LDFLAGS) $(OBJECTS) -T $(SRC)/arch/$(ARCH)/link.ld -o $@
