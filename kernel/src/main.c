@@ -33,8 +33,7 @@ static void _exec_init(void)
     _open_io();
     exec("/bin/sh", (char * const *) argv, (char * const *) envp);
 
-    kputs("Failed to start init.\n");
-    while (1);
+    fail("Failed to start init.");
 }
 
 /**

@@ -4,7 +4,7 @@
 size_t strncpy_to_user(struct mm_context * mm_context, void * dest,
                        const char * src, size_t num)
 {
-    unsigned length = strlen(src);
+    unsigned length = strlen(src) + 1;
 
     num = length < num ? length : num;
 

@@ -88,7 +88,7 @@ struct mm_context * mm_context_create_kernel(void)
 /**
  * Create a memory management context for a user task.
  */
-struct mm_context * mm_context_create(void)
+struct mm_context * mm_context_create_user(void)
 {
     struct mm_context * mm_context = kcalloc(sizeof(struct mm_context));
 
@@ -188,6 +188,7 @@ static va_table_t * _va_table_add(va_table_t * parent, unsigned level,
         ? (PT_TABLE | PT_AF)
         : (PT_PAGE | PT_AF | PT_USER | PT_ATTR(MT_NORMAL));
 
+    parent = _paddr_to_vaddr(parent);
     va_table_t * child = _vaddr_to_paddr(page->vaddr);
 
     parent[idx] = (uintptr_t) child | flags;

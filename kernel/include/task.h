@@ -29,6 +29,7 @@ struct task {
 struct binprm {
     struct mm_context * mm_context;
     void * entry;
+    void * stack_bottom;
 };
 
 typedef void (* task_function_t)(void *);
@@ -39,11 +40,11 @@ struct task * task_create_binprm(const char *, struct binprm *, unsigned);
 
 struct cpu_context * cpu_context_create_init(void);
 struct cpu_context * cpu_context_create(struct task *, task_function_t, void *);
-struct cpu_context * cpu_context_create_user(struct task *, void *);
+struct cpu_context * cpu_context_create_user(struct task *, struct binprm *);
 void cpu_context_destroy(struct task *);
 
 struct mm_context * mm_context_create_kernel(void);
-struct mm_context * mm_context_create(void);
+struct mm_context * mm_context_create_user(void);
 void mm_context_destroy(struct mm_context *);
 struct page * mm_context_page_alloc(struct mm_context *);
 void * mm_context_stack_top(struct mm_context *);

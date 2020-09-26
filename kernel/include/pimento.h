@@ -16,3 +16,7 @@ typedef struct {
     uint64_t low;
     uint64_t high;
 } uint128_t;
+
+#define fail(msg) \
+    kputs(FG_RED msg RESET "\n"); \
+    while (1);

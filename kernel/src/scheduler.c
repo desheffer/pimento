@@ -77,6 +77,10 @@ void schedule(void)
 
     struct task * next = list_pop_front(_task_queue);
 
+    if (next == 0) {
+        fail("Failed to schedule next task.");
+    }
+
     _current_task = next;
 
     critical_end();

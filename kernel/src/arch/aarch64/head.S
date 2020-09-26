@@ -34,8 +34,10 @@ enter_el1:
     mov sp, x4
 
     // Get the range of BSS.
-    adr x4, LD_BSS_START
-    adr x5, LD_BSS_END
+    ldr x4, =LD_BSS_START
+    and x4, x4, #VA_MASK
+    ldr x5, =LD_BSS_END
+    and x5, x5, #VA_MASK
 
 loop_clear_bss:
     // Zero out BSS.

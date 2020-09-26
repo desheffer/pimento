@@ -16,27 +16,10 @@ struct cpu_context * cpu_context_create_init(void)
 }
 
 /**
- * Create the CPU context to execute the given function.
- */
-struct cpu_context * cpu_context_create(struct task * task, task_function_t fn,
-                                        void * data)
-{
-    struct cpu_context * cpu_context = kcalloc(sizeof(struct cpu_context));
-
-    struct page * page = mm_context_page_alloc(task->mm_context);
-
-    cpu_context->sp = (uint64_t) page->vaddr + page_size();
-    cpu_context->pc = (uint64_t) task_entry;
-    cpu_context->x[0] = (uint64_t) fn;
-    cpu_context->x[1] = (uint64_t) data;
-
-    return cpu_context;
-}
-
-/**
  * Create the CPU context to execute a user program.
  */
-struct cpu_context * cpu_context_create_user(struct task * task, void * entry)
+struct cpu_context * cpu_context_create_user(struct task * task,
+                                             struct binprm * binprm)
 {
     struct cpu_context * cpu_context = kcalloc(sizeof(struct cpu_context));
 
@@ -44,12 +27,12 @@ struct cpu_context * cpu_context_create_user(struct task * task, void * entry)
 
     struct registers * registers = (struct registers *) ((uint64_t) page->vaddr + page_size()) - 1;
 
+    cpu_context->x[0] = (uint64_t) load_regs;
     cpu_context->sp = (uint64_t) registers;
     cpu_context->pc = (uint64_t) task_entry;
-    cpu_context->x[0] = (uint64_t) load_regs;
 
-    registers->sp = (uint64_t) mm_context_stack_top(task->mm_context);
-    registers->pc = (uint64_t) entry;
+    registers->sp = (uint64_t) binprm->stack_bottom;
+    registers->pc = (uint64_t) binprm->entry;
     registers->pstate = PSR_MODE_USER;
 
     return cpu_context;

@@ -7,6 +7,8 @@
 
 SYSCALL_DEFINE4(newfstatat, int, dirfd, const char *, pathname, struct stat *, statbuf, int, flags)
 {
+    struct task * task = scheduler_current_task();
+
     if (dirfd != -100) {
         return -EINVAL;
     }
@@ -15,14 +17,19 @@ SYSCALL_DEFINE4(newfstatat, int, dirfd, const char *, pathname, struct stat *, s
         return -EINVAL;
     }
 
-    struct task * task = scheduler_current_task();
-
     struct path * path = vfs_path_create();
 
-    vfs_resolve_path(path, task->vfs_context->pwd, pathname);
+    char * kpathname = 0;
+    if (pathname != 0) {
+        kpathname = kmalloc(strnlen(pathname, page_size()));
+        mm_copy_from_user(task->mm_context, kpathname, pathname, page_size());
+    }
+
+    vfs_resolve_path(path, task->vfs_context->pwd, kpathname);
 
     if (path->child == 0) {
         vfs_path_destroy(path);
+        kfree(kpathname);
 
         return -ENOENT;
     }
@@ -31,6 +38,7 @@ SYSCALL_DEFINE4(newfstatat, int, dirfd, const char *, pathname, struct stat *, s
     (void) statbuf;
 
     vfs_path_destroy(path);
+    kfree(kpathname);
 
     return 0;
 }
