@@ -43,6 +43,7 @@ struct cpu_context * cpu_context_create(struct task *, task_function_t, void *);
 struct cpu_context * cpu_context_create_user(struct task *, struct binprm *);
 void cpu_context_destroy(struct task *);
 
+void * mm_context_brk(struct mm_context *, void *);
 struct mm_context * mm_context_create_kernel(void);
 struct mm_context * mm_context_create_user(void);
 void mm_context_destroy(struct mm_context *);

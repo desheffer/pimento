@@ -1,7 +1,11 @@
 #include <abi.h>
 #include <pimento.h>
+#include <scheduler.h>
+#include <task.h>
 
-SYSCALL_DEFINE0(brk)
+SYSCALL_DEFINE1(brk, void *, addr)
 {
-    return -ENOSYS;
+    struct task * task = scheduler_current_task();
+
+    return (long) mm_context_brk(task->mm_context, addr);
 }

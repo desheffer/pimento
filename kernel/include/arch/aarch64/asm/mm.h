@@ -64,6 +64,7 @@ struct mm_context {
     unsigned asid;
     struct list * pages;
     void * stack_top;
+    void * brk;
 };
 
 void mm_init(void);

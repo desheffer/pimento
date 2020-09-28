@@ -71,6 +71,18 @@ void mm_init(void)
 }
 
 /**
+ * Set the memory break for the given context.
+ */
+void * mm_context_brk(struct mm_context * mm_context, void * addr)
+{
+    if (addr > mm_context->brk) {
+        mm_context->brk = addr;
+    }
+
+    return mm_context->brk;
+}
+
+/**
  * Create a memory management context for a kernel task.
  */
 struct mm_context * mm_context_create_kernel(void)
@@ -102,6 +114,7 @@ struct mm_context * mm_context_create_user(void)
     mm_context->pgd = _vaddr_to_paddr(pgd);
     mm_context->asid = _assign_asid();
     mm_context->stack_top = (void *) STACK_TOP_USER;
+    mm_context->brk = mm_context->stack_top;
 
     return mm_context;
 }
