@@ -245,10 +245,16 @@ static struct dentry * _dentry_find_child(struct dentry * d_parent,
 {
     struct dentry * d_found = 0;
 
-    list_foreach(d_parent->children, struct dentry *, d_child) {
-        if (strncmp(d_child->name, path_token->token, path_token->length) == 0) {
-            d_found = d_child;
-            break;
+    if (strncmp(".", path_token->token, path_token->length) == 0) {
+        d_found = d_parent;
+    } else if (strncmp("..", path_token->token, path_token->length) == 0) {
+        d_found = d_parent->parent;
+    } else {
+        list_foreach(d_parent->children, struct dentry *, d_child) {
+            if (strncmp(d_child->name, path_token->token, path_token->length) == 0) {
+                d_found = d_child;
+                break;
+            }
         }
     }
 

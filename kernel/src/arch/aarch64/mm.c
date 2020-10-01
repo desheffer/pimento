@@ -1,6 +1,7 @@
 #include <asm/mm.h>
 #include <critical.h>
 #include <list.h>
+#include <mm_context.h>
 #include <page.h>
 #include <pimento.h>
 #include <scheduler.h>

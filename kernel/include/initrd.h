@@ -5,6 +5,8 @@
 #define TAR_TYPEFLAG_FILE '0'
 #define TAR_TYPEFLAG_DIR  '5'
 
+#include <vfs_context.h>
+
 struct ustar_header {
     const char name[100];
     const char mode[8];
@@ -24,4 +26,4 @@ struct ustar_header {
     const char prefix[155];
 } __attribute__((packed));
 
-void initrd_init(void);
+void initrd_init(struct vfs_context *);

@@ -1,9 +1,10 @@
 #include <asm/cpu.h>
 #include <asm/head.h>
 #include <asm/entry.h>
+#include <binprm.h>
+#include <mm_context.h>
 #include <page.h>
 #include <pimento.h>
-#include <task.h>
 
 /**
  * Create the CPU context for the "init" task.
@@ -18,12 +19,11 @@ struct cpu_context * cpu_context_create_init(void)
 /**
  * Create the CPU context to execute a user program.
  */
-struct cpu_context * cpu_context_create_user(struct task * task,
-                                             struct binprm * binprm)
+struct cpu_context * cpu_context_create_binprm(struct binprm * binprm)
 {
     struct cpu_context * cpu_context = kcalloc(sizeof(struct cpu_context));
 
-    struct page * page = mm_context_page_alloc(task->mm_context);
+    struct page * page = mm_context_page_alloc(binprm->mm_context);
 
     struct registers * registers = (struct registers *) ((uint64_t) page->vaddr + page_size()) - 1;
 
@@ -39,9 +39,9 @@ struct cpu_context * cpu_context_create_user(struct task * task,
 }
 
 /**
- * Destroy the CPU context for a task.
+ * Destroy a CPU context.
  */
-void cpu_context_destroy(struct task * task)
+void cpu_context_destroy(struct cpu_context * cpu_context)
 {
-    kfree(task->cpu_context);
+    kfree(cpu_context);
 }

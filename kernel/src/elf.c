@@ -1,6 +1,7 @@
+#include <binprm.h>
 #include <elf.h>
+#include <mm_context.h>
 #include <pimento.h>
-#include <task.h>
 #include <vfs.h>
 
 int elf_load(struct binprm * binprm, struct file * file)

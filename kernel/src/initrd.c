@@ -1,9 +1,7 @@
 #include <fs/ramfs.h>
 #include <initrd.h>
 #include <pimento.h>
-#include <scheduler.h>
-#include <task.h>
-#include <vfs_task.h>
+#include <vfs_context.h>
 
 extern const char _binary_build_initrd_tar_start;
 
@@ -89,7 +87,7 @@ static void _copy_tar_contents(struct ustar_header * header)
  * Create a root filesystem, stored in RAM, that holds the contents of the
  * initrd tarball.
  */
-void initrd_init(void)
+void initrd_init(struct vfs_context * vfs_context)
 {
     struct superblock * ramfs = ramfs_create();
     struct path * path = vfs_path_create();
@@ -102,6 +100,5 @@ void initrd_init(void)
 
     _copy_tar_contents((struct ustar_header *) &_binary_build_initrd_tar_start);
 
-    struct task * task = scheduler_current_task();
-    task->vfs_context->pwd = vfs_root();
+    vfs_context->pwd = vfs_root();
 }

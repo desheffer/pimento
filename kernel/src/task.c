@@ -1,6 +1,9 @@
+#include <cpu_context.h>
 #include <critical.h>
+#include <mm_context.h>
 #include <pimento.h>
 #include <task.h>
+#include <vfs_context.h>
 
 static unsigned _next_pid = 1;
 
@@ -45,8 +48,9 @@ struct task * task_create_init(void)
 /**
  * Create a task to execute user code.
  */
-struct task * task_create_binprm(const char * name, struct binprm * binprm,
-                                 unsigned pid)
+struct task * task_create(unsigned pid, const char * name,
+                          struct mm_context * mm_context,
+                          struct cpu_context * cpu_context)
 {
     // Create a new task control block.
     struct task * task = kcalloc(sizeof(struct task));
@@ -60,9 +64,9 @@ struct task * task_create_binprm(const char * name, struct binprm * binprm,
     }
     task->pid = pid;
 
-    task->mm_context = binprm->mm_context;
+    task->mm_context = mm_context;
 
-    task->cpu_context = cpu_context_create_user(task, binprm);
+    task->cpu_context = cpu_context;
 
     task->vfs_context = vfs_context_create();
 

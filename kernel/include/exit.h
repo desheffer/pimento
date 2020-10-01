@@ -1,3 +1,5 @@
 #pragma once
 
-void exit(int);
+#include <task.h>
+
+void exit(struct task *, int);

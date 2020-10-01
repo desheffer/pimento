@@ -1,11 +1,15 @@
+#include <binprm.h>
+#include <cpu_context.h>
 #include <elf.h>
 #include <exec.h>
 #include <interrupts.h>
+#include <mm_context.h>
+#include <page.h>
 #include <pimento.h>
 #include <scheduler.h>
 #include <task.h>
 #include <vfs.h>
-#include <vfs_task.h>
+#include <vfs_context.h>
 
 /**
  * Count the number of elements in a string array.
@@ -91,18 +95,18 @@ static void _binprm_copy_args(struct binprm * binprm, char * const * argv,
 
     // Copy argv.
     for (unsigned i = 0; i < argv_count; ++i) {
-        unsigned length = strlen(argv[i]);
-        mm_copy_to_user(binprm->mm_context, new_argv_str, argv[i], length + 1);
+        size_t length = strlen(argv[i]) + 1;
+        mm_copy_to_user(binprm->mm_context, new_argv_str, argv[i], length);
         mm_copy_to_user(binprm->mm_context, &new_argv[i], &new_argv_str, sizeof(char *));
-        new_argv_str += length + 1;
+        new_argv_str += length;
     }
 
     // Copy envp.
     for (unsigned i = 0; i < envp_count; ++i) {
-        unsigned length = strlen(envp[i]);
-        mm_copy_to_user(binprm->mm_context, new_envp_str, envp[i], length + 1);
+        size_t length = strlen(envp[i]) + 1;
+        mm_copy_to_user(binprm->mm_context, new_envp_str, envp[i], length);
         mm_copy_to_user(binprm->mm_context, &new_envp[i], &new_envp_str, sizeof(char *));
-        new_envp_str += length + 1;
+        new_envp_str += length;
     }
 
     // Copy auxv.
@@ -152,27 +156,29 @@ static int _binprm_load(struct binprm * binprm, const char * pathname,
 }
 
 /**
- * Execute a file, replacing the current task.
+ * Execute a file, replacing the given task.
  */
-int exec(const char * pathname, char * const * argv, char * const * envp)
+struct task * exec(struct task * old_task, const char * pathname,
+                   char * const * argv, char * const * envp)
 {
     struct binprm * binprm = kcalloc(sizeof(struct binprm));
 
     int res = _binprm_load(binprm, pathname, argv, envp);
     if (res < 0) {
-        return res;
+        return 0;
     }
 
-    struct task * old_task = scheduler_current_task();
-    struct task * task = task_create_binprm(pathname, binprm, old_task->pid);
+    struct cpu_context * cpu_context = cpu_context_create_binprm(binprm);
 
-    vfs_task_copy(task, old_task);
+    struct task * task = task_create(old_task->pid, pathname, binprm->mm_context, cpu_context);
+
+    vfs_context_copy(task->vfs_context, old_task->vfs_context);
 
     interrupts_disable();
 
     scheduler_replace(old_task, task);
 
-    schedule();
+    kfree(binprm);
 
-    return 0;
+    return task;
 }

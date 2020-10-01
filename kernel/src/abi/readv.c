@@ -1,9 +1,11 @@
 #include <abi.h>
+#include <mm_context.h>
+#include <page.h>
 #include <pimento.h>
 #include <scheduler.h>
 #include <sys/uio.h>
 #include <task.h>
-#include <vfs_task.h>
+#include <vfs_context.h>
 
 SYSCALL_DEFINE3(readv, int, fd, const struct iovec *, iov, int, iovcnt)
 {
@@ -11,7 +13,7 @@ SYSCALL_DEFINE3(readv, int, fd, const struct iovec *, iov, int, iovcnt)
 
     struct task * task = scheduler_current_task();
 
-    struct file * file = vfs_task_file(task, fd);
+    struct file * file = vfs_context_file(task->vfs_context, fd);
     if (file == 0) {
         return -ENOENT;
     }

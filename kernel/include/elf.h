@@ -1,7 +1,7 @@
 #pragma once
 
+#include <binprm.h>
 #include <pimento.h>
-#include <task.h>
 #include <vfs.h>
 
 #define EI_MAG0       0x00
