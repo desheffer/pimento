@@ -20,19 +20,19 @@ SYSCALL_DEFINE3(writev, int, fd, const struct iovec *, iov, int, iovcnt)
     }
 
     unsigned p_size = page_size();
-    struct page * page = page_alloc();
+    struct page * page_buf = page_alloc();
 
     while (iovcnt--) {
         size_t count = iov->iov_len < p_size ? iov->iov_len : p_size;
-        count = mm_copy_from_user(task->mm_context, page->vaddr, iov->iov_base, count);
+        count = mm_copy_from_user(task->mm_context, page_buf->vaddr, iov->iov_base, count);
 
         off_t off = 0;
-        res += vfs_write(file, page->vaddr, count, &off);
+        res += vfs_write(file, page_buf->vaddr, count, &off);
 
         ++iov;
     }
 
-    kfree(page);
+    kfree(page_buf);
 
     return res;
 }

@@ -9,7 +9,7 @@ SYSCALL_DEFINE1(exit, int, code)
 
     exit(task, code);
 
-    schedule();
+    scheduler_schedule();
 
     return 0;
 }

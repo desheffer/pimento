@@ -17,14 +17,14 @@ SYSCALL_DEFINE3(read, int, fd, char *, buf, size_t, count)
         return -ENOENT;
     }
 
-    struct page * page = page_alloc();
+    struct page * page_buf = page_alloc();
 
     off_t off = 0;
-    res = vfs_read(file, page->vaddr, count, &off);
+    res = vfs_read(file, page_buf->vaddr, count, &off);
 
-    mm_copy_to_user(task->mm_context, buf, page->vaddr, off + 1);
+    mm_copy_to_user(task->mm_context, buf, page_buf->vaddr, off + 1);
 
-    kfree(page);
+    kfree(page_buf);
 
     return res;
 }

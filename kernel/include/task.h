@@ -5,6 +5,7 @@
 enum task_state {
     new,
     running,
+    zombie,
     stopped,
 };
 
@@ -24,4 +25,4 @@ struct task {
 };
 
 struct task * task_create_init(void);
-struct task * task_create(unsigned, const char *, struct mm_context *, struct cpu_context *);
+struct task * task_create(unsigned, const char *, struct task *, struct mm_context *, struct cpu_context *);

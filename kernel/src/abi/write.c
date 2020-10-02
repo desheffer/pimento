@@ -18,15 +18,15 @@ SYSCALL_DEFINE3(write, int, fd, const char *, buf, size_t, count)
     }
 
     unsigned p_size = page_size();
-    struct page * page = page_alloc();
+    struct page * page_buf = page_alloc();
 
     count = count < p_size ? count : p_size;
-    count = mm_copy_from_user(task->mm_context, page->vaddr, buf, count);
+    count = mm_copy_from_user(task->mm_context, page_buf->vaddr, buf, count);
 
     off_t off = 0;
-    res = vfs_write(file, page->vaddr, count, &off);
+    res = vfs_write(file, page_buf->vaddr, count, &off);
 
-    kfree(page);
+    kfree(page_buf);
 
     return res;
 }

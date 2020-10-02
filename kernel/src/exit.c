@@ -10,6 +10,6 @@ void exit(struct task * task, int code)
 {
     interrupts_disable();
 
-    task->state = stopped;
+    task->state = zombie;
     task->exit_code = code;
 }

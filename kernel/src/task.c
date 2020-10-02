@@ -49,6 +49,7 @@ struct task * task_create_init(void)
  * Create a task to execute user code.
  */
 struct task * task_create(unsigned pid, const char * name,
+                          struct task * parent,
                           struct mm_context * mm_context,
                           struct cpu_context * cpu_context)
 {
@@ -63,6 +64,8 @@ struct task * task_create(unsigned pid, const char * name,
         pid = _assign_pid();
     }
     task->pid = pid;
+
+    task->parent = parent;
 
     task->mm_context = mm_context;
 

@@ -11,7 +11,7 @@ void armv8_timer_tick(void * data)
 {
     (void) data;
 
-    schedule();
+    scheduler_schedule();
 }
 
 /**

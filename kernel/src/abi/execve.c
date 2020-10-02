@@ -11,7 +11,7 @@ SYSCALL_DEFINE3(execve, const char *, pname, char * const *, argv, char * const 
     // @TODO: Safe copy from user space.
     exec(old_task, pname, argv, envp);
 
-    schedule();
+    scheduler_schedule();
 
     return -EINVAL;
 }

@@ -1,5 +1,7 @@
 #include "abi.h"
+#include "clone.h"
 #include "pimento.h"
+#include "scheduler.h"
 #include "task.h"
 
 SYSCALL_DEFINE6(clone, int, flags, void *, child_stack, void *, arg, pid_t *, ptid, void *, newtls, pid_t *, ctid)
@@ -11,7 +13,11 @@ SYSCALL_DEFINE6(clone, int, flags, void *, child_stack, void *, arg, pid_t *, pt
     (void) newtls;
     (void) ctid;
 
-    kputs("clone() not implemented.\n");
+    struct task * old_task = scheduler_current_task();
 
-    return 0;
+    struct task * new_task = clone(old_task);
+
+    scheduler_schedule();
+
+    return new_task->pid;
 }

@@ -105,17 +105,56 @@ struct mm_context * mm_context_create_user(void)
 {
     struct mm_context * mm_context = kcalloc(sizeof(struct mm_context));
 
-    // Initialize list of allocated pages.
+    // Initialize list of pages.
     mm_context->pages = list_create();
+    mm_context->page_mappings = list_create();
 
     // Allocate page directory.
-    struct page * page = mm_context_page_alloc(mm_context);
-    va_table_t * pgd = page->vaddr;
+    struct page * page_dir = mm_context_page_alloc(mm_context);
+    va_table_t * pgd = page_dir->vaddr;
+
+    // Allocate kernel stack.
+    struct page * page_kstack = mm_context_page_alloc(mm_context);
+    mm_context->kernel_stack_init = (void *) ((uintptr_t) page_kstack->vaddr + PAGE_SIZE);
 
     mm_context->pgd = _vaddr_to_paddr(pgd);
     mm_context->asid = _assign_asid();
-    mm_context->stack_top = (void *) STACK_TOP_USER;
-    mm_context->brk = mm_context->stack_top;
+    mm_context->stack_init = (void *) STACK_INIT_USER;
+    mm_context->brk = mm_context->stack_init;
+
+    return mm_context;
+}
+
+struct mm_context * mm_context_create_user_clone(struct mm_context * old_mm_context)
+{
+    struct mm_context * mm_context = kcalloc(sizeof(struct mm_context));
+
+    // Initialize list of allocated pages.
+    mm_context->pages = list_create();
+    mm_context->page_mappings = list_create();
+
+    // Allocate page directory.
+    struct page * page_dir = mm_context_page_alloc(mm_context);
+    va_table_t * pgd = page_dir->vaddr;
+
+    // Copy kernel stack.
+    struct page * page_kstack = mm_context_page_alloc(mm_context);
+    memcpy(page_kstack->vaddr, (void *) ((uintptr_t) old_mm_context->kernel_stack_init - PAGE_SIZE), PAGE_SIZE);
+    mm_context->kernel_stack_init = (void *) ((uintptr_t) page_kstack->vaddr + PAGE_SIZE);
+
+    mm_context->pgd = _vaddr_to_paddr(pgd);
+    mm_context->asid = _assign_asid();
+    mm_context->stack_init = old_mm_context->stack_init;
+    mm_context->brk = old_mm_context->brk;
+
+    // Copy page mappings.
+    list_foreach(old_mm_context->page_mappings, struct page_mapping *, page_mapping) {
+        critical_start();
+
+        mm_copy_to_user(mm_context, page_mapping->vaddr, page_mapping->page->vaddr, PAGE_SIZE);
+
+        critical_end();
+    }
 
     return mm_context;
 }
@@ -138,7 +177,26 @@ void mm_context_destroy(struct mm_context * mm_context)
         critical_end();
     }
 
+    list_destroy(mm_context->pages);
+
+    struct page_mapping * page_mapping;
+
+    // Remove page mappings.
+    while ((page_mapping = list_pop_front(mm_context->page_mappings))) {
+        kfree(page_mapping);
+    }
+
+    list_destroy(mm_context->page_mappings);
+
     kfree(mm_context);
+}
+
+/**
+ * Get the kernel stack address for the given context.
+ */
+void * mm_context_kernel_stack_init(struct mm_context * mm_context)
+{
+    return mm_context->kernel_stack_init;
 }
 
 /**
@@ -148,6 +206,7 @@ struct page * mm_context_page_alloc(struct mm_context * mm_context)
 {
     struct page * page = page_alloc();
 
+    // Zero out the contents of the page.
     memset(page->vaddr, 0, PAGE_SIZE);
 
     critical_start();
@@ -160,11 +219,29 @@ struct page * mm_context_page_alloc(struct mm_context * mm_context)
 }
 
 /**
+ * Map a page for the given context.
+ */
+void mm_context_page_map(struct mm_context * mm_context, struct page * page,
+                         void * vaddr)
+{
+    struct page_mapping * page_mapping = kcalloc(sizeof(struct page_mapping));
+
+    page_mapping->page = page;
+    page_mapping->vaddr = vaddr;
+
+    critical_start();
+
+    list_push_back(mm_context->page_mappings, page_mapping);
+
+    critical_end();
+}
+
+/**
  * Get the stack address for the given context.
  */
-void * mm_context_stack_top(struct mm_context * mm_context)
+void * mm_context_stack_init(struct mm_context * mm_context)
 {
-    return mm_context->stack_top;
+    return mm_context->stack_init;
 }
 
 /**
@@ -246,7 +323,7 @@ static void * _page_read_address(struct mm_context * mm_context,
         return 0;
     }
 
-    uintptr_t page_offset = (uintptr_t) dest & (PAGE_SIZE - 1);
+    uintptr_t page_offset = (uintptr_t) dest & PAGE_OFFSET_MASK;
 
     return _paddr_to_vaddr((void *) (page_start | page_offset));
 }
@@ -256,8 +333,7 @@ static void * _page_read_address(struct mm_context * mm_context,
  * If the given address is not mapped, then mapping tables will be created
  * along the way.
  */
-static void * _page_write_address(struct mm_context * mm_context,
-                                  const void * dest)
+static void * _page_write_address(struct mm_context * mm_context, void * dest)
 {
     // Begin with the level 0 table.
     va_table_t * l0 = mm_context->pgd;
@@ -291,9 +367,13 @@ static void * _page_write_address(struct mm_context * mm_context,
     if (page_start == 0) {
         struct page * page = mm_context_page_alloc(mm_context);
         page_start = (uintptr_t) _va_table_add(l3, 3, dest, page);
+
+        // Record the mapping.
+        void * dest_page_start = (void *) ((uintptr_t) dest & PAGE_START_MASK);
+        mm_context_page_map(mm_context, page, dest_page_start);
     }
 
-    uintptr_t page_offset = (uintptr_t) dest & (PAGE_SIZE - 1);
+    uintptr_t page_offset = (uintptr_t) dest & PAGE_OFFSET_MASK;
 
     return _paddr_to_vaddr((void *) (page_start | page_offset));
 }
@@ -313,7 +393,7 @@ size_t mm_copy_from_user(struct mm_context * mm_context, void * dest,
 
     while (num--) {
         // If we encounter a new page, then calculate the new page address.
-        if (((uintptr_t) ksrc & (PAGE_SIZE - 1)) == 0) {
+        if (((uintptr_t) ksrc & PAGE_OFFSET_MASK) == 0) {
             ksrc = (char *) _page_read_address(mm_context, usrc);
             if (ksrc == 0) {
                 break;
@@ -343,7 +423,7 @@ size_t mm_copy_to_user(struct mm_context * mm_context, void * dest,
 
     while (num--) {
         // If we encounter a new page, then calculate the new page address.
-        if (((uintptr_t) kdest & (PAGE_SIZE - 1)) == 0) {
+        if (((uintptr_t) kdest & PAGE_OFFSET_MASK) == 0) {
             kdest = (char *) _page_write_address(mm_context, udest);
             if (ksrc == 0) {
                 break;

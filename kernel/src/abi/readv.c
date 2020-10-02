@@ -19,18 +19,18 @@ SYSCALL_DEFINE3(readv, int, fd, const struct iovec *, iov, int, iovcnt)
         return -ENOENT;
     }
 
-    struct page * page = page_alloc();
+    struct page * page_buf = page_alloc();
 
     while (iovcnt--) {
         off_t off = 0;
-        res += vfs_read(file, page->vaddr, iov->iov_len, &off);
+        res += vfs_read(file, page_buf->vaddr, iov->iov_len, &off);
 
-        mm_copy_to_user(task->mm_context, iov->iov_base, page->vaddr, off + 1);
+        mm_copy_to_user(task->mm_context, iov->iov_base, page_buf->vaddr, off + 1);
 
         ++iov;
     }
 
-    kfree(page);
+    kfree(page_buf);
 
     return res;
 }

@@ -1,6 +1,8 @@
 #pragma once
 
 #define PAGE_SIZE 4096
+#define PAGE_OFFSET_MASK (PAGE_SIZE - 1)
+#define PAGE_START_MASK  (~PAGE_OFFSET_MASK)
 
 #define VA_BITS  48
 #define VA_MASK  ((0x1UL << VA_BITS) - 1)
@@ -50,7 +52,7 @@
 
 #define ASID_SHIFT 48
 
-#define STACK_TOP_USER 0x100000000
+#define STACK_INIT_USER 0x100000000
 
 #ifndef __ASSEMBLER__
 
@@ -59,11 +61,18 @@
 
 typedef uintptr_t va_table_t;
 
+struct page_mapping {
+    struct page * page;
+    void * vaddr;
+};
+
 struct mm_context {
     void * pgd;
     unsigned asid;
     struct list * pages;
-    void * stack_top;
+    struct list * page_mappings;
+    void * kernel_stack_init;
+    void * stack_init;
     void * brk;
 };
 

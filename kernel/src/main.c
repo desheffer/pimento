@@ -33,7 +33,7 @@ static void _exec_init(struct task * init_task)
     const char * const envp[] = {"HOME=/", 0};
     exec(init_task, "/bin/sh", (char * const *) argv, (char * const *) envp);
 
-    schedule();
+    scheduler_schedule();
 
     fail("Failed to start init.");
 }
@@ -44,7 +44,7 @@ static void _exec_init(struct task * init_task)
  */
 void kernel_main(void)
 {
-    schedule();
+    scheduler_schedule();
 
     struct task * init_task = scheduler_current_task();
 

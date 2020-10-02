@@ -42,11 +42,11 @@ static size_t _binprm_args_str_size(char * const * args)
  */
 static void * _binprm_calloc(struct binprm * binprm, size_t size)
 {
-    binprm->stack_bottom = (char *) binprm->stack_bottom - size;
+    binprm->stack_init = (char *) binprm->stack_init - size;
 
-    binprm->stack_bottom = (void *) ((uintptr_t) binprm->stack_bottom & ~0xFF);
+    binprm->stack_init = (void *) ((uintptr_t) binprm->stack_init & ~0xFF);
 
-    return binprm->stack_bottom;
+    return binprm->stack_init;
 }
 
 /**
@@ -66,7 +66,7 @@ static void _binprm_auxv(struct binprm * binprm, long unsigned * new_auxv)
 }
 
 /**
- * Copy runtime arguments into place, beginning at `binprm->stack_bottom`.
+ * Copy runtime arguments into place, beginning at `binprm->stack_init`.
  */
 static void _binprm_copy_args(struct binprm * binprm, char * const * argv,
                               char * const * envp)
@@ -122,7 +122,7 @@ static int _binprm_load(struct binprm * binprm, const char * pathname,
     binprm->mm_context = mm_context_create_user();
 
     // Copy arguments into user memory.
-    binprm->stack_bottom = mm_context_stack_top(binprm->mm_context);
+    binprm->stack_init = mm_context_stack_init(binprm->mm_context);
     _binprm_copy_args(binprm, argv, envp);
 
     struct path * path = vfs_path_create();
@@ -170,7 +170,7 @@ struct task * exec(struct task * old_task, const char * pathname,
 
     struct cpu_context * cpu_context = cpu_context_create_binprm(binprm);
 
-    struct task * task = task_create(old_task->pid, pathname, binprm->mm_context, cpu_context);
+    struct task * task = task_create(old_task->pid, pathname, old_task->parent, binprm->mm_context, cpu_context);
 
     vfs_context_copy(task->vfs_context, old_task->vfs_context);
 
