@@ -1,11 +1,11 @@
-#include <asm/mm.h>
-#include <critical.h>
-#include <list.h>
-#include <mm_context.h>
-#include <page.h>
-#include <pimento.h>
-#include <scheduler.h>
-#include <task.h>
+#include "asm/mm.h"
+#include "critical.h"
+#include "list.h"
+#include "mm_context.h"
+#include "page.h"
+#include "pimento.h"
+#include "scheduler.h"
+#include "task.h"
 
 static va_table_t _kernel_l0[PAGE_SIZE] __attribute__((aligned (PAGE_SIZE))) = {0};
 static va_table_t _kernel_l1[PAGE_SIZE] __attribute__((aligned (PAGE_SIZE))) = {0};

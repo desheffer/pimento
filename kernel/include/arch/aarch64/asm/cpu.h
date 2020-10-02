@@ -1,6 +1,6 @@
 #pragma once
 
-#include <pimento.h>
+#include "pimento.h"
 
 struct fpsimd_context {
     uint128_t q[32];

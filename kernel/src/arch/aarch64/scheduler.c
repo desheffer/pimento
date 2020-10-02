@@ -1,7 +1,8 @@
-#include <asm/cpu.h>
-#include <asm/mm.h>
-#include <scheduler.h>
-#include <task.h>
+#include "asm/cpu.h"
+#include "asm/mm.h"
+#include "pimento.h"
+#include "scheduler.h"
+#include "task.h"
 
 /**
  * Perform a context switch between two tasks.

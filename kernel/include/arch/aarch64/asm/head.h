@@ -23,6 +23,8 @@
 
 #ifndef __ASSEMBLER__
 
+#include "pimento.h"
+
 void hang(void);
 
 #endif

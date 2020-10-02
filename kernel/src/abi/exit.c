@@ -1,7 +1,7 @@
-#include <abi.h>
-#include <exit.h>
-#include <pimento.h>
-#include <scheduler.h>
+#include "abi.h"
+#include "exit.h"
+#include "pimento.h"
+#include "scheduler.h"
 
 SYSCALL_DEFINE1(exit, int, code)
 {

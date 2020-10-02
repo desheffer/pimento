@@ -1,6 +1,7 @@
-#include <asm/entry.h>
-#include <board/armv8_timer.h>
-#include <board/bcm2837_interrupts.h>
+#include "asm/entry.h"
+#include "board/armv8_timer.h"
+#include "board/bcm2837_interrupts.h"
+#include "pimento.h"
 
 static interrupt_handler_t _handlers[BCM2837_NUM_IRQS] = {0};
 static void * _handlers_data[BCM2837_NUM_IRQS] = {0};

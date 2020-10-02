@@ -1,4 +1,5 @@
-#include <asm/entry.h>
+#include "asm/entry.h"
+#include "pimento.h"
 
 static interrupts_handler_t _interrupts_handler;
 

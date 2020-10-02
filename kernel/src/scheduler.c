@@ -1,8 +1,9 @@
-#include <critical.h>
-#include <interrupts.h>
-#include <list.h>
-#include <scheduler.h>
-#include <task.h>
+#include "critical.h"
+#include "interrupts.h"
+#include "list.h"
+#include "pimento.h"
+#include "scheduler.h"
+#include "task.h"
 
 static struct task * _current_task = 0;
 static struct list * _task_queue = 0;

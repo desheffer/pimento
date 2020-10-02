@@ -1,18 +1,19 @@
-#include <abi.h>
-#include <asm/entry.h>
-#include <asm-generic/unistd.h>
+#include "abi.h"
+#include "asm/entry.h"
+#include "asm-generic/unistd.h"
+#include "pimento.h"
 
 #undef SYSCALL
 #define SYSCALL(nr) \
     long abi_ ## nr(long, long, long, long, long, long);
 
-#include <asm/syscalls.h>
+#include "asm/syscalls.h"
 
 #undef SYSCALL
 #define SYSCALL(nr) [__NR_ ## nr] = (void *) abi_ ## nr,
 
 static syscall_t _calls[__NR_syscalls] = {
-#include <asm/syscalls.h>
+#include "asm/syscalls.h"
 };
 
 #undef SYSCALL

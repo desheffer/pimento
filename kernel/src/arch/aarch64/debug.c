@@ -1,8 +1,8 @@
-#include <asm/debug.h>
-#include <asm/entry.h>
-#include <asm/head.h>
-#include <interrupts.h>
-#include <pimento.h>
+#include "asm/debug.h"
+#include "asm/entry.h"
+#include "asm/head.h"
+#include "interrupts.h"
+#include "pimento.h"
 
 /**
  * Output debug information when an unhandled exception occurs.

@@ -1,10 +1,10 @@
-#include <asm/cpu.h>
-#include <asm/head.h>
-#include <asm/entry.h>
-#include <binprm.h>
-#include <mm_context.h>
-#include <page.h>
-#include <pimento.h>
+#include "asm/cpu.h"
+#include "asm/head.h"
+#include "asm/entry.h"
+#include "binprm.h"
+#include "mm_context.h"
+#include "page.h"
+#include "pimento.h"
 
 /**
  * Create the CPU context for the "init" task.

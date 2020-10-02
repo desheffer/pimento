@@ -1,5 +1,5 @@
-#include <critical.h>
-#include <pimento.h>
+#include "critical.h"
+#include "pimento.h"
 
 static putc_t _kputc = 0;
 

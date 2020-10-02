@@ -1,4 +1,4 @@
-#include <pimento.h>
+#include "pimento.h"
 
 #define BUF_MAX 17
 

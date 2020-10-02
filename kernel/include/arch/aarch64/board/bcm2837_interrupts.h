@@ -1,7 +1,7 @@
 #pragma once
 
-#include <asm/entry.h>
-#include <pimento.h>
+#include "asm/entry.h"
+#include "pimento.h"
 
 #define BCM2837_NUM_IRQS 10
 

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <binprm.h>
-#include <pimento.h>
-#include <vfs.h>
+#include "binprm.h"
+#include "pimento.h"
+#include "vfs.h"
 
 #define EI_MAG0       0x00
 #define EI_MAG1       0x01

@@ -1,5 +1,5 @@
-#include <asm/head.h>
-#include <asm/mm.h>
+#include "asm/head.h"
+#include "asm/mm.h"
 
 .section ".text.boot"
 

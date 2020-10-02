@@ -1,10 +1,7 @@
-#include <byte_array.h>
-#include <fs/devfs.h>
-#include <fs/ramfs.h>
-#include <list.h>
-#include <page.h>
-#include <pimento.h>
-#include <vfs.h>
+#include "fs/devfs.h"
+#include "fs/ramfs.h"
+#include "pimento.h"
+#include "vfs.h"
 
 /**
  * Create a device file system based in RAM.

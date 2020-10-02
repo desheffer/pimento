@@ -1,6 +1,7 @@
-#include <asm/head.h>
-#include <critical.h>
-#include <interrupts.h>
+#include "asm/head.h"
+#include "critical.h"
+#include "interrupts.h"
+#include "pimento.h"
 
 static unsigned _critical_level = 0;
 static unsigned _daif = 0;

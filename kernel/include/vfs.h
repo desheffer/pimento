@@ -1,7 +1,7 @@
 #pragma once
 
-#include <list.h>
-#include <pimento.h>
+#include "list.h"
+#include "pimento.h"
 
 #define INODE_IFDIR 0040000 // Directory
 #define INODE_IFREG 0100000 // Regular file
@@ -34,7 +34,7 @@ struct dentry {
 struct inode {
     struct list * dentries;
     unsigned mode;
-    loff_t size;
+    off_t size;
     struct superblock * superblock;
     struct inode_operations * operations;
     struct file_operations * file_operations;
@@ -61,8 +61,8 @@ struct inode_operations {
 
 struct file_operations {
     int (* open)(struct inode *, struct file *);
-    ssize_t (* read)(struct file *, char *, size_t, loff_t *);
-    ssize_t (* write)(struct file *, const char *, size_t, loff_t *);
+    ssize_t (* read)(struct file *, char *, size_t, off_t *);
+    ssize_t (* write)(struct file *, const char *, size_t, off_t *);
 };
 
 struct path_token {
@@ -87,7 +87,7 @@ int vfs_mknod(struct path *, int);
 int vfs_open(struct path *, struct file *);
 struct path * vfs_path_create(void);
 void vfs_path_destroy(struct path *);
-ssize_t vfs_read(struct file *, char *, size_t, loff_t *);
+ssize_t vfs_read(struct file *, char *, size_t, off_t *);
 void vfs_resolve_path(struct path *, struct dentry *, const char *);
 struct dentry * vfs_root(void);
-ssize_t vfs_write(struct file *, const char *, size_t, loff_t *);
+ssize_t vfs_write(struct file *, const char *, size_t, off_t *);

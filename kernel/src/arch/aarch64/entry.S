@@ -1,4 +1,4 @@
-#include <asm/entry.h>
+#include "asm/entry.h"
 
 .macro interrupts_disable
     msr daifset, #DAIF_I

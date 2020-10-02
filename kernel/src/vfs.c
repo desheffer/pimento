@@ -1,7 +1,7 @@
-#include <critical.h>
-#include <list.h>
-#include <pimento.h>
-#include <vfs.h>
+#include "critical.h"
+#include "list.h"
+#include "pimento.h"
+#include "vfs.h"
 
 static struct list * _file_systems = 0;
 static struct dentry * _dentry_root = 0;
@@ -195,7 +195,7 @@ void vfs_path_destroy(struct path * path)
 /**
  * Read from a file.
  */
-ssize_t vfs_read(struct file * file, char * buf, size_t num, loff_t * off)
+ssize_t vfs_read(struct file * file, char * buf, size_t num, off_t * off)
 {
     if (file->inode == 0) {
         return -ENOENT;
@@ -330,7 +330,7 @@ struct dentry * vfs_root(void)
  * Write to a file.
  */
 ssize_t vfs_write(struct file * file, const char * buf, size_t num,
-                  loff_t * off)
+                  off_t * off)
 {
     if (file->inode == 0) {
         return -ENOENT;

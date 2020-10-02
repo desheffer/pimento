@@ -1,4 +1,5 @@
-#include <elf.h>
+#include "elf.h"
+#include "pimento.h"
 
 /**
  * Return the ELF code for AArch64.

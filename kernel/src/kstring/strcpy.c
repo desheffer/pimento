@@ -1,4 +1,4 @@
-#include <pimento.h>
+#include "pimento.h"
 
 char * strcpy(char * dest, const char * src)
 {

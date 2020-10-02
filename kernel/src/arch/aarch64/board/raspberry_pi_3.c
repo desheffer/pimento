@@ -1,10 +1,11 @@
-#include <asm/mm.h>
-#include <board/armv8_timer.h>
-#include <board/bcm2837_interrupts.h>
-#include <board/bcm2837_serial.h>
-#include <board/raspberry_pi_3.h>
-#include <page.h>
-#include <scheduler.h>
+#include "asm/mm.h"
+#include "board/armv8_timer.h"
+#include "board/bcm2837_interrupts.h"
+#include "board/bcm2837_serial.h"
+#include "board/raspberry_pi_3.h"
+#include "page.h"
+#include "pimento.h"
+#include "scheduler.h"
 
 #ifdef RASPBERRY_PI_3
 

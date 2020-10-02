@@ -20,7 +20,7 @@
 
 #ifndef __ASSEMBLER__
 
-#include <pimento.h>
+#include "pimento.h"
 
 typedef void (* interrupts_handler_t)(void);
 typedef void (* interrupt_handler_t)(void *);

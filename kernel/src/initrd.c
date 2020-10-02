@@ -1,7 +1,8 @@
-#include <fs/ramfs.h>
-#include <initrd.h>
-#include <pimento.h>
-#include <vfs_context.h>
+#include "fs/ramfs.h"
+#include "initrd.h"
+#include "pimento.h"
+#include "vfs.h"
+#include "vfs_context.h"
 
 extern const char _binary_build_initrd_tar_start;
 
@@ -59,7 +60,7 @@ static void _copy_tar_contents(struct ustar_header * header)
             }
 
             const char * content = _content(header);
-            loff_t off = 0;
+            off_t off = 0;
             vfs_write(file, content, strtoul(header->size, 0, 8), &off);
 
             vfs_path_destroy(path);

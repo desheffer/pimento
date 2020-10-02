@@ -1,4 +1,4 @@
-#include <pimento.h>
+#include "pimento.h"
 
 inline int _digit(const char * str, int base)
 {

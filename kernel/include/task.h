@@ -1,8 +1,6 @@
 #pragma once
 
-#include <pimento.h>
-
-typedef unsigned pid_t;
+#include "pimento.h"
 
 enum task_state {
     new,

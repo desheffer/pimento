@@ -1,6 +1,6 @@
-#include <board/bcm2837_serial.h>
-#include <pimento.h>
-#include <vfs.h>
+#include "board/bcm2837_serial.h"
+#include "pimento.h"
+#include "vfs.h"
 
 /**
  * Output a single character on the serial device.
@@ -39,7 +39,7 @@ static int _bcm2837_serial_file_open(struct inode * inode, struct file * file)
  * Read from the serial device.
  */
 static ssize_t _bcm2837_serial_file_read(struct file * file, char * buf,
-                                         size_t num, loff_t * off)
+                                         size_t num, off_t * off)
 {
     (void) file;
 
@@ -85,7 +85,7 @@ static ssize_t _bcm2837_serial_file_read(struct file * file, char * buf,
  * Write to the serial device.
  */
 static ssize_t _bcm2837_serial_file_write(struct file * file, const char * buf,
-                                          size_t num, loff_t * off)
+                                          size_t num, off_t * off)
 {
     (void) file;
 

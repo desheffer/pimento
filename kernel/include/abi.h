@@ -29,6 +29,8 @@
 #define SYSCALL_DEFINE5(name, ...) SYSCALL_DEFINEn(5, name, __VA_ARGS__)
 #define SYSCALL_DEFINE6(name, ...) SYSCALL_DEFINEn(6, name, __VA_ARGS__)
 
+#include "pimento.h"
+
 typedef long (* syscall_t)();
 
 long abi_invalid(int);

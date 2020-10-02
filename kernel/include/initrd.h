@@ -5,7 +5,8 @@
 #define TAR_TYPEFLAG_FILE '0'
 #define TAR_TYPEFLAG_DIR  '5'
 
-#include <vfs_context.h>
+#include "pimento.h"
+#include "vfs_context.h"
 
 struct ustar_header {
     const char name[100];

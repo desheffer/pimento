@@ -1,4 +1,4 @@
-#include <asm/entry.h>
+#include "asm/entry.h"
 
 .macro interrupts_enable
     msr daifclr, #DAIF_I

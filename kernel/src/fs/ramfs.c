@@ -1,9 +1,8 @@
-#include <byte_array.h>
-#include <fs/ramfs.h>
-#include <list.h>
-#include <page.h>
-#include <pimento.h>
-#include <vfs.h>
+#include "byte_array.h"
+#include "fs/ramfs.h"
+#include "list.h"
+#include "pimento.h"
+#include "vfs.h"
 
 static struct file_system _file_system = {
     .name = "ramfs",
@@ -71,7 +70,7 @@ int ramfs_file_open(struct inode * inode, struct file * file)
  * Read from a file.
  */
 ssize_t ramfs_file_read(struct file * file, char * buf, size_t num,
-                        loff_t * off)
+                        off_t * off)
 {
     num = byte_array_copy(file->inode->private_data, buf, num, *off);
 
@@ -85,7 +84,7 @@ ssize_t ramfs_file_read(struct file * file, char * buf, size_t num,
  * Write to a file.
  */
 ssize_t ramfs_file_write(struct file * file, const char * buf, size_t num,
-                         loff_t * off)
+                         off_t * off)
 {
     if (file->inode->size > 0) {
         // @TODO: Erase bytes starting at index `off`.
