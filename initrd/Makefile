@@ -4,7 +4,7 @@ IMG := initrd
 
 BUILD := build
 
-BIN := help ls sh
+BIN := help ls sh uname
 
 .PHONY: all
 all: $(BUILD)/$(IMG).tar
