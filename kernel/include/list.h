@@ -21,6 +21,7 @@ struct list {
     unsigned count;
 };
 
+void * list_at(struct list *, unsigned);
 void list_clear(struct list *);
 unsigned list_count(struct list *);
 struct list * list_create(void);

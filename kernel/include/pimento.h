@@ -5,12 +5,12 @@
 #include <stdint.h>
 
 #include <sys/types.h>
+#include <bits/errno.h>
 
 #include "kstdio.h"
 #include "kstdlib.h"
 #include "kstring.h"
 
-#include "errno.h"
 #include "messages.h"
 
 typedef struct {

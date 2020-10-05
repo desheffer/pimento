@@ -116,8 +116,9 @@ static void _binprm_copy_args(struct binprm * binprm, char * const * argv,
 /**
  * Create a `binprm` to facilitate execution of a new program.
  */
-static int _binprm_load(struct binprm * binprm, const char * pathname,
-                        char * const * argv, char * const * envp)
+static int _binprm_load(struct binprm * binprm, struct dentry * pwd,
+                        const char * pathname, char * const * argv,
+                        char * const * envp)
 {
     binprm->mm_context = mm_context_create_user();
 
@@ -128,7 +129,7 @@ static int _binprm_load(struct binprm * binprm, const char * pathname,
     struct path * path = vfs_path_create();
     struct file * file = vfs_file_create();
 
-    vfs_resolve_path(path, 0, pathname);
+    vfs_resolve_path(path, pwd, pathname);
 
     // Open the executable file.
     // @TODO: Check for executable bit.
@@ -163,7 +164,7 @@ struct task * exec(struct task * old_task, const char * pathname,
 {
     struct binprm * binprm = kcalloc(sizeof(struct binprm));
 
-    int res = _binprm_load(binprm, pathname, argv, envp);
+    int res = _binprm_load(binprm, old_task->vfs_context->pwd, pathname, argv, envp);
     if (res < 0) {
         return 0;
     }

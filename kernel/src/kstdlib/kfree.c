@@ -6,6 +6,6 @@
  */
 void kfree(void * addr)
 {
-    // @TODO: Free the appropriate amount of memory.
-    page_free(addr);
+    // @TODO: Free the given memory.
+    (void) addr;
 }

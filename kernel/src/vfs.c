@@ -47,7 +47,7 @@ void vfs_dentry_destroy(struct dentry * dentry)
 struct file * vfs_file_create(void)
 {
     struct file * file = kcalloc(sizeof(struct file));
-    file->references = 1;
+    file->references = 0;
 
     return file;
 }
@@ -162,10 +162,6 @@ int vfs_open(struct path * path, struct file * file)
 {
     if (path->child == 0) {
         return -ENOENT;
-    }
-
-    if ((path->child->inode->mode & INODE_IFREG) == 0) {
-        return -EPERM;
     }
 
     struct inode * i_child = path->child->inode;

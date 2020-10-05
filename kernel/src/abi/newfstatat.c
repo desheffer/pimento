@@ -41,12 +41,11 @@ SYSCALL_DEFINE4(newfstatat, int, dirfd, const char *, pathname, struct stat *, s
 
     // Create `kstatbuf` in kernel memory.
     // @TODO: Fill in missing stat values.
-    struct stat * kstatbuf = kmalloc(sizeof(struct stat));
-    mm_copy_from_user(task->mm_context, kstatbuf, statbuf, sizeof(*statbuf));
-    /* kstatbuf->st_mode = path->child->inode->mode; */
-    /* kstatbuf->st_size = path->child->inode->size; */
+    struct stat * kstatbuf = kcalloc(sizeof(struct stat));
+    kstatbuf->st_mode = path->child->inode->mode;
+    kstatbuf->st_size = path->child->inode->size;
 
-    mm_copy_to_user(task->mm_context, statbuf, kstatbuf, sizeof(*statbuf));
+    mm_copy_to_user(task->mm_context, statbuf, kstatbuf, sizeof(struct stat));
 
     vfs_path_destroy(path);
     kfree(kpathname);

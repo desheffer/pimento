@@ -1,18 +1,14 @@
-#include <fcntl.h>
-
 #include "abi.h"
 #include "mm_context.h"
 #include "page.h"
 #include "pimento.h"
 #include "scheduler.h"
 #include "task.h"
+#include "vfs.h"
 #include "vfs_context.h"
 
-SYSCALL_DEFINE4(openat, int, dirfd, const char *, pathname, int, flags, unsigned, mode)
+SYSCALL_DEFINE1(chdir, const char *, pathname)
 {
-    (void) flags;
-    (void) mode;
-
     struct task * task = scheduler_current_task();
 
     struct path * path = vfs_path_create();
@@ -25,19 +21,7 @@ SYSCALL_DEFINE4(openat, int, dirfd, const char *, pathname, int, flags, unsigned
         mm_copy_from_user(task->mm_context, kpathname, pathname, length);
     }
 
-    struct dentry * pwd = 0;
-    if (dirfd == AT_FDCWD) {
-        pwd = task->vfs_context->pwd;
-    } else {
-        struct file * file = vfs_context_file(task->vfs_context, dirfd);
-        if (file == 0) {
-            return -EBADF;
-        }
-
-        pwd = list_peek_front(file->inode->dentries);
-    }
-
-    vfs_resolve_path(path, pwd, kpathname);
+    vfs_resolve_path(path, task->vfs_context->pwd, kpathname);
 
     if (path->child == 0) {
         vfs_path_destroy(path);
@@ -46,9 +30,11 @@ SYSCALL_DEFINE4(openat, int, dirfd, const char *, pathname, int, flags, unsigned
         return -ENOENT;
     }
 
-    int fd = vfs_context_open(task->vfs_context, path);
+    if ((path->child->inode->mode & INODE_IFDIR) == 0) {
+        return -ENOTDIR;
+    }
 
-    vfs_path_destroy(path);
+    task->vfs_context->pwd = path->child;
 
-    return fd;
+    return 0;
 }

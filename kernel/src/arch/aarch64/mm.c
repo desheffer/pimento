@@ -170,7 +170,7 @@ void mm_context_destroy(struct mm_context * mm_context)
     while ((page = list_pop_front(mm_context->pages))) {
         critical_start();
 
-        if (--page->count <= 0) {
+        if (--page->count == 0) {
             page_free(page);
         }
 

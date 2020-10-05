@@ -4,14 +4,14 @@
 #include "scheduler.h"
 #include "task.h"
 
-SYSCALL_DEFINE3(execve, const char *, pname, char * const *, argv, char * const *, envp)
+SYSCALL_DEFINE3(execve, const char *, pathname, char * const *, argv, char * const *, envp)
 {
     struct task * old_task = scheduler_current_task();
 
     // @TODO: Safe copy from user space.
-    exec(old_task, pname, argv, envp);
+    exec(old_task, pathname, argv, envp);
 
     scheduler_schedule();
 
-    return -EINVAL;
+    return -ENOENT;
 }

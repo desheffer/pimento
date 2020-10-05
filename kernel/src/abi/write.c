@@ -14,7 +14,7 @@ SYSCALL_DEFINE3(write, int, fd, const char *, buf, size_t, count)
 
     struct file * file = vfs_context_file(task->vfs_context, fd);
     if (file == 0) {
-        return -ENOENT;
+        return -EBADF;
     }
 
     unsigned p_size = page_size();

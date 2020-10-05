@@ -2,22 +2,17 @@
 #include "pimento.h"
 
 /**
- * Create a list.
+ * View an item at the given index.
  */
-struct list * list_create(void)
+void * list_at(struct list * list, unsigned index)
 {
-    struct list * list = kcalloc(sizeof(struct list));
+    struct list_item * list_item = list->front;
 
-    return list;
-}
+    while (list_item != 0 && index-- > 0) {
+        list_item = list_item->next;
+    }
 
-/**
- * Destroy a list.
- */
-void list_destroy(struct list * list)
-{
-    list_clear(list);
-    kfree(list);
+    return list_item ? list_item->item : 0;
 }
 
 /**
@@ -36,6 +31,25 @@ void list_clear(struct list * list)
 unsigned list_count(struct list * list)
 {
     return list->count;
+}
+
+/**
+ * Create a list.
+ */
+struct list * list_create(void)
+{
+    struct list * list = kcalloc(sizeof(struct list));
+
+    return list;
+}
+
+/**
+ * Destroy a list.
+ */
+void list_destroy(struct list * list)
+{
+    list_clear(list);
+    kfree(list);
 }
 
 /**

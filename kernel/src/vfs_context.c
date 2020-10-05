@@ -17,26 +17,6 @@ struct vfs_context * vfs_context_create(void)
 }
 
 /**
- * Destroy a virtual file system context for a task.
- */
-void vfs_context_destroy(struct vfs_context * vfs_context)
-{
-    struct vfs_context_file * vfs_context_file;
-
-    while ((vfs_context_file = list_pop_front(vfs_context->files))) {
-        if (--vfs_context_file->file->references == 0) {
-            vfs_file_destroy(vfs_context_file->file);
-        }
-
-        kfree(vfs_context_file);
-    }
-
-    list_destroy(vfs_context->files);
-
-    kfree(vfs_context);
-}
-
-/**
  * Copy open files.
  */
 void vfs_context_copy(struct vfs_context * vfs_context,
@@ -55,6 +35,42 @@ void vfs_context_copy(struct vfs_context * vfs_context,
     }
 
     vfs_context->pwd = old_vfs_context->pwd;
+}
+
+/**
+ * Duplicate an open file.
+ */
+int vfs_context_copy_one(struct vfs_context * vfs_context, struct file * file)
+{
+    ++file->references;
+
+    struct vfs_context_file * vfs_context_file = kcalloc(sizeof(struct vfs_context_file));
+    vfs_context_file->file = file;
+    vfs_context_file->fd = vfs_context->next_fd++;
+
+    list_push_back(vfs_context->files, vfs_context_file);
+
+    return vfs_context_file->fd;
+}
+
+/**
+ * Destroy a virtual file system context for a task.
+ */
+void vfs_context_destroy(struct vfs_context * vfs_context)
+{
+    struct vfs_context_file * vfs_context_file;
+
+    while ((vfs_context_file = list_pop_front(vfs_context->files))) {
+        if (--vfs_context_file->file->references == 0) {
+            vfs_file_destroy(vfs_context_file->file);
+        }
+
+        kfree(vfs_context_file);
+    }
+
+    list_destroy(vfs_context->files);
+
+    kfree(vfs_context);
 }
 
 /**
@@ -77,6 +93,7 @@ struct file * vfs_context_file(struct vfs_context * vfs_context, unsigned fd)
 int vfs_context_open(struct vfs_context * vfs_context, struct path * path)
 {
     struct file * file = vfs_file_create();
+    ++file->references;
 
     int res = vfs_open(path, file);
     if (res < 0) {
@@ -91,5 +108,5 @@ int vfs_context_open(struct vfs_context * vfs_context, struct path * path)
 
     list_push_back(vfs_context->files, vfs_context_file);
 
-    return res;
+    return vfs_context_file->fd;
 }
