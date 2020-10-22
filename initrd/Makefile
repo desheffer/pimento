@@ -4,7 +4,7 @@ IMG := initrd
 
 BUILD := build
 
-BIN := help ls sh uname
+BIN := cat help ls sh uname
 
 .PHONY: all
 all: $(BUILD)/$(IMG).tar
@@ -13,8 +13,8 @@ all: $(BUILD)/$(IMG).tar
 clean:
 	rm -rf $(BUILD)
 
-$(BUILD)/$(IMG).tar: $(patsubst %, $(BUILD)/rootfs/bin/%, $(BIN))
-	tar -cvf - -C $(BUILD)/rootfs bin > $@
+$(BUILD)/$(IMG).tar: $(patsubst %, $(BUILD)/rootfs/bin/%, $(BIN)) $(BUILD)/rootfs/etc
+	tar -cvf - -C $(BUILD)/rootfs bin etc > $@
 
 $(BUILD)/rootfs/bin/sh:
 	@mkdir -p $(@D)
@@ -26,3 +26,6 @@ $(BUILD)/rootfs/bin/toybox:
 
 $(BUILD)/rootfs/bin/%: $(BUILD)/rootfs/bin/toybox
 	cp $< $@
+
+$(BUILD)/rootfs/etc: etc
+	cp -R $< $@

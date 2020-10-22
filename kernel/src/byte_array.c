@@ -68,6 +68,10 @@ size_t byte_array_copy(struct byte_array * byte_array, char * buf, size_t num,
     page = list_item->item;
     p_buf = page->vaddr;
 
+    if (off + num > byte_array->length) {
+        num = byte_array->length - off;
+    }
+
     // Find the starting page.
     while (off >= p_size) {
         off -= p_size;

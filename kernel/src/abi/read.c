@@ -18,11 +18,14 @@ SYSCALL_DEFINE3(read, int, fd, char *, buf, size_t, count)
     }
 
     struct page * page_buf = page_alloc();
+    off_t off = file->pos;
 
-    off_t off = 0;
     res = vfs_read(file, page_buf->vaddr, count, &off);
+    if (res < 0) {
+        return res;
+    }
 
-    mm_copy_to_user(task->mm_context, buf, page_buf->vaddr, off + 1);
+    mm_copy_to_user(task->mm_context, buf, page_buf->vaddr, res);
 
     kfree(page_buf);
 
