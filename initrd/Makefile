@@ -18,11 +18,11 @@ $(BUILD)/$(IMG).tar: $(patsubst %, $(BUILD)/rootfs/bin/%, $(BIN)) $(BUILD)/rootf
 
 $(BUILD)/rootfs/bin/sh:
 	@mkdir -p $(@D)
-	curl -fSL -o $@ https://pkg.musl.cc/dash-0.5.10.2/aarch64-linux-musl/bin/dash
+	curl -fSL -o $@ https://github.com/desheffer/pimento/raw/5af73b29650960667e8d591bb8a6b911aef789f9/dash
 
 $(BUILD)/rootfs/bin/toybox:
 	@mkdir -p $(@D)
-	curl -fSL -o $@ https://pkg.musl.cc/toybox-0.8.3/aarch64-linux-musl/bin/toybox
+	curl -fSL -o $@ https://github.com/desheffer/pimento/raw/5af73b29650960667e8d591bb8a6b911aef789f9/toybox
 
 $(BUILD)/rootfs/bin/%: $(BUILD)/rootfs/bin/toybox
 	cp $< $@

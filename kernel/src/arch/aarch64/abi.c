@@ -3,6 +3,9 @@
 #include "asm-generic/unistd.h"
 #include "pimento.h"
 
+#define __NR_newfstatat 79
+#define __NR_fstat 80
+
 #undef SYSCALL
 #define SYSCALL(nr) \
     long abi_ ## nr(long, long, long, long, long, long);

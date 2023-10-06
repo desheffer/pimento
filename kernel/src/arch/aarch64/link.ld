@@ -31,5 +31,5 @@ SECTIONS
 
     LD_PAGE_START = .;
 
-    /DISCARD/ : { *(.comment) *(.gnu*) *(.note*) *(.eh_frame*) }
+    /DISCARD/ : { *(.comment) *(.note*) *(.eh_frame*) }
 }
