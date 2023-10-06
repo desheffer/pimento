@@ -1,0 +1,26 @@
+[env]
+TARGET = "aarch64-unknown-none-softfloat"
+FEATURES = "bsp_raspi3b"
+RUSTFLAGS = "-C target-cpu=cortex-a53 -C link-arg=--script=src/arch/aarch64/bsp/raspi3b/link.ld"
+ELF = "target/${TARGET}/release/kernel"
+IMG = "target/${TARGET}/release/kernel8.img"
+
+[tasks.build]
+clear = true
+dependencies = ["clean", "cargo-build", "objcopy"]
+
+[tasks.cargo-build]
+command = "cargo"
+args = ["rustc", "--target", "${TARGET}", "--features", "${FEATURES}", "--release"]
+
+[tasks.objcopy]
+command = "rust-objcopy"
+args = ["--strip-all", "-O", "binary", "${ELF}", "${IMG}"]
+
+[tasks.test]
+disabled = true
+
+[tasks.qemu]
+command = "qemu-system-aarch64"
+args = ["-machine", "raspi3b", "-kernel", "${IMG}", "-serial", "null", "-serial", "stdio", "-display", "none"]
+dependencies = ["build"]
