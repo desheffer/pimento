@@ -1,7 +1,8 @@
-mod bsp;
-mod start;
-
 use core::arch::asm;
+
+mod bsp;
+pub mod lock;
+mod start;
 
 pub fn init() {
     bsp::init();

@@ -5,6 +5,7 @@
 
 mod arch;
 mod console;
+mod mutex;
 mod panic;
 mod print;
 

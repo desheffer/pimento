@@ -1,5 +1,6 @@
-use crate::console;
 use core::fmt::{self, Write};
+
+use crate::console;
 
 struct Writer;
 

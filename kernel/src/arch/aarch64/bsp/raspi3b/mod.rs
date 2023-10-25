@@ -1,6 +1,6 @@
-mod bcm2837_serial;
-
 use crate::console;
+
+mod bcm2837_serial;
 
 pub fn init() {
     bcm2837_serial::init();

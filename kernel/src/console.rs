@@ -1,3 +1,5 @@
+use crate::mutex::Mutex;
+
 pub trait Console {
     fn write_str(&self, s: &str);
 
@@ -15,14 +17,12 @@ impl Console for NullConsole {
 }
 
 static NULL_CONSOLE: NullConsole = NullConsole {};
-static mut CONSOLE: &dyn Console = &NULL_CONSOLE;
+static CONSOLE: Mutex<&dyn Console> = Mutex::new(&NULL_CONSOLE);
 
 pub fn set_console(console: &'static dyn Console) {
-    unsafe {
-        CONSOLE = console;
-    }
+    *CONSOLE.lock() = console;
 }
 
 pub fn console() -> &'static dyn Console {
-    unsafe { CONSOLE }
+    *CONSOLE.lock()
 }
