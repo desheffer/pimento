@@ -22,6 +22,7 @@
               })
               cargo-binutils
               cargo-make
+              entr
               qemu
             ];
           };

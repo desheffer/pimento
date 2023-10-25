@@ -24,3 +24,7 @@ disabled = true
 command = "qemu-system-aarch64"
 args = ["-machine", "raspi3b", "-kernel", "${IMG}", "-serial", "null", "-serial", "stdio", "-display", "none"]
 dependencies = ["build"]
+
+[tasks.watch]
+command = "bash"
+args = ["-c", "find src | entr cargo make build"]
