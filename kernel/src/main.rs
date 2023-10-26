@@ -3,8 +3,11 @@
 #![no_main]
 #![no_std]
 
+extern crate alloc;
+
 mod arch;
 mod console;
+mod heap;
 mod mutex;
 mod panic;
 mod print;
