@@ -6,7 +6,7 @@ struct Writer;
 
 impl fmt::Write for Writer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        console::console().write_str(s);
+        console::console().ok_or(fmt::Error)?.write_str(s);
         Ok(())
     }
 }
