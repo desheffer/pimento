@@ -6,6 +6,7 @@
 extern crate alloc;
 
 mod arch;
+mod cell;
 mod console;
 mod heap;
 mod mutex;

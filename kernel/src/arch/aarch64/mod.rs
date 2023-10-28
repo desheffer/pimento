@@ -10,6 +10,7 @@ pub fn init() {
 
 pub fn hang() -> ! {
     loop {
+        // SAFETY: Does not affect other threads.
         unsafe {
             asm!("wfe");
         }
@@ -17,6 +18,7 @@ pub fn hang() -> ! {
 }
 
 pub fn nop() {
+    // SAFETY: Does not affect other threads.
     unsafe {
         asm!("nop");
     }

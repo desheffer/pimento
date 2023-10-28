@@ -2,6 +2,7 @@ use core::fmt::{self, Write};
 
 use crate::console;
 
+#[derive(Debug)]
 struct Writer;
 
 impl fmt::Write for Writer {

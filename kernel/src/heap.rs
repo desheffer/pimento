@@ -7,6 +7,7 @@ use crate::mutex::Mutex;
 /// A simple heap allocator
 ///
 /// Allocations are made linearly. Deallocations are not implemented.
+#[derive(Debug)]
 struct Allocator<const N: usize> {
     heap: UnsafeCell<[u8; N]>,
     reserved: Mutex<usize>,

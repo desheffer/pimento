@@ -1,6 +1,6 @@
 use crate::mutex::Mutex;
 
-pub trait Console {
+pub trait Console: Sync {
     fn write_str(&self, s: &str);
 
     fn read_byte(&self) -> Option<u8>;
