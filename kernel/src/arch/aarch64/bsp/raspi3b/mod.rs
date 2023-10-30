@@ -1,8 +1,8 @@
-use crate::console;
+use crate::io;
 
-mod bcm2837_serial;
+pub mod bcm2837_serial;
 
 pub fn init() {
     let serial = bcm2837_serial::serial();
-    console::set_console(serial);
+    io::set_console(serial);
 }

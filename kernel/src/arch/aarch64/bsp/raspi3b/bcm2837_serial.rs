@@ -1,7 +1,6 @@
-use crate::arch;
-use crate::arch::lock::Lock;
-use crate::cell::OnceLock;
-use crate::console::Console;
+use crate::cpu;
+use crate::io::Console;
+use crate::sync::{Lock, OnceLock};
 
 const GPFSEL1: *mut u32 = 0x3F200004 as *mut u32; // GPIO function select 1
 const GPPUD: *mut u32 = 0x3F200094 as *mut u32; // GPIO pin pull-up/down enable
@@ -85,7 +84,7 @@ impl Serial {
 
             // Wait 150 cycles for the control signal.
             for _ in 0..150 {
-                arch::nop();
+                cpu::nop();
             }
 
             // Enable GPIO 14/15.
@@ -93,7 +92,7 @@ impl Serial {
 
             // Wait 150 cycles for the control signal.
             for _ in 0..150 {
-                arch::nop();
+                cpu::nop();
             }
 
             // Flush GPIO settings.

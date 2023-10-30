@@ -2,7 +2,7 @@ use core::alloc::{GlobalAlloc, Layout};
 use core::cell::UnsafeCell;
 use core::ptr;
 
-use crate::mutex::Mutex;
+use crate::sync::Mutex;
 
 /// A simple heap allocator
 ///

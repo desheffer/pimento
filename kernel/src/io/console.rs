@@ -1,4 +1,4 @@
-use crate::mutex::Mutex;
+use crate::sync::Mutex;
 
 pub trait Console: Sync {
     fn write_str(&self, s: &str);

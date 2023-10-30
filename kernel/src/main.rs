@@ -6,12 +6,11 @@
 extern crate alloc;
 
 mod arch;
-mod cell;
-mod console;
-mod heap;
-mod mutex;
+mod cpu;
+mod io;
+mod mem;
 mod panic;
-mod print;
+mod sync;
 
 #[no_mangle]
 pub extern "C" fn kernel_main() -> ! {
@@ -19,5 +18,5 @@ pub extern "C" fn kernel_main() -> ! {
 
     println!("Hello, world!");
 
-    arch::hang();
+    cpu::hang();
 }

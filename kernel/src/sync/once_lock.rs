@@ -1,7 +1,7 @@
 use core::cell::UnsafeCell;
 use core::mem::MaybeUninit;
 
-use crate::arch::lock::Lock;
+use crate::sync::Lock;
 
 /// A synchronization primitive which can be written to only once.
 ///

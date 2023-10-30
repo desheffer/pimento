@@ -2,7 +2,7 @@ use core::borrow::{Borrow, BorrowMut};
 use core::cell::UnsafeCell;
 use core::ops::{Deref, DerefMut};
 
-use crate::arch::lock::Lock;
+use crate::sync::Lock;
 
 /// A mutual exclusion primitive for protecting shared data
 ///

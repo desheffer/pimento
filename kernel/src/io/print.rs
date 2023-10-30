@@ -1,6 +1,6 @@
 use core::fmt::{self, Write};
 
-use crate::console;
+use crate::io::console;
 
 #[derive(Debug)]
 struct Writer;
@@ -20,7 +20,7 @@ pub fn _print(args: fmt::Arguments) {
 #[macro_export]
 macro_rules! print {
     ($($arg:tt)*) => {{
-        $crate::print::_print(format_args!($($arg)*));
+        $crate::io::_print(format_args!($($arg)*));
     }};
 }
 
@@ -30,7 +30,7 @@ macro_rules! println {
         $crate::print!("\n")
     };
     ($($arg:tt)*) => {{
-        $crate::print::_print(format_args_nl!($($arg)*));
+        $crate::io::_print(format_args_nl!($($arg)*));
     }};
 }
 
