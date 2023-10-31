@@ -16,4 +16,4 @@ loop_clear_bss:
     ldr x0, =__stack_start
     mov sp, x0
 
-    b kernel_main
+    b kernel_init

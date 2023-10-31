@@ -12,11 +12,6 @@ mod mem;
 mod panic;
 mod sync;
 
-#[no_mangle]
-pub extern "C" fn kernel_main() -> ! {
-    arch::init();
-
+pub fn kernel_main() {
     println!("Hello, world!");
-
-    cpu::hang();
 }
