@@ -8,6 +8,7 @@ SECTIONS
     __text_start = .;
     .text : {
         KEEP(*(.text._start))
+        KEEP(*(.text._entry))
         *(.text*)
     }
     . = ALIGN(4096);
