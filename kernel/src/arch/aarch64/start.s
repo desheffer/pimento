@@ -20,7 +20,7 @@ loop_clear_bss:
     isb
 
     // Change execution level to EL1h.
-    ldr x0, ={SPSR_EL2_M_EL1H}
+    ldr x0, ={SPSR_EL2_INIT}
     msr spsr_el2, x0
     adr x0, enter_el1
     msr elr_el2, x0

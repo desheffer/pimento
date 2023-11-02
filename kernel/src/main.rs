@@ -13,7 +13,11 @@ mod io;
 mod mem;
 mod panic;
 mod sync;
+mod time;
 
 pub fn kernel_main() {
     println!("Hello, world!");
+
+    // TODO: Remove when kernel is capable of starting other processes.
+    loop {}
 }

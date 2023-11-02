@@ -1,4 +1,5 @@
-use crate::cpu;
+use core::arch::asm;
+
 use crate::io::Console;
 use crate::sync::{Lock, Once, OnceLock};
 
@@ -112,7 +113,7 @@ pub fn init() {
 
         // Wait 150 cycles for the control signal.
         for _ in 0..150 {
-            cpu::nop();
+            asm!("nop");
         }
 
         // Enable GPIO 14/15.
@@ -120,7 +121,7 @@ pub fn init() {
 
         // Wait 150 cycles for the control signal.
         for _ in 0..150 {
-            cpu::nop();
+            asm!("nop");
         }
 
         // Flush GPIO settings.

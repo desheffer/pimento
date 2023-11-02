@@ -30,6 +30,8 @@ macro_rules! println {
         $crate::print!("\n")
     };
     ($($arg:tt)*) => {{
+        let uptime = crate::time::uptime();
+        $crate::print!("[{:5}.{:06}] ", uptime.as_secs(), uptime.subsec_millis());
         $crate::io::_print(format_args_nl!($($arg)*));
     }};
 }
