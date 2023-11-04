@@ -1,7 +1,7 @@
 [env]
 TARGET = "aarch64-unknown-none-softfloat"
 FEATURES = "bsp_raspi3b"
-RUSTFLAGS = "-C target-cpu=cortex-a53 -C link-arg=--script=src/arch/aarch64/bsp/raspi3b/link.ld"
+RUSTFLAGS = "-C target-cpu=cortex-a53 -C link-arg=--script=src/boot/aarch64/raspi3b/link.ld"
 ELF = "target/${TARGET}/release/kernel"
 IMG = "target/${TARGET}/release/kernel8.img"
 

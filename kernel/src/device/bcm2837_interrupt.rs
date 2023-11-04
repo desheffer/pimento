@@ -1,4 +1,4 @@
-use crate::cpu::Interrupt;
+use crate::interrupt::Interrupt;
 use crate::sync::{Lock, OnceLock};
 
 const CONTROL: *mut u32 = 0x40000000 as *mut u32; // Control register
@@ -14,14 +14,17 @@ const CORE1_IRQ: *mut u32 = 0x40000064 as *mut u32; // Core 1 IRQ source
 const CORE2_IRQ: *mut u32 = 0x40000068 as *mut u32; // Core 2 IRQ source
 const CORE3_IRQ: *mut u32 = 0x4000006C as *mut u32; // Core 3 IRQ source
 
+/// Broadcom chip used in the Raspberry Pi 3 Model B and others
+///
+/// This implements basic interrupt detection for this chip.
 #[derive(Debug)]
-pub struct BCM2837InterruptHandler {
+pub struct BCM2837InterruptController {
     lock: Lock,
 }
 
-impl BCM2837InterruptHandler {
+impl BCM2837InterruptController {
     pub fn instance() -> &'static Self {
-        static INSTANCE: OnceLock<BCM2837InterruptHandler> = OnceLock::new();
+        static INSTANCE: OnceLock<BCM2837InterruptController> = OnceLock::new();
         INSTANCE.get_or_init(|| Self::new())
     }
 
@@ -64,15 +67,15 @@ impl BCM2837Interrupt {
 
 impl Interrupt for BCM2837Interrupt {
     fn enable(&self) {
-        BCM2837InterruptHandler::instance().enable(self.number);
+        BCM2837InterruptController::instance().enable(self.number);
     }
 
-    fn pending(&self) -> bool {
-        BCM2837InterruptHandler::instance().pending(self.number)
+    fn is_pending(&self) -> bool {
+        BCM2837InterruptController::instance().pending(self.number)
     }
 
     fn clear(&self) {
-        BCM2837InterruptHandler::instance().clear(self.number);
+        BCM2837InterruptController::instance().clear(self.number);
     }
 }
 

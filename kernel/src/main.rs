@@ -7,11 +7,11 @@
 
 extern crate alloc;
 
-mod arch;
-mod cpu;
+mod boot;
+mod device;
+mod interrupt;
 mod io;
-mod mem;
-mod panic;
+mod memory;
 mod sync;
 mod time;
 

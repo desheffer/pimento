@@ -1,7 +1,7 @@
 use core::arch::asm;
 
 use crate::io::Console;
-use crate::sync::{Lock, Once, OnceLock};
+use crate::sync::{Lock, OnceLock};
 
 const GPFSEL1: *mut u32 = 0x3F200004 as *mut u32; // GPIO function select 1
 const GPPUD: *mut u32 = 0x3F200094 as *mut u32; // GPIO pin pull-up/down enable
@@ -38,18 +38,85 @@ const AUX_MU_IIR_RX: u8 = 0b1 << 1; // Clear RX
 const AUX_MU_LSR_RX_READY: u8 = 0b1 << 0; // Receiver ready
 const AUX_MU_LSR_TX_EMPTY: u8 = 0b1 << 5; // Transmitter empty
 
+/// Broadcom chip used in the Raspberry Pi 3 Model B and others
+///
+/// This implements basic serial input and output capabilities using this chip.
 #[derive(Debug)]
-pub struct Serial {
+pub struct BCM2837Serial {
     lock: Lock,
 }
 
-impl Serial {
+impl BCM2837Serial {
+    pub fn instance() -> &'static Self {
+        static INSTANCE: OnceLock<BCM2837Serial> = OnceLock::new();
+        INSTANCE.get_or_init(|| {
+            let instance = Self::new();
+            instance.init();
+            instance
+        })
+    }
+
     fn new() -> Self {
         Self { lock: Lock::new() }
     }
+
+    fn init(&self) {
+        // SAFETY: Safe because call is behind a lock.
+        self.lock.call(|| unsafe {
+            // Enable the mini UART.
+            AUX_ENABLES.write_volatile(AUX_ENABLES.read_volatile() | AUX_ENABLES_MU);
+
+            // Disable interrupts.
+            AUX_MU_IER.write_volatile(0);
+
+            // Disable transmitter and receiver.
+            AUX_MU_CNTL.write_volatile(0);
+
+            // Use 8-bit mode.
+            AUX_MU_LCR.write_volatile(AUX_MU_LCR_8BIT);
+
+            // Set the line to high.
+            AUX_MU_MCR.write_volatile(0);
+
+            // Set the baud rate.
+            // AUX_MU_BAUD = clock_freq / (8 * desired_baud) - 1
+            // clock_freq = 250,000,000
+            // desired_baud = 115,200
+            AUX_MU_BAUD.write_volatile(270);
+
+            // Set GPIO 14/15 to take alternative function 5.
+            GPFSEL1.write_volatile(
+                GPFSEL1.read_volatile() & !(GPFSEL1_FSEL14_MASK | GPFSEL1_FSEL15_MASK)
+                    | (GPFSEL1_FSEL14_F5 | GPFSEL1_FSEL15_F5),
+            );
+
+            // Disable pull up/down.
+            GPPUD.write_volatile(0);
+
+            // Wait 150 cycles for the control signal.
+            for _ in 0..150 {
+                asm!("nop");
+            }
+
+            // Enable GPIO 14/15.
+            GPPUDCLK0.write_volatile(GPPUDCLK0_PUD14 | GPPUDCLK0_PUD15);
+
+            // Wait 150 cycles for the control signal.
+            for _ in 0..150 {
+                asm!("nop");
+            }
+
+            // Flush GPIO settings.
+            GPPUDCLK0.write_volatile(0);
+
+            // Enable the receiver and transmitter.
+            AUX_MU_CNTL.write_volatile(AUX_MU_CNTL_RX | AUX_MU_CNTL_TX);
+            AUX_MU_IIR.write_volatile(AUX_MU_IIR_RX | AUX_MU_IIR_TX);
+        });
+    }
 }
 
-impl Console for Serial {
+impl Console for BCM2837Serial {
     fn write_str(&self, s: &str) {
         // SAFETY: Safe because call is behind a lock.
         self.lock.call(|| unsafe {
@@ -73,69 +140,4 @@ impl Console for Serial {
             }
         })
     }
-}
-
-static SERIAL: OnceLock<Serial> = OnceLock::new();
-
-pub fn init() {
-    // SAFETY: Safe because call is behind a lock.
-    static ONCE: Once = Once::new();
-    ONCE.call_once(|| unsafe {
-        // Enable the mini UART.
-        AUX_ENABLES.write_volatile(AUX_ENABLES.read_volatile() | AUX_ENABLES_MU);
-
-        // Disable interrupts.
-        AUX_MU_IER.write_volatile(0);
-
-        // Disable transmitter and receiver.
-        AUX_MU_CNTL.write_volatile(0);
-
-        // Use 8-bit mode.
-        AUX_MU_LCR.write_volatile(AUX_MU_LCR_8BIT);
-
-        // Set the line to high.
-        AUX_MU_MCR.write_volatile(0);
-
-        // Set the baud rate.
-        // AUX_MU_BAUD = clock_freq / (8 * desired_baud) - 1
-        // clock_freq = 250,000,000
-        // desired_baud = 115,200
-        AUX_MU_BAUD.write_volatile(270);
-
-        // Set GPIO 14/15 to take alternative function 5.
-        GPFSEL1.write_volatile(
-            GPFSEL1.read_volatile() & !(GPFSEL1_FSEL14_MASK | GPFSEL1_FSEL15_MASK)
-                | (GPFSEL1_FSEL14_F5 | GPFSEL1_FSEL15_F5),
-        );
-
-        // Disable pull up/down.
-        GPPUD.write_volatile(0);
-
-        // Wait 150 cycles for the control signal.
-        for _ in 0..150 {
-            asm!("nop");
-        }
-
-        // Enable GPIO 14/15.
-        GPPUDCLK0.write_volatile(GPPUDCLK0_PUD14 | GPPUDCLK0_PUD15);
-
-        // Wait 150 cycles for the control signal.
-        for _ in 0..150 {
-            asm!("nop");
-        }
-
-        // Flush GPIO settings.
-        GPPUDCLK0.write_volatile(0);
-
-        // Enable the receiver and transmitter.
-        AUX_MU_CNTL.write_volatile(AUX_MU_CNTL_RX | AUX_MU_CNTL_TX);
-        AUX_MU_IIR.write_volatile(AUX_MU_IIR_RX | AUX_MU_IIR_TX);
-
-        // Create serial object.
-        SERIAL.set(Serial::new()).unwrap();
-    });
-}
-
-pub fn serial() -> Option<&'static Serial> {
-    SERIAL.get()
 }
