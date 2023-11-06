@@ -11,7 +11,7 @@ dependencies = ["clean", "cargo-build", "objcopy"]
 
 [tasks.cargo-build]
 command = "cargo"
-args = ["rustc", "--target", "${TARGET}", "--features", "${FEATURES}", "--release"]
+args = ["rustc", "--target", "${TARGET}", "--features", "${FEATURES}", "--release", "--color", "always", "--message-format", "short"]
 
 [tasks.objcopy]
 command = "rust-objcopy"
@@ -27,4 +27,4 @@ dependencies = ["build"]
 
 [tasks.watch]
 command = "bash"
-args = ["-c", "find src | entr cargo make build"]
+args = ["-c", "find src | entr -c cargo make build"]
