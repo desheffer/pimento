@@ -1,7 +1,7 @@
 use core::arch::asm;
 
 use crate::io::Console;
-use crate::sync::{Lock, OnceLock};
+use crate::sync::Lock;
 
 const GPFSEL1: *mut u32 = 0x3F200004 as *mut u32; // GPIO function select 1
 const GPPUD: *mut u32 = 0x3F200094 as *mut u32; // GPIO pin pull-up/down enable
@@ -47,20 +47,11 @@ pub struct BCM2837Serial {
 }
 
 impl BCM2837Serial {
-    pub fn instance() -> &'static Self {
-        static INSTANCE: OnceLock<BCM2837Serial> = OnceLock::new();
-        INSTANCE.get_or_init(|| {
-            let instance = Self::new();
-            instance.init();
-            instance
-        })
-    }
-
-    fn new() -> Self {
+    pub const unsafe fn new() -> Self {
         Self { lock: Lock::new() }
     }
 
-    fn init(&self) {
+    pub fn init(&self) {
         // SAFETY: Safe because call is behind a lock.
         self.lock.call(|| unsafe {
             // Enable the mini UART.

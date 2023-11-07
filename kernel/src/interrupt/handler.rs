@@ -15,11 +15,11 @@ pub trait Interrupt {
 ///
 /// When an interrupt is raised, the local interrupt handler will determine the source of the
 /// interrupt, and then it will call the handler registered with that source.
-pub struct LocalInterruptHandler {
-    handlers: Mutex<Vec<InterruptHandler>>,
+pub struct LocalInterruptHandler<'a> {
+    handlers: Mutex<Vec<InterruptHandler<'a>>>,
 }
 
-impl LocalInterruptHandler {
+impl<'a> LocalInterruptHandler<'a> {
     pub fn instance() -> &'static Self {
         static INSTANCE: OnceLock<LocalInterruptHandler> = OnceLock::new();
         INSTANCE.get_or_init(|| Self::new())
@@ -31,8 +31,9 @@ impl LocalInterruptHandler {
         }
     }
 
-    pub fn enable(&self, interrupt: &'static dyn Interrupt, handler: fn()) {
-        self.handlers.lock().push(InterruptHandler(interrupt, handler));
+    pub fn enable(&self, interrupt: &'a dyn Interrupt, handler: fn()) {
+        let mut handlers = self.handlers.lock();
+        handlers.push(InterruptHandler(interrupt, handler));
         interrupt.enable();
     }
 
@@ -48,4 +49,4 @@ impl LocalInterruptHandler {
 }
 
 /// An interrupt handler tied to a specific interrupt.
-struct InterruptHandler(&'static dyn Interrupt, fn());
+struct InterruptHandler<'a>(&'a dyn Interrupt, fn());
