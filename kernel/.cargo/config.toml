@@ -1,0 +1,3 @@
+[build]
+target = "aarch64-unknown-none-softfloat"
+rustflags = "-C link-arg=--script=src/boot/aarch64/raspi3b/link.ld"

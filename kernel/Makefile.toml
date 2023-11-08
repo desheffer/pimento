@@ -1,7 +1,5 @@
 [env]
 TARGET = "aarch64-unknown-none-softfloat"
-FEATURES = "bsp_raspi3b"
-RUSTFLAGS = "-C target-cpu=cortex-a53 -C link-arg=--script=src/boot/aarch64/raspi3b/link.ld"
 ELF = "target/${TARGET}/release/kernel"
 IMG = "target/${TARGET}/release/kernel8.img"
 
@@ -11,7 +9,7 @@ dependencies = ["clean", "cargo-build", "objcopy"]
 
 [tasks.cargo-build]
 command = "cargo"
-args = ["rustc", "--target", "${TARGET}", "--features", "${FEATURES}", "--release", "--color", "always", "--message-format", "short"]
+args = ["rustc", "--release"]
 
 [tasks.objcopy]
 command = "rust-objcopy"
