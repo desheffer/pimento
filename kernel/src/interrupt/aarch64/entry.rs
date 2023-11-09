@@ -36,5 +36,5 @@ pub fn hang() -> ! {
 
 global_asm!(
     include_str!("entry.s"),
-    PROCESS_REGS_SIZE = const 34 * 8,
+    TASK_REGS_SIZE = const 34 * 8,
 );

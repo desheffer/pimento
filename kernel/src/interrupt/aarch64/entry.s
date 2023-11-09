@@ -37,7 +37,7 @@ vector_table:
     vector_entry_invalid 0xF
 
 .macro save_regs
-    sub sp, sp, {PROCESS_REGS_SIZE}
+    sub sp, sp, {TASK_REGS_SIZE}
 
     stp x0, x1, [sp, #16 * 0]
     stp x2, x3, [sp, #16 * 1]
@@ -87,7 +87,7 @@ vector_table:
     ldp x26, x27, [sp, #16 * 13]
     ldp x28, x29, [sp, #16 * 14]
 
-    add sp, sp, {PROCESS_REGS_SIZE}
+    add sp, sp, {TASK_REGS_SIZE}
 .endm
 
 el1_irq:

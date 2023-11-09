@@ -2,6 +2,8 @@ use core::arch::global_asm;
 
 const HCR_EL2_RW: u64 = 0b1 << 31; // Enable AArch64
 
+const SPSR_EL2_M_EL0T: u64 = 0b0000 << 0; // EL0 with SP_EL0 (EL0t)
+const SPSR_EL2_M_EL1T: u64 = 0b0100 << 0; // EL1 with SP_EL0 (EL1t)
 const SPSR_EL2_M_EL1H: u64 = 0b0101 << 0; // EL1 with SP_EL1 (EL1h)
 
 const SPSR_EL2_D: u64 = 0b1 << 9; // Debug (Sync) exception mask

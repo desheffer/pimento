@@ -1,8 +1,11 @@
+use core::arch::asm;
 use core::cell::UnsafeCell;
 
 /// A simple lock
 ///
-/// This lock assumes that the system has a single core and that interrupts are not enabled.
+/// This is a poor implementation of a lock that's not actually atomic (when interrupts are
+/// enabled). Despite such a flaw, this lock works "well enough" and serves as a foundation for
+/// when more robust implementations are possible.
 #[derive(Debug)]
 pub struct Lock {
     locked: UnsafeCell<bool>,
@@ -16,10 +19,12 @@ impl Lock {
     }
 
     pub fn lock(&self) {
-        // SAFETY: Only safe on a single core when interrupts are not enabled.
+        // TODO: Use the core::intrinsics::coreatomic_cxchg_* functions once the MMU is enabled.
+        // SAFETY: Not actually safe!
         unsafe {
-            if *self.locked.get() {
-                panic!("deadlocked");
+            // Spin until the lock is not held.
+            while *self.locked.get() {
+                asm!("wfi");
             }
 
             *self.locked.get() = true;
@@ -27,7 +32,8 @@ impl Lock {
     }
 
     pub fn unlock(&self) {
-        // SAFETY: Only safe on a single core when interrupts are not enabled.
+        // TODO: Use the core::intrinsics::coreatomic_cxchg_* functions once the MMU is enabled.
+        // SAFETY: Not actually safe!
         unsafe {
             *self.locked.get() = false;
         }

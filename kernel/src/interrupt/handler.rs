@@ -38,12 +38,20 @@ impl<'a> LocalInterruptHandler<'a> {
     }
 
     pub fn handle(&self) {
-        for handler in &*self.handlers.lock() {
+        let mut func: Option<fn()> = None;
+
+        let handlers = self.handlers.lock();
+        for handler in &*handlers {
             if handler.0.is_pending() {
-                handler.1();
                 handler.0.clear();
+                func = Some(handler.1);
                 break;
             }
+        }
+        drop(handlers);
+
+        if let Some(func) = func {
+            func();
         }
     }
 }
