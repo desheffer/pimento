@@ -59,12 +59,18 @@ impl Scheduler {
         Self {
             tasks: Mutex::new(BTreeMap::new()),
             queue: Mutex::new(VecDeque::new()),
-            current_task: Mutex::new(Vec::from([None; 1])),
+            current_task: Mutex::new(Vec::new()),
             after_schedule: OnceLock::new(),
         }
     }
 
-    pub unsafe fn create_and_become_init(&self) -> TaskId {
+    pub fn set_num_cores(&self, num_cores: usize) {
+        let mut current_task = self.current_task.lock();
+        let current_len = current_task.len();
+        current_task.extend((current_len..num_cores).map(|_| None));
+    }
+
+    pub fn create_and_become_init(&self) -> TaskId {
         assert!(self.tasks.lock().is_empty());
         assert!(self.queue.lock().is_empty());
 

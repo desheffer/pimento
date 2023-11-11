@@ -1,7 +1,7 @@
 use core::arch::asm;
 use core::arch::global_asm;
 
-use crate::interrupt::LocalInterruptHandler;
+use crate::abi::LocalInterruptHandler;
 
 #[no_mangle]
 pub extern "C" fn vector_irq() {

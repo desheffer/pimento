@@ -56,5 +56,5 @@ impl<'a> LocalInterruptHandler<'a> {
     }
 }
 
-/// An interrupt handler tied to a specific interrupt.
+/// An interrupt handler tied to a specific interrupt
 struct InterruptHandler<'a>(&'a dyn Interrupt, fn());

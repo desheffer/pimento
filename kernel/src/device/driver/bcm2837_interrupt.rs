@@ -1,4 +1,4 @@
-use crate::interrupt::Interrupt;
+use crate::abi::Interrupt;
 use crate::sync::Lock;
 
 const CONTROL: *mut u32 = 0x40000000 as *mut u32; // Control register
@@ -20,19 +20,19 @@ pub const CNTPNSIRQ: u32 = 1;
 ///
 /// This implements basic interrupt detection for this chip.
 #[derive(Debug)]
-pub struct BCM2837InterruptController {
+pub struct Bcm2837InterruptController {
     lock: Lock,
 }
 
-impl BCM2837InterruptController {
+impl Bcm2837InterruptController {
     pub const unsafe fn new() -> Self {
         Self { lock: Lock::new() }
     }
 
-    pub fn interrupt(&self, number: u32) -> BCM2837Interrupt {
+    pub fn interrupt(&self, number: u32) -> Bcm2837Interrupt {
         assert!(number <= 10);
 
-        BCM2837Interrupt::new(self, number)
+        Bcm2837Interrupt::new(self, number)
     }
 
     fn enable(&self, number: u32) {
@@ -58,18 +58,18 @@ impl BCM2837InterruptController {
 }
 
 #[derive(Debug)]
-pub struct BCM2837Interrupt<'a> {
-    controller: &'a BCM2837InterruptController,
+pub struct Bcm2837Interrupt<'a> {
+    controller: &'a Bcm2837InterruptController,
     number: u32,
 }
 
-impl<'a> BCM2837Interrupt<'a> {
-    const fn new(controller: &'a BCM2837InterruptController, number: u32) -> Self {
+impl<'a> Bcm2837Interrupt<'a> {
+    const fn new(controller: &'a Bcm2837InterruptController, number: u32) -> Self {
         Self { controller, number }
     }
 }
 
-impl<'a> Interrupt for BCM2837Interrupt<'_> {
+impl<'a> Interrupt for Bcm2837Interrupt<'_> {
     fn enable(&self) {
         self.controller.enable(self.number);
     }

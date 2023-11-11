@@ -8,14 +8,14 @@
 
 extern crate alloc;
 
+mod abi;
 mod boot;
 mod device;
-mod interrupt;
-mod io;
 mod memory;
+mod panic;
+mod print;
 mod sync;
 mod task;
-mod time;
 
 pub fn kernel_main() {
     println!("Hello, world!");

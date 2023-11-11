@@ -1,6 +1,6 @@
 use core::arch::asm;
 
-use crate::io::Console;
+use crate::device::Logger;
 use crate::sync::Lock;
 
 const GPFSEL1: *mut u32 = 0x3F200004 as *mut u32; // GPIO function select 1
@@ -42,11 +42,11 @@ const AUX_MU_LSR_TX_EMPTY: u8 = 0b1 << 5; // Transmitter empty
 ///
 /// This implements basic serial input and output capabilities using this chip.
 #[derive(Debug)]
-pub struct BCM2837Serial {
+pub struct Bcm2837Serial {
     lock: Lock,
 }
 
-impl BCM2837Serial {
+impl Bcm2837Serial {
     pub const unsafe fn new() -> Self {
         Self { lock: Lock::new() }
     }
@@ -105,20 +105,6 @@ impl BCM2837Serial {
             AUX_MU_IIR.write_volatile(AUX_MU_IIR_RX | AUX_MU_IIR_TX);
         });
     }
-}
-
-impl Console for BCM2837Serial {
-    fn write_str(&self, s: &str) {
-        // SAFETY: Safe because call is behind a lock.
-        self.lock.call(|| unsafe {
-            for c in s.bytes() {
-                // Wait until transmitter is empty.
-                while AUX_MU_LSR.read_volatile() & AUX_MU_LSR_TX_EMPTY == 0 {}
-
-                AUX_MU_IO.write_volatile(c as u8);
-            }
-        });
-    }
 
     fn read_byte(&self) -> Option<u8> {
         // SAFETY: Safe because call is behind a lock.
@@ -130,5 +116,19 @@ impl Console for BCM2837Serial {
                 Some(AUX_MU_IO.read_volatile())
             }
         })
+    }
+}
+
+impl Logger for Bcm2837Serial {
+    fn write_str(&self, s: &str) {
+        // SAFETY: Safe because call is behind a lock.
+        self.lock.call(|| unsafe {
+            for c in s.bytes() {
+                // Wait until transmitter is empty.
+                while AUX_MU_LSR.read_volatile() & AUX_MU_LSR_TX_EMPTY == 0 {}
+
+                AUX_MU_IO.write_volatile(c as u8);
+            }
+        });
     }
 }

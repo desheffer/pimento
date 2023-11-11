@@ -1,6 +1,6 @@
 use core::panic::PanicInfo;
 
-use crate::interrupt;
+use crate::abi;
 use crate::println;
 
 #[panic_handler]
@@ -17,5 +17,5 @@ fn panic(info: &PanicInfo) -> ! {
         println!("{}", message);
     }
 
-    interrupt::hang();
+    abi::hang();
 }

@@ -1,7 +1,7 @@
 pub use self::arch::*;
-pub use self::handler::{Interrupt, LocalInterruptHandler};
+pub use self::interrupt::{Interrupt, LocalInterruptHandler};
 
-mod handler;
+mod interrupt;
 
 #[cfg(target_arch = "aarch64")]
 #[path = "aarch64/mod.rs"]
