@@ -9,8 +9,13 @@ use crate::device::driver::bcm2837_interrupt::{
 use crate::device::driver::bcm2837_serial::Bcm2837Serial;
 use crate::device::Registry;
 use crate::kernel_main;
+use crate::memory::PageAllocator;
 use crate::sync::OnceLock;
 use crate::task::Scheduler;
+
+extern "C" {
+    static mut __end: u8;
+}
 
 /// Initialize a Raspberry Pi 3 B
 ///
@@ -25,6 +30,10 @@ pub unsafe extern "C" fn kernel_init() -> ! {
     let serial = SERIAL.get_or_init(|| Bcm2837Serial::new());
     serial.init();
     Registry::instance().set_logger(serial);
+
+    let page_allocator = PageAllocator::instance();
+    let end = &mut __end as *mut u8;
+    page_allocator.add_capacity(end, 0x3F000000 - end as usize);
 
     let intr_controller = INTR_CONTROLLER.get_or_init(|| Bcm2837InterruptController::new());
     let cntpnsirq = CNTPNSIRQ_INTR.get_or_init(|| intr_controller.interrupt(CNTPNSIRQ));

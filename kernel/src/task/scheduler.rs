@@ -6,6 +6,7 @@ use alloc::collections::{BTreeMap, VecDeque};
 use alloc::string::String;
 use alloc::vec::Vec;
 
+use crate::memory::PageAllocator;
 use crate::sync::{Mutex, OnceLock};
 use crate::task::{cpu_switch, CpuContext};
 
@@ -91,10 +92,8 @@ impl Scheduler {
         unsafe {
             cpu_context.set_program_counter(func as *const u64);
 
-            // XXX: Create page allocator.
-            static mut STACK: u64 = 0x200000;
-            cpu_context.set_stack_pointer(STACK as *mut u64);
-            STACK += 0x1000;
+            let page = PageAllocator::instance().alloc();
+            cpu_context.set_stack_pointer(page.end_exclusive() as *mut u64);
         }
 
         let id = TaskId::next();
