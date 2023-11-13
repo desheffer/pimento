@@ -1,4 +1,4 @@
-pub use page::PageAllocator;
+pub use page::{Page, PageAllocator};
 
 mod heap;
 mod page;

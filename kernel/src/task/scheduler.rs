@@ -6,7 +6,7 @@ use alloc::collections::{BTreeMap, VecDeque};
 use alloc::string::String;
 use alloc::vec::Vec;
 
-use crate::memory::PageAllocator;
+use crate::memory::{Page, PageAllocator};
 use crate::sync::{Mutex, OnceLock};
 use crate::task::{cpu_switch, CpuContext};
 
@@ -39,6 +39,19 @@ pub struct Task {
     parent_id: ParentTaskId,
     name: String,
     cpu_context: CpuContext,
+    pages: Vec<Page>,
+}
+
+impl Task {
+    fn new(id: TaskId, parent_id: ParentTaskId, name: String) -> Self {
+        Task {
+            id,
+            parent_id,
+            name,
+            cpu_context: CpuContext::new(),
+            pages: Vec::new(),
+        }
+    }
 }
 
 /// A round-robin task scheduler
@@ -65,6 +78,7 @@ impl Scheduler {
         }
     }
 
+    // TODO: Currently only 1 core is supported.
     pub fn set_num_cores(&self, num_cores: usize) {
         let mut current_task = self.current_task.lock();
         let current_len = current_task.len();
@@ -76,35 +90,33 @@ impl Scheduler {
         assert!(self.queue.lock().is_empty());
 
         let id = TaskId::next();
-        let task = Task {
-            id,
-            parent_id: ParentTaskId::Root,
-            name: "init".to_owned(),
-            cpu_context: CpuContext::new(),
-        };
+        let task = Task::new(id, ParentTaskId::Root, "init".to_owned());
+
         self.tasks.lock().insert(id, Box::pin(task));
+
+        // Skip the queue and set as current task.
         self.current_task.lock()[0] = Some(id);
+
         id
     }
 
     pub fn create_kthread(&self, func: fn()) -> TaskId {
-        let mut cpu_context = CpuContext::new();
+        let id = TaskId::next();
+        let mut task = Task::new(id, ParentTaskId::Root, "kthread".to_owned());
+
         unsafe {
-            cpu_context.set_program_counter(func as *const u64);
+            task.cpu_context.set_program_counter(func as *const u64);
 
             let page = PageAllocator::instance().alloc();
-            cpu_context.set_stack_pointer(page.end_exclusive() as *mut u64);
+            task.cpu_context
+                .set_stack_pointer(page.end_exclusive() as *mut u64);
+            task.pages.push(page);
         }
 
-        let id = TaskId::next();
-        let task = Task {
-            id,
-            parent_id: ParentTaskId::Root,
-            name: "kthread".to_owned(),
-            cpu_context,
-        };
         self.tasks.lock().insert(id, Box::pin(task));
+
         self.queue.lock().push_back(id);
+
         id
     }
 

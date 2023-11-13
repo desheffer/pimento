@@ -25,7 +25,7 @@ impl Range {
     }
 }
 
-/// An aligned page of memory
+/// An aligned page of physical memory
 #[derive(Debug)]
 pub struct Page {
     range: Range,
@@ -49,6 +49,15 @@ impl Page {
 
     pub fn size(&self) -> usize {
         self.range.size()
+    }
+}
+
+impl Drop for Page {
+    fn drop(&mut self) {
+        // SAFETY: The caller must keep a reference to every page in use.
+        unsafe {
+            PageAllocator::instance().dealloc(self);
+        }
     }
 }
 
@@ -95,5 +104,5 @@ impl PageAllocator {
         Page::new(alloc_start, PAGE_SIZE)
     }
 
-    pub unsafe fn dealloc(&self, _page: Page) {} // TODO
+    pub unsafe fn dealloc(&self, _page: &mut Page) {} // TODO
 }
