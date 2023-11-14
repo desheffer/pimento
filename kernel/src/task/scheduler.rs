@@ -78,16 +78,22 @@ impl Scheduler {
         }
     }
 
-    // TODO: Currently only 1 core is supported.
     pub fn set_num_cores(&self, num_cores: usize) {
         let mut current_task = self.current_task.lock();
         let current_len = current_task.len();
         current_task.extend((current_len..num_cores).map(|_| None));
     }
 
+    pub fn set_after_schedule(&self, after_schedule: fn()) {
+        self.after_schedule.set(after_schedule).unwrap();
+    }
+
     pub fn create_and_become_init(&self) -> TaskId {
         assert!(self.tasks.lock().is_empty());
         assert!(self.queue.lock().is_empty());
+
+        let core_num = self.current_core();
+        assert!(core_num == 0);
 
         let id = TaskId::next();
         let task = Task::new(id, ParentTaskId::Root, "init".to_owned());
@@ -96,7 +102,7 @@ impl Scheduler {
             self.tasks.lock().insert(id, Box::pin(task));
 
             // Skip the queue and set as current task.
-            self.current_task.lock()[0] = Some(id);
+            self.current_task.lock()[core_num] = Some(id);
         });
 
         id
@@ -124,16 +130,18 @@ impl Scheduler {
     }
 
     pub unsafe fn schedule(&self) {
+        let core_num = self.current_core();
+
         let (old_cpu_context, new_cpu_context) = InterruptMask::instance().call(|| {
             let tasks = self.tasks.lock();
             let mut queue = self.queue.lock();
             let mut current_task = self.current_task.lock();
 
             // Put the current task back into the queue and get the next task.
-            let old_task_id = current_task[0].unwrap();
+            let old_task_id = current_task[core_num].unwrap();
             queue.push_back(old_task_id);
             let new_task_id = queue.pop_front().unwrap();
-            current_task[0] = Some(new_task_id);
+            current_task[core_num] = Some(new_task_id);
 
             let old_cpu_context = &tasks.get(&old_task_id).unwrap().cpu_context;
             let new_cpu_context = &tasks.get(&new_task_id).unwrap().cpu_context;
@@ -149,7 +157,8 @@ impl Scheduler {
         cpu_switch(old_cpu_context, new_cpu_context);
     }
 
-    pub fn set_after_schedule(&self, after_schedule: fn()) {
-        self.after_schedule.set(after_schedule).unwrap();
+    // TODO: Only one core is currently supported.
+    fn current_core(&self) -> usize {
+        0
     }
 }
