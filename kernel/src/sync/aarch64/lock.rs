@@ -1,11 +1,11 @@
 use core::arch::asm;
 use core::cell::UnsafeCell;
 
-/// A simple lock
+use crate::task::InterruptMask;
+
+/// A simple spin lock
 ///
-/// This is a poor implementation of a lock that's not actually atomic (when interrupts are
-/// enabled). Despite such a flaw, this lock works "well enough" and serves as a foundation for
-/// when more robust implementations are possible.
+/// This lock assumes that the system has a single core.
 #[derive(Debug)]
 pub struct Lock {
     locked: UnsafeCell<bool>,
@@ -20,22 +20,32 @@ impl Lock {
 
     pub fn lock(&self) {
         // TODO: Use the core::intrinsics::coreatomic_cxchg_* functions once the MMU is enabled.
-        // SAFETY: Not actually safe!
+        // SAFETY: Safe on a single core because interrupts are disabled.
         unsafe {
-            // Spin until the lock is not held.
-            while *self.locked.get() {
+            // Spin until the lock is acquired.
+            loop {
+                let acquired = InterruptMask::instance().call(|| match *self.locked.get() {
+                    true => false,
+                    false => {
+                        *self.locked.get() = true;
+                        true
+                    }
+                });
+                if acquired {
+                    break;
+                }
                 asm!("wfi");
             }
-
-            *self.locked.get() = true;
         }
     }
 
     pub fn unlock(&self) {
         // TODO: Use the core::intrinsics::coreatomic_cxchg_* functions once the MMU is enabled.
-        // SAFETY: Not actually safe!
+        // SAFETY: Safe on a single core because interrupts are disabled.
         unsafe {
-            *self.locked.get() = false;
+            InterruptMask::instance().call(|| {
+                *self.locked.get() = false;
+            });
         }
     }
 
