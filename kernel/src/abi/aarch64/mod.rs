@@ -1,3 +1,3 @@
-pub use self::entry::{disable_interrupts, enable_interrupts, hang};
+pub use self::entry::hang;
 
 mod entry;

@@ -8,7 +8,7 @@ use alloc::vec::Vec;
 
 use crate::memory::{Page, PageAllocator};
 use crate::sync::{Mutex, OnceLock};
-use crate::task::{cpu_switch, CpuContext};
+use crate::task::{cpu_switch, CpuContext, InterruptMask};
 
 /// An auto-incrementing task ID
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -92,10 +92,12 @@ impl Scheduler {
         let id = TaskId::next();
         let task = Task::new(id, ParentTaskId::Root, "init".to_owned());
 
-        self.tasks.lock().insert(id, Box::pin(task));
+        InterruptMask::instance().call(|| {
+            self.tasks.lock().insert(id, Box::pin(task));
 
-        // Skip the queue and set as current task.
-        self.current_task.lock()[0] = Some(id);
+            // Skip the queue and set as current task.
+            self.current_task.lock()[0] = Some(id);
+        });
 
         id
     }
@@ -113,14 +115,17 @@ impl Scheduler {
             task.pages.push(page);
         }
 
-        self.tasks.lock().insert(id, Box::pin(task));
-
-        self.queue.lock().push_back(id);
+        InterruptMask::instance().call(|| {
+            self.tasks.lock().insert(id, Box::pin(task));
+            self.queue.lock().push_back(id);
+        });
 
         id
     }
 
     pub unsafe fn schedule(&self) {
+        InterruptMask::instance().lock();
+
         let tasks = self.tasks.lock();
         let mut queue = self.queue.lock();
         let mut current_task = self.current_task.lock();
@@ -140,6 +145,8 @@ impl Scheduler {
         drop(current_task);
         drop(queue);
         drop(tasks);
+
+        InterruptMask::instance().unlock();
 
         (self.after_schedule.get().unwrap())();
 

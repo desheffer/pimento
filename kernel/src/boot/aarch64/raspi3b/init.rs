@@ -1,7 +1,7 @@
 use core::ops::Add;
 use core::time::Duration;
 
-use crate::abi::{enable_interrupts, hang, LocalInterruptHandler};
+use crate::abi::{hang, LocalInterruptHandler};
 use crate::device::driver::armv8_timer::ArmV8Timer;
 use crate::device::driver::bcm2837_interrupt::{
     Bcm2837Interrupt, Bcm2837InterruptController, CNTPNSIRQ,
@@ -11,7 +11,7 @@ use crate::device::Registry;
 use crate::kernel_main;
 use crate::memory::PageAllocator;
 use crate::sync::OnceLock;
-use crate::task::Scheduler;
+use crate::task::{InterruptMask, Scheduler};
 
 extern "C" {
     static mut __end: u8;
@@ -44,7 +44,7 @@ pub unsafe extern "C" fn kernel_init() -> ! {
     scheduler.set_after_schedule(|| {
         let timer = Registry::instance().timer().unwrap();
         timer.set_duration(core::time::Duration::from_millis(1));
-        enable_interrupts();
+        InterruptMask::instance().enable_interrupts();
     });
     scheduler.create_and_become_init();
     scheduler.schedule();
