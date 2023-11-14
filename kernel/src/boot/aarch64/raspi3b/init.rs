@@ -53,20 +53,20 @@ pub unsafe extern "C" fn kernel_init() -> ! {
 
     // Create example threads:
     scheduler.create_kthread(|| loop {
-        crate::println!("[kthread 1 - 1 sec]");
         let counter = Registry::instance().counter().unwrap();
         let target = counter.uptime().add(Duration::from_secs(1));
         while counter.uptime() < target {
-            core::arch::asm!("nop");
+            core::arch::asm!("wfi");
         }
+        crate::print!("1");
     });
     scheduler.create_kthread(|| loop {
-        crate::println!("[kthread 2 - 2 sec]");
         let counter = Registry::instance().counter().unwrap();
         let target = counter.uptime().add(Duration::from_secs(2));
         while counter.uptime() < target {
-            core::arch::asm!("nop");
+            core::arch::asm!("wfi");
         }
+        crate::print!("2");
     });
 
     kernel_main();
