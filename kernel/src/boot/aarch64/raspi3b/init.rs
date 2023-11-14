@@ -33,7 +33,9 @@ pub unsafe extern "C" fn kernel_init() -> ! {
 
     let page_allocator = PageAllocator::instance();
     let end = &mut __end as *mut u8;
-    page_allocator.add_capacity(end, 0x3F000000 - end as usize);
+    page_allocator.set_capacity(0x40000000);
+    page_allocator.add_reserved_range(0..(end as usize));
+    page_allocator.add_reserved_range(0x3F000000..0x40000000);
 
     let intr_controller = INTR_CONTROLLER.get_or_init(|| Bcm2837InterruptController::new());
     let cntpnsirq = CNTPNSIRQ_INTR.get_or_init(|| intr_controller.interrupt(CNTPNSIRQ));

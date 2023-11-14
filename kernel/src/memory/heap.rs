@@ -10,14 +10,14 @@ use crate::sync::Mutex;
 #[derive(Debug)]
 struct Allocator<const N: usize> {
     heap: UnsafeCell<[u8; N]>,
-    reserved: Mutex<usize>,
+    allocated: Mutex<usize>,
 }
 
 impl<const N: usize> Allocator<N> {
     const fn new() -> Self {
         Self {
             heap: UnsafeCell::new([0; N]),
-            reserved: Mutex::new(0),
+            allocated: Mutex::new(0),
         }
     }
 }
@@ -25,20 +25,20 @@ impl<const N: usize> Allocator<N> {
 unsafe impl<const N: usize> GlobalAlloc for Allocator<N> {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         let start = self.heap.get() as *mut u8;
-        let mut reserved = self.reserved.lock();
+        let mut allocated = self.allocated.lock();
 
         // Reserve space to accommodate the requested alignment.
-        let align_offset = start.add(*reserved).align_offset(layout.align());
-        *reserved += align_offset;
+        let align_offset = start.add(*allocated).align_offset(layout.align());
+        *allocated += align_offset;
 
         // Record the starting point of this allocation.
-        let alloc_start = start.add(*reserved);
+        let alloc_start = start.add(*allocated);
 
         // Reserve space to accommodate the requested size.
-        *reserved += layout.size();
+        *allocated += layout.size();
 
         // Return a null pointer if the heap is exhausted.
-        if *reserved > N {
+        if *allocated > N {
             return ptr::null_mut();
         }
 
