@@ -1,7 +1,7 @@
-pub use counter::Counter;
-pub use logger::Logger;
-pub use registry::Registry;
-pub use timer::Timer;
+pub use self::counter::Counter;
+pub use self::logger::Logger;
+pub use self::registry::Registry;
+pub use self::timer::Timer;
 
 mod counter;
 pub mod driver;
