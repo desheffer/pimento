@@ -124,29 +124,25 @@ impl Scheduler {
     }
 
     pub unsafe fn schedule(&self) {
-        InterruptMask::instance().lock();
+        let (old_cpu_context, new_cpu_context) = InterruptMask::instance().call(|| {
+            let tasks = self.tasks.lock();
+            let mut queue = self.queue.lock();
+            let mut current_task = self.current_task.lock();
 
-        let tasks = self.tasks.lock();
-        let mut queue = self.queue.lock();
-        let mut current_task = self.current_task.lock();
+            // Put the current task back into the queue and get the next task.
+            let old_task_id = current_task[0].unwrap();
+            queue.push_back(old_task_id);
+            let new_task_id = queue.pop_front().unwrap();
+            current_task[0] = Some(new_task_id);
 
-        // Put the current task back into the queue and get the next task.
-        let old_task_id = current_task[0].unwrap();
-        queue.push_back(old_task_id);
-        let new_task_id = queue.pop_front().unwrap();
-        current_task[0] = Some(new_task_id);
+            let old_cpu_context = &tasks.get(&old_task_id).unwrap().cpu_context;
+            let new_cpu_context = &tasks.get(&new_task_id).unwrap().cpu_context;
 
-        let old_task = tasks.get(&old_task_id).unwrap();
-        let new_task = tasks.get(&new_task_id).unwrap();
-
-        let old_cpu_context = &old_task.cpu_context as *const CpuContext as *mut CpuContext;
-        let new_cpu_context = &new_task.cpu_context as *const CpuContext as *mut CpuContext;
-
-        drop(current_task);
-        drop(queue);
-        drop(tasks);
-
-        InterruptMask::instance().unlock();
+            (
+                old_cpu_context as *const CpuContext as *mut CpuContext,
+                new_cpu_context as *const CpuContext as *mut CpuContext,
+            )
+        });
 
         (self.after_schedule.get().unwrap())();
 
