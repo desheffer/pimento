@@ -30,12 +30,15 @@ containing the Raspberry Pi firmware.
 
 This project has been heavily guided by the following resources:
 
-- The tutorials for building an OS in Rust [here][rust-raspberrypi-os-tutorials].
-- The [Raspberry Pi Processors][raspberrypi-processors] documentation.
 - The [Arm Architecture Reference Manual][arm-manual].
+- The [Raspberry Pi Processors][raspberrypi-processors] documentation.
+- The following tutorials:
+  - https://github.com/bztsrc/raspi3-tutorial
+  - https://github.com/rust-embedded/rust-raspberrypi-OS-tutorials
+  - https://github.com/s-matyukevich/raspberry-pi-os
+
 
 [arm-manual]: https://developer.arm.com/documentation/ddi0487/latest/
 [nix-installer]: https://github.com/DeterminateSystems/nix-installer
 [pi-boot-chain]: https://github.com/desheffer/pi-boot-chain
 [raspberrypi-processors]: https://www.raspberrypi.com/documentation/computers/processors.html
-[rust-raspberrypi-os-tutorials]: https://github.com/rust-embedded/rust-raspberrypi-OS-tutorials
