@@ -1,9 +1,9 @@
 use alloc::vec::Vec;
 
-use crate::sync::{Mutex, OnceLock};
+use crate::sync::Mutex;
 
 /// An interrupt that can be raised and detected
-pub trait Interrupt {
+pub trait Interrupt: Sync {
     fn enable(&self);
 
     fn is_pending(&self) -> bool;
@@ -21,11 +21,11 @@ pub struct LocalInterruptHandler<'a> {
 
 impl<'a> LocalInterruptHandler<'a> {
     pub fn instance() -> &'static Self {
-        static INSTANCE: OnceLock<LocalInterruptHandler> = OnceLock::new();
-        INSTANCE.get_or_init(|| Self::new())
+        static INSTANCE: LocalInterruptHandler = LocalInterruptHandler::new();
+        &INSTANCE
     }
 
-    fn new() -> Self {
+    const fn new() -> Self {
         Self {
             handlers: Mutex::new(Vec::new()),
         }

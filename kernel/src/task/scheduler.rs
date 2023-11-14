@@ -65,11 +65,11 @@ pub struct Scheduler {
 
 impl Scheduler {
     pub fn instance() -> &'static Self {
-        static INSTANCE: OnceLock<Scheduler> = OnceLock::new();
-        INSTANCE.get_or_init(|| Self::new())
+        static INSTANCE: Scheduler = Scheduler::new();
+        &INSTANCE
     }
 
-    fn new() -> Self {
+    const fn new() -> Self {
         Self {
             tasks: Mutex::new(BTreeMap::new()),
             queue: Mutex::new(VecDeque::new()),

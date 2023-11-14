@@ -1,6 +1,6 @@
 use alloc::vec::Vec;
 
-use crate::sync::{Mutex, OnceLock};
+use crate::sync::Mutex;
 
 const PAGE_SIZE: usize = 4096;
 
@@ -24,6 +24,9 @@ impl Range {
         self.size
     }
 }
+
+unsafe impl Send for Range {}
+unsafe impl Sync for Range {}
 
 /// An aligned page of physical memory
 #[derive(Debug)]
@@ -71,11 +74,11 @@ pub struct PageAllocator {
 
 impl PageAllocator {
     pub fn instance() -> &'static Self {
-        static INSTANCE: OnceLock<PageAllocator> = OnceLock::new();
-        INSTANCE.get_or_init(|| Self::new())
+        static INSTANCE: PageAllocator = PageAllocator::new();
+        &INSTANCE
     }
 
-    fn new() -> Self {
+    const fn new() -> Self {
         Self {
             pages: Mutex::new(Vec::new()),
             reserved: Mutex::new(0),
