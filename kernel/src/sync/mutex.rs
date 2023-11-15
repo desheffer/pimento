@@ -20,9 +20,9 @@ use crate::sync::Lock;
 /// println!("{}", *SHARED.lock());
 /// ```
 #[derive(Debug)]
-pub struct Mutex<T> {
-    data: UnsafeCell<T>,
+pub struct Mutex<T: ?Sized> {
     lock: Lock,
+    data: UnsafeCell<T>,
 }
 
 impl<T> Mutex<T> {
@@ -32,37 +32,39 @@ impl<T> Mutex<T> {
             lock: Lock::new(),
         }
     }
+}
 
+impl<T: ?Sized> Mutex<T> {
     pub fn lock(&self) -> MutexGuard<'_, T> {
         self.lock.lock();
         MutexGuard::new(self)
     }
 }
 
-unsafe impl<T: Send> Send for Mutex<T> {}
-unsafe impl<T: Send> Sync for Mutex<T> {}
+unsafe impl<T: ?Sized + Send> Send for Mutex<T> {}
+unsafe impl<T: ?Sized + Send> Sync for Mutex<T> {}
 
 /// An RAII implementation of a "scoped lock" of a mutex
 ///
 /// This is a simplified version of `MutexGuard` from the Rust Standard Library.
 #[derive(Debug)]
-pub struct MutexGuard<'a, T> {
+pub struct MutexGuard<'a, T: ?Sized> {
     lock: &'a Mutex<T>,
 }
 
-impl<'a, T> MutexGuard<'a, T> {
+impl<'a, T: ?Sized> MutexGuard<'a, T> {
     pub fn new(lock: &'a Mutex<T>) -> Self {
         Self { lock }
     }
 }
 
-impl<T> Drop for MutexGuard<'_, T> {
+impl<T: ?Sized> Drop for MutexGuard<'_, T> {
     fn drop(&mut self) {
         self.lock.lock.unlock();
     }
 }
 
-impl<T> Deref for MutexGuard<'_, T> {
+impl<T: ?Sized> Deref for MutexGuard<'_, T> {
     type Target = T;
 
     fn deref(&self) -> &T {
@@ -71,25 +73,25 @@ impl<T> Deref for MutexGuard<'_, T> {
     }
 }
 
-impl<T> DerefMut for MutexGuard<'_, T> {
+impl<T: ?Sized> DerefMut for MutexGuard<'_, T> {
     fn deref_mut(&mut self) -> &mut T {
         // SAFETY: Safe because data is behind a lock.
         unsafe { &mut *self.lock.data.get() }
     }
 }
 
-impl<T> Borrow<T> for MutexGuard<'_, T> {
+impl<T: ?Sized> Borrow<T> for MutexGuard<'_, T> {
     fn borrow(&self) -> &T {
         // SAFETY: Safe because data is behind a lock.
         unsafe { &*self.lock.data.get() }
     }
 }
 
-impl<T> BorrowMut<T> for MutexGuard<'_, T> {
+impl<T: ?Sized> BorrowMut<T> for MutexGuard<'_, T> {
     fn borrow_mut(&mut self) -> &mut T {
         // SAFETY: Safe because data is behind a lock.
         unsafe { &mut *self.lock.data.get() }
     }
 }
 
-unsafe impl<T: Sync> Sync for MutexGuard<'_, T> {}
+unsafe impl<T: ?Sized + Sync> Sync for MutexGuard<'_, T> {}
