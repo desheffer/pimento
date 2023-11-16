@@ -13,6 +13,8 @@ use crate::memory::PageAllocator;
 use crate::sync::OnceLock;
 use crate::task::{InterruptMask, Scheduler};
 
+const QUANTUM: Duration = Duration::from_millis(100);
+
 extern "C" {
     static mut __end: u8;
 }
@@ -45,7 +47,7 @@ pub unsafe extern "C" fn kernel_init() -> ! {
     scheduler.set_num_cores(1);
     scheduler.set_after_schedule(|| {
         let timer = Registry::instance().timer().unwrap();
-        timer.set_duration(core::time::Duration::from_millis(1));
+        timer.set_duration(QUANTUM);
         InterruptMask::instance().enable_interrupts();
     });
     scheduler.create_and_become_init();
