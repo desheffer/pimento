@@ -1,5 +1,5 @@
-.globl cpu_switch
-cpu_switch:
+.globl cpu_context_switch
+cpu_context_switch:
     mov x9, sp
     stp x19, x20, [x0, #16 * 0]
     stp x21, x22, [x0, #16 * 1]
@@ -18,7 +18,7 @@ cpu_switch:
     ldr x30, [x1, #16 * 6]
     mov sp, x9
 
-    ret
+    br x2
 
 .globl task_entry
 task_entry:

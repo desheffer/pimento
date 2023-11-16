@@ -45,7 +45,7 @@ pub unsafe extern "C" fn kernel_init() -> ! {
 
     let scheduler = Scheduler::instance();
     scheduler.set_num_cores(1);
-    scheduler.set_after_schedule(|| {
+    scheduler.set_reset_timer(|| {
         let timer = Registry::instance().timer().unwrap();
         timer.set_duration(QUANTUM);
         InterruptMask::instance().enable_interrupts();

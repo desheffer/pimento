@@ -2,7 +2,6 @@ use core::arch::asm;
 use core::arch::global_asm;
 
 use crate::abi::LocalInterruptHandler;
-use crate::task::InterruptMask;
 
 #[no_mangle]
 pub extern "C" fn vector_irq() {
@@ -20,7 +19,7 @@ pub extern "C" fn vector_invalid(code: u64, esr_el1: u64, far_el1: u64) -> ! {
 pub fn hang() -> ! {
     // SAFETY: This is the end.
     unsafe {
-        InterruptMask::instance().disable_interrupts();
+        asm!("msr daifset, #0b1111");
         loop {
             asm!("wfe");
         }

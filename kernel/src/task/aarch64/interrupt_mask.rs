@@ -21,11 +21,11 @@ impl InterruptMask {
     }
 
     unsafe fn _enable_interrupts() {
-        asm!("msr daifclr, #2");
+        asm!("msr daifclr, #0b0010");
     }
 
     unsafe fn _disable_interrupts() {
-        asm!("msr daifset, #2");
+        asm!("msr daifset, #0b0010");
     }
 
     unsafe fn _save() -> u64 {

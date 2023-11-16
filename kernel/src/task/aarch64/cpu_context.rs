@@ -27,7 +27,7 @@ impl CpuContext {
 }
 
 extern "C" {
-    pub fn cpu_switch(old: *mut CpuContext, new: *mut CpuContext);
+    pub fn cpu_context_switch(prev: &CpuContext, next: &CpuContext, after: unsafe extern "C" fn());
     pub fn task_entry(pc: u64);
 }
 
