@@ -1,7 +1,7 @@
 use core::arch::asm;
 use core::time::Duration;
 
-use crate::device::{Counter, Timer};
+use crate::device::{Monotonic, Timer};
 use crate::sync::Lock;
 
 const NANOS: u64 = 1_000_000_000;
@@ -17,7 +17,7 @@ impl ArmV8Timer {
         Self { lock: Lock::new() }
     }
 
-    fn counter_freq(&self) -> u64 {
+    fn frequency(&self) -> u64 {
         // SAFETY: Safe because this is a read operation.
         unsafe {
             let cntfrq: u64;
@@ -26,7 +26,7 @@ impl ArmV8Timer {
         }
     }
 
-    fn counter(&self) -> u64 {
+    fn count(&self) -> u64 {
         // SAFETY: Safe because this is a read operation.
         unsafe {
             let cntpct: u64;
@@ -42,7 +42,7 @@ impl Timer for ArmV8Timer {
         self.lock.call(|| unsafe {
             // Set the timer.
             let tval =
-                (duration.as_nanos() as u128 * self.counter_freq() as u128 / NANOS as u128) as u64;
+                (duration.as_nanos() as u128 * self.frequency() as u128 / NANOS as u128) as u64;
             asm!("msr cntp_tval_el0, {}", in(reg) tval);
 
             // Enable the timer.
@@ -51,9 +51,9 @@ impl Timer for ArmV8Timer {
     }
 }
 
-impl Counter for ArmV8Timer {
-    fn uptime(&self) -> Duration {
-        let nanos = (self.counter() as u128 * NANOS as u128 / self.counter_freq() as u128) as u64;
+impl Monotonic for ArmV8Timer {
+    fn monotonic(&self) -> Duration {
+        let nanos = (self.count() as u128 * NANOS as u128 / self.frequency() as u128) as u64;
         Duration::from_nanos(nanos)
     }
 }

@@ -1,6 +1,6 @@
 use core::fmt::{self, Write};
 
-use crate::device::{Counter, Logger};
+use crate::device::{Monotonic, Logger};
 use crate::sync::{Arc, OnceLock};
 
 #[macro_export]
@@ -43,19 +43,19 @@ pub fn _print(args: fmt::Arguments) {
 }
 
 pub fn _println(args: fmt::Arguments) {
-    if let Some(counter) = PrintRegistry::counter() {
-        let uptime = counter.uptime();
+    if let Some(monotonic) = PrintRegistry::monotonic() {
+        let uptime = monotonic.monotonic();
         print!("[{:5}.{:03}] ", uptime.as_secs(), uptime.subsec_millis());
     }
 
     _print(args);
 }
 
-/// A registry supporting different print implementations
+/// A registry supporting different print implementations.
 #[derive(Debug)]
 pub struct PrintRegistry {
     logger: OnceLock<Arc<dyn Logger>>,
-    counter: OnceLock<Arc<dyn Counter>>,
+    monotonic: OnceLock<Arc<dyn Monotonic>>,
 }
 
 impl PrintRegistry {
@@ -67,20 +67,20 @@ impl PrintRegistry {
     const fn new() -> Self {
         Self {
             logger: OnceLock::new(),
-            counter: OnceLock::new(),
+            monotonic: OnceLock::new(),
         }
     }
 
-    pub fn set_counter(counter: Arc<dyn Counter>) {
-        Self::instance().counter.set(counter).unwrap();
+    pub fn set_monotonic(monotonic: Arc<dyn Monotonic>) {
+        Self::instance().monotonic.set(monotonic).unwrap();
     }
 
     pub fn set_logger(logger: Arc<dyn Logger>) {
         Self::instance().logger.set(logger).unwrap();
     }
 
-    pub fn counter() -> Option<&'static dyn Counter> {
-        Self::instance().counter.get().map(|v| &**v)
+    pub fn monotonic() -> Option<&'static dyn Monotonic> {
+        Self::instance().monotonic.get().map(|v| &**v)
     }
 
     pub fn logger() -> Option<&'static dyn Logger> {

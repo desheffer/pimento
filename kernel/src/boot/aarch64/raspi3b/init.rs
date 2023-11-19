@@ -7,7 +7,7 @@ use crate::abi::{hang, Entry, LocalInterruptHandler};
 use crate::device::driver::armv8_timer::ArmV8Timer;
 use crate::device::driver::bcm2837_interrupt::{Bcm2837InterruptController, CNTPNSIRQ};
 use crate::device::driver::bcm2837_serial::Bcm2837Serial;
-use crate::device::Counter;
+use crate::device::Monotonic;
 use crate::kernel_main;
 use crate::memory::PageAllocator;
 use crate::print::PrintRegistry;
@@ -29,7 +29,7 @@ pub unsafe extern "C" fn kernel_init() -> ! {
     let timer = Arc::new(ArmV8Timer::new());
     let serial = Arc::new(Bcm2837Serial::new());
     serial.init();
-    PrintRegistry::set_counter(timer.clone());
+    PrintRegistry::set_monotonic(timer.clone());
     PrintRegistry::set_logger(serial.clone());
 
     let end = &mut __end as *mut u8;
@@ -62,20 +62,20 @@ pub unsafe extern "C" fn kernel_init() -> ! {
     scheduler.schedule();
 
     // Create example threads:
-    static COUNTER: OnceLock<Arc<dyn Counter>> = OnceLock::new();
-    COUNTER.set(timer.clone()).unwrap();
+    static MONOTONIC: OnceLock<Arc<dyn Monotonic>> = OnceLock::new();
+    MONOTONIC.set(timer.clone()).unwrap();
     scheduler.create_kthread(|| loop {
-        let counter = COUNTER.get().unwrap();
-        let target = counter.uptime().add(Duration::from_secs(1));
-        while counter.uptime() < target {
+        let monotonic = MONOTONIC.get().unwrap();
+        let target = monotonic.monotonic().add(Duration::from_secs(1));
+        while monotonic.monotonic() < target {
             core::arch::asm!("wfi");
         }
         crate::print!("1");
     });
     scheduler.create_kthread(|| loop {
-        let counter = COUNTER.get().unwrap();
-        let target = counter.uptime().add(Duration::from_secs(2));
-        while counter.uptime() < target {
+        let monotonic = MONOTONIC.get().unwrap();
+        let target = monotonic.monotonic().add(Duration::from_secs(2));
+        while monotonic.monotonic() < target {
             core::arch::asm!("wfi");
         }
         crate::print!("2");
