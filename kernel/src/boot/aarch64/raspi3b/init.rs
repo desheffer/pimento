@@ -1,19 +1,20 @@
 use core::ops::Add;
 use core::time::Duration;
 
-use crate::abi::{hang, LocalInterruptHandler};
+use alloc::vec;
+
+use crate::abi::{hang, Entry, LocalInterruptHandler};
 use crate::device::driver::armv8_timer::ArmV8Timer;
-use crate::device::driver::bcm2837_interrupt::{
-    Bcm2837Interrupt, Bcm2837InterruptController, CNTPNSIRQ,
-};
+use crate::device::driver::bcm2837_interrupt::{Bcm2837InterruptController, CNTPNSIRQ};
 use crate::device::driver::bcm2837_serial::Bcm2837Serial;
-use crate::device::Registry;
+use crate::device::Counter;
 use crate::kernel_main;
 use crate::memory::PageAllocator;
-use crate::sync::OnceLock;
-use crate::task::{InterruptMask, Scheduler};
+use crate::print::PrintRegistry;
+use crate::sync::{Arc, OnceLock};
+use crate::task::{InterruptMask, Scheduler, _scheduler_schedule};
 
-const QUANTUM: Duration = Duration::from_millis(100);
+const QUANTUM: Duration = Duration::from_millis(10);
 
 extern "C" {
     static mut __end: u8;
@@ -25,37 +26,47 @@ extern "C" {
 /// loaded from a Device Tree Blob (DTB).
 #[no_mangle]
 pub unsafe extern "C" fn kernel_init() -> ! {
-    let timer = TIMER.get_or_init(|| ArmV8Timer::new());
-    Registry::instance().set_timer(timer);
-    Registry::instance().set_counter(timer);
-
-    let serial = SERIAL.get_or_init(|| Bcm2837Serial::new());
+    let timer = Arc::new(ArmV8Timer::new());
+    let serial = Arc::new(Bcm2837Serial::new());
     serial.init();
-    Registry::instance().set_logger(serial);
+    PrintRegistry::set_counter(timer.clone());
+    PrintRegistry::set_logger(serial.clone());
 
-    let page_allocator = PageAllocator::instance();
     let end = &mut __end as *mut u8;
-    page_allocator.set_capacity(0x40000000);
-    page_allocator.add_reserved_range(0..(end as usize));
-    page_allocator.add_reserved_range(0x3F000000..0x40000000);
+    let page_allocator = Arc::new(PageAllocator::new(
+        0x40000000,
+        vec![0..(end as usize), 0x3F000000..0x40000000],
+    ));
 
-    let intr_controller = INTR_CONTROLLER.get_or_init(|| Bcm2837InterruptController::new());
-    let cntpnsirq = CNTPNSIRQ_INTR.get_or_init(|| intr_controller.interrupt(CNTPNSIRQ));
-    LocalInterruptHandler::instance().enable(cntpnsirq, || Scheduler::instance().schedule());
+    let local_interrupt_handler = Arc::new(LocalInterruptHandler::new());
 
-    let scheduler = Scheduler::instance();
-    scheduler.set_num_cores(1);
-    scheduler.set_reset_timer(|| {
-        let timer = Registry::instance().timer().unwrap();
-        timer.set_duration(QUANTUM);
-        InterruptMask::instance().enable_interrupts();
-    });
+    let entry = Entry::new(local_interrupt_handler.clone());
+    entry.install();
+
+    let scheduler = Arc::new(Scheduler::new(
+        1,
+        QUANTUM,
+        timer.clone(),
+        InterruptMask::instance(),
+        page_allocator.clone(),
+    ));
     scheduler.create_and_become_init();
+
+    let interrupt_controller = Arc::new(Bcm2837InterruptController::new());
+    local_interrupt_handler.enable(
+        interrupt_controller,
+        CNTPNSIRQ,
+        _scheduler_schedule,
+        &scheduler as *const Arc<Scheduler> as *const (),
+    );
+
     scheduler.schedule();
 
     // Create example threads:
+    static COUNTER: OnceLock<Arc<dyn Counter>> = OnceLock::new();
+    COUNTER.set(timer.clone()).unwrap();
     scheduler.create_kthread(|| loop {
-        let counter = Registry::instance().counter().unwrap();
+        let counter = COUNTER.get().unwrap();
         let target = counter.uptime().add(Duration::from_secs(1));
         while counter.uptime() < target {
             core::arch::asm!("wfi");
@@ -63,7 +74,7 @@ pub unsafe extern "C" fn kernel_init() -> ! {
         crate::print!("1");
     });
     scheduler.create_kthread(|| loop {
-        let counter = Registry::instance().counter().unwrap();
+        let counter = COUNTER.get().unwrap();
         let target = counter.uptime().add(Duration::from_secs(2));
         while counter.uptime() < target {
             core::arch::asm!("wfi");
@@ -75,8 +86,3 @@ pub unsafe extern "C" fn kernel_init() -> ! {
 
     hang();
 }
-
-static TIMER: OnceLock<ArmV8Timer> = OnceLock::new();
-static SERIAL: OnceLock<Bcm2837Serial> = OnceLock::new();
-static INTR_CONTROLLER: OnceLock<Bcm2837InterruptController> = OnceLock::new();
-static CNTPNSIRQ_INTR: OnceLock<Bcm2837Interrupt> = OnceLock::new();

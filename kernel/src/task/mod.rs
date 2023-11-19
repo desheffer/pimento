@@ -1,5 +1,5 @@
 pub use self::arch::*;
-pub use self::scheduler::{Scheduler, Task, TaskId};
+pub use self::scheduler::{Scheduler, Task, TaskId, _scheduler_schedule};
 
 mod scheduler;
 

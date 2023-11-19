@@ -18,6 +18,7 @@ cpu_context_switch:
     ldr x30, [x1, #16 * 6]
     mov sp, x9
 
+    mov x0, x3
     br x2
 
 .globl task_entry

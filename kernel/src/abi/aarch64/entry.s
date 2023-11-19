@@ -10,7 +10,7 @@
     mov x0, \code
     mrs x1, esr_el1
     mrs x2, far_el1
-    b vector_invalid
+    b _vector_invalid
 .endm
 
 .globl vector_table
@@ -92,12 +92,12 @@ vector_table:
 
 el1_irq:
     save_regs
-    bl vector_irq
+    bl _vector_irq
     load_regs
     eret
 
 el0_irq:
     save_regs
-    bl vector_irq
+    bl _vector_irq
     load_regs
     eret

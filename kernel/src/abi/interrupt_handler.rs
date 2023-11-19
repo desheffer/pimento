@@ -1,60 +1,70 @@
 use alloc::vec::Vec;
 
-use crate::sync::Mutex;
-
-/// An interrupt that can be raised and detected
-pub trait Interrupt: Sync {
-    fn enable(&self);
-
-    fn is_pending(&self) -> bool;
-
-    fn clear(&self);
-}
+use crate::device::InterruptController;
+use crate::sync::{Arc, Mutex};
 
 /// A generic interrupt handler
 ///
 /// When an interrupt is raised, the local interrupt handler will determine the source of the
 /// interrupt, and then it will call the handler registered with that source.
-pub struct LocalInterruptHandler<'a> {
-    handlers: Mutex<Vec<InterruptHandler<'a>>>,
+pub struct LocalInterruptHandler {
+    interrupts: Mutex<Vec<Interrupt>>,
 }
 
-impl<'a> LocalInterruptHandler<'a> {
-    pub fn instance() -> &'static Self {
-        static INSTANCE: LocalInterruptHandler = LocalInterruptHandler::new();
-        &INSTANCE
-    }
-
-    const fn new() -> Self {
+impl LocalInterruptHandler {
+    pub const fn new() -> Self {
         Self {
-            handlers: Mutex::new(Vec::new()),
+            interrupts: Mutex::new(Vec::new()),
         }
     }
 
-    pub fn enable(&self, interrupt: &'a dyn Interrupt, handler: fn()) {
-        let mut handlers = self.handlers.lock();
-        handlers.push(InterruptHandler(interrupt, handler));
-        interrupt.enable();
+    pub fn enable(
+        &self,
+        interrupt_controller: Arc<dyn InterruptController>,
+        number: u64,
+        handler: unsafe fn(*const ()),
+        data: *const (),
+    ) {
+        let mut handlers = self.interrupts.lock();
+        handlers.push(Interrupt {
+            controller: interrupt_controller.clone(),
+            number,
+            handler,
+            data,
+        });
+        interrupt_controller.enable(number);
     }
 
-    pub fn handle(&self) {
-        let mut func: Option<fn()> = None;
+    pub unsafe fn handle(&self) {
+        let mut handler: Option<unsafe fn(*const ())> = None;
+        let mut data: Option<*const ()> = None;
 
-        let handlers = self.handlers.lock();
-        for handler in &*handlers {
-            if handler.0.is_pending() {
-                handler.0.clear();
-                func = Some(handler.1);
+        let interrupts = self.interrupts.lock();
+        for interrupt in &*interrupts {
+            if interrupt.controller.is_pending(interrupt.number) {
+                interrupt.controller.clear(interrupt.number);
+                handler = Some(interrupt.handler);
+                data = Some(interrupt.data);
                 break;
             }
         }
-        drop(handlers);
+        drop(interrupts);
 
-        if let Some(func) = func {
-            func();
+        if let Some(handler) = handler {
+            if let Some(data) = data {
+                (handler)(data);
+            }
         }
     }
 }
 
-/// An interrupt handler tied to a specific interrupt
-struct InterruptHandler<'a>(&'a dyn Interrupt, fn());
+/// The values representing an interrupt that is enabled
+struct Interrupt {
+    controller: Arc<dyn InterruptController>,
+    number: u64,
+    handler: unsafe fn(*const ()),
+    data: *const (),
+}
+
+unsafe impl Send for Interrupt {}
+unsafe impl Sync for Interrupt {}

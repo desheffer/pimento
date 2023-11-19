@@ -31,9 +31,4 @@ enter_el1:
     ldr x9, =__stack_start
     mov sp, x9
 
-    // Set up vector table.
-    adr x9, vector_table
-    msr vbar_el1, x9
-    isb
-
     b kernel_init

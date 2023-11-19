@@ -2,6 +2,7 @@ use core::arch::asm;
 use core::cell::UnsafeCell;
 
 /// A simple wrapper for enabling and disabling interrupts
+#[derive(Debug)]
 pub struct InterruptMask {
     level: UnsafeCell<i64>,
     saved_daif: UnsafeCell<u64>,

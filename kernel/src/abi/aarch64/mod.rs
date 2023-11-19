@@ -1,3 +1,3 @@
-pub use self::entry::hang;
+pub use self::entry::{hang, Entry};
 
 mod entry;

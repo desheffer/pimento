@@ -1,4 +1,4 @@
-use crate::abi::Interrupt;
+use crate::device::InterruptController;
 use crate::sync::Lock;
 
 const CONTROL: *mut u32 = 0x40000000 as *mut u32; // Control register
@@ -14,7 +14,7 @@ const CORE1_IRQ: *mut u32 = 0x40000064 as *mut u32; // Core 1 IRQ source
 const CORE2_IRQ: *mut u32 = 0x40000068 as *mut u32; // Core 2 IRQ source
 const CORE3_IRQ: *mut u32 = 0x4000006C as *mut u32; // Core 3 IRQ source
 
-pub const CNTPNSIRQ: u32 = 1;
+pub const CNTPNSIRQ: u64 = 1;
 
 /// Broadcom chip used in the Raspberry Pi 3 Model B and others
 ///
@@ -28,57 +28,27 @@ impl Bcm2837InterruptController {
     pub const unsafe fn new() -> Self {
         Self { lock: Lock::new() }
     }
+}
 
-    pub fn interrupt(&self, number: u32) -> Bcm2837Interrupt {
-        assert!(number <= 10);
-
-        Bcm2837Interrupt::new(self, number)
-    }
-
-    fn enable(&self, number: u32) {
+impl InterruptController for Bcm2837InterruptController {
+    fn enable(&self, number: u64) {
         // SAFETY: Safe because call is behind a lock.
         self.lock.call(|| unsafe {
             CORE0_TIMER_IRQCNTL
-                .write_volatile(CORE0_TIMER_IRQCNTL.read_volatile() | (0b1 << number));
+                .write_volatile(CORE0_TIMER_IRQCNTL.read_volatile() | (0b1 << number as u32));
         })
     }
 
-    fn pending(&self, number: u32) -> bool {
+    fn is_pending(&self, number: u64) -> bool {
         // SAFETY: Safe because call is behind a lock.
         self.lock
-            .call(|| unsafe { (CORE0_IRQ.read_volatile() & (0b1 << number)) != 0 })
+            .call(|| unsafe { (CORE0_IRQ.read_volatile() & (0b1 << number as u32)) != 0 })
     }
 
-    fn clear(&self, number: u32) {
+    fn clear(&self, number: u64) {
         // SAFETY: Safe because call is behind a lock.
         self.lock.call(|| unsafe {
-            CORE0_IRQ.write_volatile(CORE0_IRQ.read_volatile() & !(0b1 << number));
+            CORE0_IRQ.write_volatile(CORE0_IRQ.read_volatile() & !(0b1 << number as u32));
         });
-    }
-}
-
-#[derive(Debug)]
-pub struct Bcm2837Interrupt<'a> {
-    controller: &'a Bcm2837InterruptController,
-    number: u32,
-}
-
-impl<'a> Bcm2837Interrupt<'a> {
-    const fn new(controller: &'a Bcm2837InterruptController, number: u32) -> Self {
-        Self { controller, number }
-    }
-}
-
-impl<'a> Interrupt for Bcm2837Interrupt<'_> {
-    fn enable(&self) {
-        self.controller.enable(self.number);
-    }
-
-    fn is_pending(&self) -> bool {
-        self.controller.pending(self.number)
-    }
-
-    fn clear(&self) {
-        self.controller.clear(self.number);
     }
 }

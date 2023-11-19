@@ -1,5 +1,5 @@
 pub use self::arch::*;
-pub use self::interrupt_handler::{Interrupt, LocalInterruptHandler};
+pub use self::interrupt_handler::LocalInterruptHandler;
 
 mod interrupt_handler;
 

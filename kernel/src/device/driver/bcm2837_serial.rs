@@ -47,7 +47,7 @@ pub struct Bcm2837Serial {
 }
 
 impl Bcm2837Serial {
-    pub const unsafe fn new() -> Self {
+    pub unsafe fn new() -> Self {
         Self { lock: Lock::new() }
     }
 
@@ -106,6 +106,16 @@ impl Bcm2837Serial {
         });
     }
 
+    fn write_byte(&self, c: u8) {
+        // SAFETY: Safe because call is behind a lock.
+        self.lock.call(|| unsafe {
+            // Wait until transmitter is empty.
+            while AUX_MU_LSR.read_volatile() & AUX_MU_LSR_TX_EMPTY == 0 {}
+
+            AUX_MU_IO.write_volatile(c as u8);
+        });
+    }
+
     fn read_byte(&self) -> Option<u8> {
         // SAFETY: Safe because call is behind a lock.
         self.lock.call(|| unsafe {
@@ -121,14 +131,8 @@ impl Bcm2837Serial {
 
 impl Logger for Bcm2837Serial {
     fn write_str(&self, s: &str) {
-        // SAFETY: Safe because call is behind a lock.
-        self.lock.call(|| unsafe {
-            for c in s.bytes() {
-                // Wait until transmitter is empty.
-                while AUX_MU_LSR.read_volatile() & AUX_MU_LSR_TX_EMPTY == 0 {}
-
-                AUX_MU_IO.write_volatile(c as u8);
-            }
-        });
+        for c in s.bytes() {
+            self.write_byte(c);
+        }
     }
 }

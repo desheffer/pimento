@@ -1,4 +1,5 @@
 use core::cell::UnsafeCell;
+use core::time::Duration;
 
 use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
@@ -6,8 +7,9 @@ use alloc::collections::{BTreeMap, VecDeque};
 use alloc::string::String;
 use alloc::vec::Vec;
 
+use crate::device::Timer;
 use crate::memory::{Page, PageAllocator};
-use crate::sync::{Mutex, OnceLock};
+use crate::sync::{Arc, Mutex};
 use crate::task::{cpu_context_switch, CpuContext, InterruptMask};
 
 /// An auto-incrementing task ID
@@ -60,35 +62,32 @@ pub struct Scheduler {
     tasks: UnsafeCell<BTreeMap<TaskId, Box<Task>>>,
     queue: UnsafeCell<VecDeque<TaskId>>,
     current_task: UnsafeCell<Vec<Option<TaskId>>>,
-    reset_timer: OnceLock<fn()>,
+    quantum: Duration,
+    timer: Arc<dyn Timer>,
+    interrupt_mask: &'static InterruptMask,
+    page_allocator: Arc<PageAllocator>,
 }
 
 impl Scheduler {
-    pub fn instance() -> &'static Self {
-        static INSTANCE: Scheduler = Scheduler::new();
-        &INSTANCE
-    }
+    pub fn new(
+        num_cores: usize,
+        quantum: Duration,
+        timer: Arc<dyn Timer>,
+        interrupt_mask: &'static InterruptMask,
+        page_allocator: Arc<PageAllocator>,
+    ) -> Self {
+        let mut current_task = Vec::new();
+        current_task.extend((0..num_cores).map(|_| None));
 
-    const fn new() -> Self {
         Self {
             tasks: UnsafeCell::new(BTreeMap::new()),
             queue: UnsafeCell::new(VecDeque::new()),
-            current_task: UnsafeCell::new(Vec::new()),
-            reset_timer: OnceLock::new(),
+            current_task: UnsafeCell::new(current_task),
+            quantum,
+            timer,
+            interrupt_mask,
+            page_allocator,
         }
-    }
-
-    pub fn set_num_cores(&self, num_cores: usize) {
-        let current_task = self.current_task.get();
-
-        InterruptMask::instance().call(|| unsafe {
-            let current_len = (*current_task).len();
-            (*current_task).extend((current_len..num_cores).map(|_| None));
-        });
-    }
-
-    pub fn set_reset_timer(&self, reset_timer: fn()) {
-        self.reset_timer.set(reset_timer).unwrap();
     }
 
     pub fn create_and_become_init(&self) -> TaskId {
@@ -100,7 +99,8 @@ impl Scheduler {
         let id = TaskId::next();
         let task = Task::new(id, ParentTaskId::Root, "init".to_owned());
 
-        InterruptMask::instance().call(|| unsafe {
+        // SAFETY: Safe because call is behind a lock.
+        self.interrupt_mask.call(|| unsafe {
             assert!((*tasks).is_empty());
             assert!((*queue).is_empty());
             assert!(core_num == 0);
@@ -121,16 +121,18 @@ impl Scheduler {
         let id = TaskId::next();
         let mut task = Task::new(id, ParentTaskId::Root, "kthread".to_owned());
 
+        // SAFETY: Safe because these are basic conversions from references to pointers.
         unsafe {
             task.cpu_context.set_program_counter(func as *const u64);
 
-            let page = PageAllocator::instance().alloc();
+            let page = self.page_allocator.alloc();
             task.cpu_context
                 .set_stack_pointer(page.end_exclusive() as *mut u64);
             task.pages.push(page);
         }
 
-        InterruptMask::instance().call(|| unsafe {
+        // SAFETY: Safe because call is behind a lock.
+        self.interrupt_mask.call(|| unsafe {
             (*tasks).insert(id, Box::new(task));
             (*queue).push_back(id);
         });
@@ -144,7 +146,7 @@ impl Scheduler {
         let current_task = self.current_task.get();
         let core_num = self.current_core();
 
-        InterruptMask::instance().lock();
+        self.interrupt_mask.lock();
 
         // Put the current task back into the queue and get the next task.
         let prev_task_id = (*current_task)[core_num].unwrap();
@@ -160,14 +162,17 @@ impl Scheduler {
         cpu_context_switch(
             &prev_task.cpu_context,
             &next_task.cpu_context,
-            scheduler_after_schedule,
+            _scheduler_after_schedule,
+            self as *const Scheduler as *const (),
         );
     }
 
     unsafe fn after_schedule(&self) {
-        InterruptMask::instance().unlock();
+        self.interrupt_mask.unlock();
 
-        (self.reset_timer.get().unwrap())();
+        self.timer.set_duration(self.quantum);
+
+        self.interrupt_mask.enable_interrupts();
     }
 
     // TODO: Only one core is currently supported.
@@ -177,8 +182,15 @@ impl Scheduler {
 }
 
 #[no_mangle]
-unsafe extern "C" fn scheduler_after_schedule() {
-    Scheduler::instance().after_schedule();
+pub unsafe fn _scheduler_schedule(scheduler: *const ()) {
+    let scheduler = &*(scheduler as *const Arc<Scheduler>);
+    scheduler.schedule();
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn _scheduler_after_schedule(scheduler: *const ()) {
+    let scheduler = &*(scheduler as *const Scheduler);
+    scheduler.after_schedule();
 }
 
 unsafe impl Send for Scheduler {}

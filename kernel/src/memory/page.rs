@@ -32,52 +32,29 @@ impl Page {
     }
 }
 
-impl Drop for Page {
-    fn drop(&mut self) {
-        // SAFETY: The caller must keep a reference to every page in use.
-        unsafe {
-            PageAllocator::instance().dealloc(self);
-        }
-    }
-}
-
 unsafe impl Send for Page {}
 unsafe impl Sync for Page {}
 
 /// A simple page allocator
 ///
 /// Allocations are made linearly. Deallocations are not implemented.
+#[derive(Debug)]
 pub struct PageAllocator {
-    capacity: Mutex<usize>,
-    reserved_ranges: Mutex<Vec<Range<usize>>>,
+    capacity: usize,
+    reserved_ranges: Vec<Range<usize>>,
     allocated: Mutex<usize>,
 }
 
 impl PageAllocator {
-    pub fn instance() -> &'static Self {
-        static INSTANCE: PageAllocator = PageAllocator::new();
-        &INSTANCE
-    }
-
-    const fn new() -> Self {
+    pub fn new(capacity: usize, reserved_ranges: Vec<Range<usize>>) -> Self {
         Self {
-            capacity: Mutex::new(0),
-            reserved_ranges: Mutex::new(Vec::new()),
+            capacity,
+            reserved_ranges,
             allocated: Mutex::new(0),
         }
     }
 
-    pub unsafe fn set_capacity(&self, capacity: usize) {
-        *self.capacity.lock() = capacity;
-    }
-
-    pub unsafe fn add_reserved_range(&self, range: Range<usize>) {
-        self.reserved_ranges.lock().push(range);
-    }
-
     pub unsafe fn alloc(&self) -> Page {
-        let capacity = self.capacity.lock();
-        let reserved = self.reserved_ranges.lock();
         let mut allocated = self.allocated.lock();
         let mut alloc_start;
 
@@ -89,13 +66,13 @@ impl PageAllocator {
             *allocated += PAGE_SIZE;
 
             // Return a null pointer if memory is exhausted.
-            if *allocated > *capacity {
+            if *allocated > self.capacity {
                 panic!("page allocation failed");
             }
 
             // Retry if this allocation intersects a reserved range.
             let alloc_range = alloc_start..(alloc_start + PAGE_SIZE);
-            for reserved_range in &*reserved {
+            for reserved_range in &self.reserved_ranges {
                 if alloc_range.contains(&reserved_range.start)
                     || alloc_range.contains(&(reserved_range.end - 1))
                     || reserved_range.contains(&alloc_range.start)
