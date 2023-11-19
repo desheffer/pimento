@@ -12,7 +12,7 @@ use crate::kernel_main;
 use crate::memory::PageAllocator;
 use crate::print::PrintRegistry;
 use crate::sync::{Arc, OnceLock};
-use crate::task::{InterruptMask, Scheduler, _scheduler_schedule};
+use crate::task::{Scheduler, _scheduler_schedule};
 
 const QUANTUM: Duration = Duration::from_millis(10);
 
@@ -47,7 +47,6 @@ pub unsafe extern "C" fn kernel_init() -> ! {
         1,
         QUANTUM,
         timer.clone(),
-        InterruptMask::instance(),
         page_allocator.clone(),
     ));
     scheduler.create_and_become_init();

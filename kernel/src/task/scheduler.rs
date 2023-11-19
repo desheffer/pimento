@@ -9,8 +9,10 @@ use alloc::vec::Vec;
 
 use crate::device::Timer;
 use crate::memory::{Page, PageAllocator};
-use crate::sync::{Arc, Mutex};
-use crate::task::{cpu_context_switch, CpuContext, InterruptMask};
+use crate::sync::{Arc, Mutex, UninterruptibleLock};
+use crate::task::{cpu_context_switch, CpuContext};
+
+use super::InterruptMask;
 
 /// An auto-incrementing task ID
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
@@ -59,12 +61,12 @@ impl Task {
 /// A round-robin task scheduler
 #[derive(Debug)]
 pub struct Scheduler {
+    lock: UninterruptibleLock,
     tasks: UnsafeCell<BTreeMap<TaskId, Box<Task>>>,
     queue: UnsafeCell<VecDeque<TaskId>>,
     current_task: UnsafeCell<Vec<Option<TaskId>>>,
     quantum: Duration,
     timer: Arc<dyn Timer>,
-    interrupt_mask: &'static InterruptMask,
     page_allocator: Arc<PageAllocator>,
 }
 
@@ -73,19 +75,18 @@ impl Scheduler {
         num_cores: usize,
         quantum: Duration,
         timer: Arc<dyn Timer>,
-        interrupt_mask: &'static InterruptMask,
         page_allocator: Arc<PageAllocator>,
     ) -> Self {
         let mut current_task = Vec::new();
         current_task.extend((0..num_cores).map(|_| None));
 
         Self {
+            lock: UninterruptibleLock::new(),
             tasks: UnsafeCell::new(BTreeMap::new()),
             queue: UnsafeCell::new(VecDeque::new()),
             current_task: UnsafeCell::new(current_task),
             quantum,
             timer,
-            interrupt_mask,
             page_allocator,
         }
     }
@@ -100,7 +101,7 @@ impl Scheduler {
         let task = Task::new(id, ParentTaskId::Root, "init".to_owned());
 
         // SAFETY: Safe because call is behind a lock.
-        self.interrupt_mask.call(|| unsafe {
+        self.lock.call(|| unsafe {
             assert!((*tasks).is_empty());
             assert!((*queue).is_empty());
             assert!(core_num == 0);
@@ -132,7 +133,7 @@ impl Scheduler {
         }
 
         // SAFETY: Safe because call is behind a lock.
-        self.interrupt_mask.call(|| unsafe {
+        self.lock.call(|| unsafe {
             (*tasks).insert(id, Box::new(task));
             (*queue).push_back(id);
         });
@@ -146,7 +147,7 @@ impl Scheduler {
         let current_task = self.current_task.get();
         let core_num = self.current_core();
 
-        self.interrupt_mask.lock();
+        self.lock.lock();
 
         // Put the current task back into the queue and get the next task.
         let prev_task_id = (*current_task)[core_num].unwrap();
@@ -165,14 +166,17 @@ impl Scheduler {
             _scheduler_after_schedule,
             self as *const Scheduler as *const (),
         );
+
+        // The previous function call might not return or might return in a different context. All
+        // clean up should be handled before that call or in the `after_schedule` function.
     }
 
     unsafe fn after_schedule(&self) {
-        self.interrupt_mask.unlock();
+        self.lock.unlock();
 
         self.timer.set_duration(self.quantum);
 
-        self.interrupt_mask.enable_interrupts();
+        InterruptMask::instance().enable_interrupts();
     }
 
     // TODO: Only one core is currently supported.
