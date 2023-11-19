@@ -34,6 +34,7 @@ pub unsafe extern "C" fn kernel_init() -> ! {
 
     let end = &mut __end as *mut u8;
     let page_allocator = Arc::new(PageAllocator::new(
+        4096,
         0x40000000,
         vec![0..(end as usize), 0x3F000000..0x40000000],
     ));
