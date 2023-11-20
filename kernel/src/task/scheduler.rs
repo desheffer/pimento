@@ -14,7 +14,7 @@ use crate::task::{cpu_context_switch, CpuContext};
 
 use super::InterruptMask;
 
-/// An auto-incrementing task ID
+/// An auto-incrementing task ID.
 #[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct TaskId {
     id: u64,
@@ -30,13 +30,14 @@ impl TaskId {
     }
 }
 
-/// A representation of a task's parent task ID
+/// A task's parent task ID.
 #[derive(Debug)]
 pub enum ParentTaskId {
     Root,
     TaskId(TaskId),
 }
 
+/// A task and the context it needs to run.
 #[derive(Debug)]
 pub struct Task {
     id: TaskId,
@@ -58,7 +59,7 @@ impl Task {
     }
 }
 
-/// A round-robin task scheduler
+/// A round-robin task scheduler.
 #[derive(Debug)]
 pub struct Scheduler {
     lock: UninterruptibleLock,
@@ -91,6 +92,8 @@ impl Scheduler {
         }
     }
 
+    /// Creates a task for the "init" process, which is presumed to be the currently running
+    /// process. This is required after initialization.
     pub fn create_and_become_init(&self) -> TaskId {
         let tasks = self.tasks.get();
         let queue = self.queue.get();
@@ -115,6 +118,7 @@ impl Scheduler {
         id
     }
 
+    /// Spawns a new kernel thread that will execute the given function.
     pub fn create_kthread(&self, func: fn()) -> TaskId {
         let tasks = self.tasks.get();
         let queue = self.queue.get();
@@ -124,7 +128,7 @@ impl Scheduler {
 
         // SAFETY: Safe because these are basic conversions from references to pointers.
         unsafe {
-            task.cpu_context.set_program_counter(func as *const u64);
+            task.cpu_context.set_task_entry(func as *const u64);
 
             let page = self.page_allocator.alloc();
             task.cpu_context
@@ -141,6 +145,7 @@ impl Scheduler {
         id
     }
 
+    /// Determines the next task to run and performs a context switch.
     pub unsafe fn schedule(&self) {
         let tasks = self.tasks.get();
         let queue = self.queue.get();
@@ -171,6 +176,8 @@ impl Scheduler {
         // clean up should be handled before that call or in the `after_schedule` function.
     }
 
+    /// Cleans up after the `schedule` function. This is required due to the complex nature of a
+    /// context switch.
     unsafe fn after_schedule(&self) {
         self.lock.unlock();
 
@@ -179,20 +186,23 @@ impl Scheduler {
         InterruptMask::instance().enable_interrupts();
     }
 
-    // TODO: Only one core is currently supported.
+    /// Gets the index number of the current CPU core.
     fn current_core(&self) -> usize {
+        // TODO: Only one core is currently supported.
         0
     }
 }
 
+/// Wraps the `schedule` function so that it can be called from the interrupt handler.
 #[no_mangle]
 pub unsafe fn _scheduler_schedule(scheduler: *const ()) {
     let scheduler = &*(scheduler as *const Arc<Scheduler>);
     scheduler.schedule();
 }
 
+/// Wraps the `after_schedule` function so that it can be called from the context switch function.
 #[no_mangle]
-pub unsafe extern "C" fn _scheduler_after_schedule(scheduler: *const ()) {
+unsafe extern "C" fn _scheduler_after_schedule(scheduler: *const ()) {
     let scheduler = &*(scheduler as *const Scheduler);
     scheduler.after_schedule();
 }

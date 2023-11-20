@@ -1,24 +1,46 @@
 use core::arch::global_asm;
 
+/// AArch64 registers to persist between context switches.
 #[derive(Debug)]
 #[repr(C)]
 pub struct CpuContext {
-    x: [u64; 11], // x19 - x29
-    sp: u64,
-    pc: u64,
+    x19: u64,
+    x20: u64,
+    x21: u64,
+    x22: u64,
+    x23: u64,
+    x24: u64,
+    x25: u64,
+    x26: u64,
+    x27: u64,
+    x28: u64,
+    lr: u64, // x29
+    pc: u64, // x30
+    sp: u64, // x31
 }
 
 impl CpuContext {
     pub fn new() -> Self {
         Self {
-            x: [0; 11],
+            x19: 0,
+            x20: 0,
+            x21: 0,
+            x22: 0,
+            x23: 0,
+            x24: 0,
+            x25: 0,
+            x26: 0,
+            x27: 0,
+            x28: 0,
+            lr: 0,
             sp: 0,
-            pc: task_entry as *const fn() as u64,
+            pc: 0,
         }
     }
 
-    pub unsafe fn set_program_counter(&mut self, pc: *const u64) {
-        self.x[0] = pc as u64;
+    pub unsafe fn set_task_entry(&mut self, pc: *const u64) {
+        self.pc = task_entry as *const fn() as u64;
+        self.x19 = pc as u64;
     }
 
     pub unsafe fn set_stack_pointer(&mut self, sp: *mut u64) {
@@ -33,6 +55,7 @@ extern "C" {
         after: unsafe extern "C" fn(*const ()),
         data: *const (),
     );
+
     pub fn task_entry(pc: u64);
 }
 

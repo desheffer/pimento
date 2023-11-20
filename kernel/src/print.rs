@@ -87,14 +87,14 @@ impl PrintRegistry {
         Self::instance().logger.get().map(|v| &**v)
     }
 
-    pub fn writer() -> Writer {
+    fn writer() -> Writer {
         Writer::new(Self::instance())
     }
 }
 
-/// A writer for kernel log messages
+/// A writer for kernel log messages.
 #[derive(Debug)]
-pub struct Writer {
+struct Writer {
     print_registry: &'static PrintRegistry,
 }
 

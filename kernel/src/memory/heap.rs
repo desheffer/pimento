@@ -4,7 +4,7 @@ use core::ptr;
 
 use crate::sync::Mutex;
 
-/// A simple heap allocator
+/// A simple heap allocator.
 ///
 /// Allocations are made linearly. Deallocations are not implemented.
 #[derive(Debug)]

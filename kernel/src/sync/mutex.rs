@@ -4,7 +4,7 @@ use core::ops::{Deref, DerefMut};
 
 use crate::sync::Lock;
 
-/// A mutual exclusion primitive for protecting shared data
+/// A mutual exclusion primitive for protecting shared data.
 ///
 /// This is a simplified version of `Mutex` from the Rust Standard Library.
 ///
@@ -44,7 +44,7 @@ impl<T: ?Sized> Mutex<T> {
 unsafe impl<T: ?Sized + Send> Send for Mutex<T> {}
 unsafe impl<T: ?Sized + Send> Sync for Mutex<T> {}
 
-/// An RAII implementation of a "scoped lock" of a mutex
+/// An RAII implementation of a "scoped lock" of a mutex.
 ///
 /// This is a simplified version of `MutexGuard` from the Rust Standard Library.
 #[derive(Debug)]

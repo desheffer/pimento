@@ -1,7 +1,7 @@
 use core::arch::asm;
 use core::cell::UnsafeCell;
 
-/// A simple wrapper for enabling and disabling interrupts
+/// A simple wrapper for enabling and disabling interrupts.
 #[derive(Debug)]
 pub struct InterruptMask {
     level: UnsafeCell<i64>,
@@ -21,38 +21,20 @@ impl InterruptMask {
         }
     }
 
-    unsafe fn _enable_interrupts() {
-        asm!("msr daifclr, #0b0011");
-    }
-
-    unsafe fn _disable_interrupts() {
-        asm!("msr daifset, #0b0011");
-    }
-
-    unsafe fn _save() -> u64 {
-        let daif: u64;
-        asm!("mrs {}, daif", out(reg) daif);
-        daif
-    }
-
-    unsafe fn _restore(daif: u64) {
-        asm!("msr daif, {}", in(reg) daif);
-    }
-
     pub fn enable_interrupts(&self) {
         // SAFETY: Safe because interrupts are disabled.
         unsafe {
-            Self::_disable_interrupts();
+            disable_interrupts();
             assert!(*self.level.get() == 0);
 
-            Self::_enable_interrupts();
+            enable_interrupts();
         }
     }
 
     pub fn disable_interrupts(&self) {
         // SAFETY: Safe because interrupts are disabled.
         unsafe {
-            Self::_disable_interrupts();
+            disable_interrupts();
             assert!(*self.level.get() == 0);
         }
     }
@@ -60,8 +42,8 @@ impl InterruptMask {
     pub fn lock(&self) {
         // SAFETY: Safe because interrupts are disabled.
         unsafe {
-            let saved = Self::_save();
-            Self::_disable_interrupts();
+            let saved = save();
+            disable_interrupts();
 
             if *self.level.get() == 0 {
                 *self.saved_daif.get() = saved;
@@ -74,13 +56,13 @@ impl InterruptMask {
     pub fn unlock(&self) {
         // SAFETY: Safe because interrupts are disabled.
         unsafe {
-            Self::_disable_interrupts();
+            disable_interrupts();
 
             assert!(*self.level.get() > 0);
             *self.level.get() -= 1;
 
             if *self.level.get() == 0 {
-                Self::_restore(*self.saved_daif.get());
+                restore(*self.saved_daif.get());
             }
         }
     }
@@ -100,3 +82,21 @@ impl InterruptMask {
 
 unsafe impl Send for InterruptMask {}
 unsafe impl Sync for InterruptMask {}
+
+unsafe fn enable_interrupts() {
+    asm!("msr daifclr, #0b0011");
+}
+
+unsafe fn disable_interrupts() {
+    asm!("msr daifset, #0b0011");
+}
+
+unsafe fn save() -> u64 {
+    let daif: u64;
+    asm!("mrs {}, daif", out(reg) daif);
+    daif
+}
+
+unsafe fn restore(daif: u64) {
+    asm!("msr daif, {}", in(reg) daif);
+}

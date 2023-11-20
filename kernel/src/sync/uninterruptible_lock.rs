@@ -1,6 +1,6 @@
 use crate::task::InterruptMask;
 
-/// A lock that cannot be interrupted while the lock is held
+/// A lock that cannot be interrupted while the lock is held.
 ///
 /// This lock is designed for restricting access to critical sections of code. Interrupts are
 /// disabled when the lock is held and restored (if previously enabled) when the lock is released.

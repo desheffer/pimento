@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 
 use crate::sync::Mutex;
 
-/// A simple page allocator
+/// A simple page allocator.
 ///
 /// Allocations are made linearly. Deallocations are not implemented.
 #[derive(Debug)]
@@ -62,7 +62,7 @@ impl PageAllocator {
     pub unsafe fn dealloc(&self, _page: &mut Page) {} // TODO
 }
 
-/// An allocated page of physical memory
+/// An allocated page of physical memory.
 #[derive(Debug)]
 pub struct Page {
     start: *mut u8,

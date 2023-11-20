@@ -7,7 +7,7 @@ use alloc::boxed::Box;
 
 use crate::sync::Mutex;
 
-/// A thread-safe reference-counting pointer
+/// A thread-safe reference-counting pointer.
 ///
 /// This is a simplified version of `Arc` from the Rust Standard Library.
 #[derive(Debug)]
@@ -79,7 +79,7 @@ impl<T: ?Sized> Borrow<T> for Arc<T> {
 unsafe impl<T: ?Sized + Send + Sync> Send for Arc<T> {}
 unsafe impl<T: ?Sized + Send + Sync> Sync for Arc<T> {}
 
-/// The inner datum that is shared
+/// The inner datum that is shared between instances.
 #[derive(Debug)]
 struct ArcInner<T: ?Sized> {
     strong: Mutex<usize>,

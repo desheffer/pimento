@@ -3,7 +3,7 @@ use core::cell::UnsafeCell;
 
 use crate::task::InterruptMask;
 
-/// A simple spin lock
+/// A simple spin lock.
 ///
 /// This lock assumes that the system has a single core.
 #[derive(Debug)]

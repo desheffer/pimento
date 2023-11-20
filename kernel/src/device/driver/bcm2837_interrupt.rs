@@ -16,7 +16,7 @@ const CORE3_IRQ: *mut u32 = 0x4000006C as *mut u32; // Core 3 IRQ source
 
 pub const CNTPNSIRQ: u64 = 1;
 
-/// Broadcom chip used in the Raspberry Pi 3 Model B and others
+/// Broadcom chip used in the Raspberry Pi 3 Model B and others.
 ///
 /// This implements basic interrupt detection for this chip.
 #[derive(Debug)]

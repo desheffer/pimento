@@ -6,6 +6,7 @@ use alloc::boxed::Box;
 use crate::abi::LocalInterruptHandler;
 use crate::sync::{Arc, OnceLock};
 
+/// Shuts down the current core and causes it to enter a low-power state.
 pub fn hang() -> ! {
     // SAFETY: This is the point of no return.
     unsafe {
@@ -20,7 +21,7 @@ extern "C" {
     static mut vector_table: u8;
 }
 
-/// A vector table manager
+/// A vector table manager.
 #[derive(Debug)]
 pub struct Entry {
     ptr: NonNull<EntryInner>,
@@ -42,6 +43,7 @@ impl Entry {
         unsafe { self.ptr.as_ref() }
     }
 
+    /// Installs a vector table pointing to this instance.
     pub unsafe fn install(&self) {
         let ptr = EntryInnerPtr { ptr: self.ptr };
         INSTALLED_ENTRY.set(ptr).unwrap();
@@ -64,17 +66,19 @@ impl Drop for Entry {
     }
 }
 
-/// The inner datum that is managed
-pub struct EntryInner {
+/// The inner datum whose memory is managed.
+struct EntryInner {
     local_interrupt_handler: Arc<LocalInterruptHandler>,
 }
 
+/// Wraps the `handle` function so that it can be called from the vector table.
 #[no_mangle]
 pub unsafe extern "C" fn _vector_irq() {
     let inner = INSTALLED_ENTRY.get().unwrap().inner();
     inner.local_interrupt_handler.handle();
 }
 
+/// Handles invalid entries from the vector table.
 #[no_mangle]
 pub extern "C" fn _vector_invalid(code: u64, esr_el1: u64, far_el1: u64) -> ! {
     panic!(
@@ -83,7 +87,7 @@ pub extern "C" fn _vector_invalid(code: u64, esr_el1: u64, far_el1: u64) -> ! {
     );
 }
 
-/// A pointer to the inner datum that can be shared
+/// A pointer to the inner datum that can be shared between cores.
 #[derive(Debug)]
 struct EntryInnerPtr {
     ptr: NonNull<EntryInner>,

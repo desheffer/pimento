@@ -3,7 +3,7 @@ use alloc::vec::Vec;
 use crate::device::InterruptController;
 use crate::sync::{Arc, Mutex};
 
-/// A generic interrupt handler
+/// A generic interrupt handler.
 ///
 /// When an interrupt is raised, the local interrupt handler will determine the source of the
 /// interrupt, and then it will call the handler registered with that source.
@@ -18,6 +18,8 @@ impl LocalInterruptHandler {
         }
     }
 
+    /// Enables a specific interrupt provided by an interrupt controller and registers a function
+    /// to handle it.
     pub fn enable(
         &self,
         interrupt_controller: Arc<dyn InterruptController>,
@@ -35,6 +37,7 @@ impl LocalInterruptHandler {
         interrupt_controller.enable(number);
     }
 
+    /// Handles an interrupt after it has been detected.
     pub unsafe fn handle(&self) {
         let mut handler: Option<unsafe fn(*const ())> = None;
         let mut data: Option<*const ()> = None;
@@ -58,7 +61,7 @@ impl LocalInterruptHandler {
     }
 }
 
-/// The values representing an interrupt that is enabled
+/// The values representing an interrupt that has been enabled.
 struct Interrupt {
     controller: Arc<dyn InterruptController>,
     number: u64,

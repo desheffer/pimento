@@ -20,7 +20,7 @@ extern "C" {
     static mut __end: u8;
 }
 
-/// Initialize a Raspberry Pi 3 B
+/// Initializes a Raspberry Pi 3 B.
 ///
 /// This initialization sequence is designed so that, at some point in the future, it might be
 /// loaded from a Device Tree Blob (DTB).
