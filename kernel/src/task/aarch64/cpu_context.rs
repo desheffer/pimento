@@ -38,12 +38,19 @@ impl CpuContext {
         }
     }
 
-    pub unsafe fn set_task_entry(&mut self, pc: *const u64) {
-        self.pc = task_entry as *const fn() as u64;
-        self.x19 = pc as u64;
+    pub unsafe fn new_with_task_entry(entry: fn(), sp: *mut u64) -> Self {
+        let mut new = Self::new();
+        new.set_task_entry(entry);
+        new.set_stack_pointer(sp);
+        new
     }
 
-    pub unsafe fn set_stack_pointer(&mut self, sp: *mut u64) {
+    unsafe fn set_task_entry(&mut self, entry: fn()) {
+        self.pc = task_entry as *const fn() as u64;
+        self.x19 = entry as u64;
+    }
+
+    unsafe fn set_stack_pointer(&mut self, sp: *mut u64) {
         self.sp = sp as u64;
     }
 }

@@ -43,18 +43,24 @@ pub struct Task {
     id: TaskId,
     parent_id: ParentTaskId,
     name: String,
+    stack: Option<Page>,
     cpu_context: CpuContext,
-    pages: Vec<Page>,
 }
 
 impl Task {
-    fn new(id: TaskId, parent_id: ParentTaskId, name: String) -> Self {
+    fn new(
+        id: TaskId,
+        parent_id: ParentTaskId,
+        name: String,
+        stack: Option<Page>,
+        cpu_context: CpuContext,
+    ) -> Self {
         Task {
             id,
             parent_id,
             name,
-            cpu_context: CpuContext::new(),
-            pages: Vec::new(),
+            stack,
+            cpu_context,
         }
     }
 }
@@ -66,16 +72,16 @@ pub struct Scheduler {
     tasks: UnsafeCell<BTreeMap<TaskId, Box<Task>>>,
     queue: UnsafeCell<VecDeque<TaskId>>,
     current_task: UnsafeCell<Vec<Option<TaskId>>>,
-    quantum: Duration,
     timer: Arc<dyn Timer>,
+    quantum: Duration,
     page_allocator: Arc<PageAllocator>,
 }
 
 impl Scheduler {
     pub fn new(
         num_cores: usize,
-        quantum: Duration,
         timer: Arc<dyn Timer>,
+        quantum: Duration,
         page_allocator: Arc<PageAllocator>,
     ) -> Self {
         let mut current_task = Vec::new();
@@ -86,33 +92,37 @@ impl Scheduler {
             tasks: UnsafeCell::new(BTreeMap::new()),
             queue: UnsafeCell::new(VecDeque::new()),
             current_task: UnsafeCell::new(current_task),
-            quantum,
             timer,
+            quantum,
             page_allocator,
         }
     }
 
-    /// Creates a task for the "init" process, which is presumed to be the currently running
+    /// Creates a task for the kernel "init" process, which is presumed to be the currently running
     /// process. This is required after initialization.
-    pub fn create_and_become_init(&self) -> TaskId {
-        let tasks = self.tasks.get();
-        let queue = self.queue.get();
-        let current_task = self.current_task.get();
+    pub fn create_and_become_kinit(&self) -> TaskId {
         let core_num = self.current_core();
 
         let id = TaskId::next();
-        let task = Task::new(id, ParentTaskId::Root, "init".to_owned());
+        let cpu_context = CpuContext::new();
+        let task = Task::new(
+            id,
+            ParentTaskId::Root,
+            "kinit".to_owned(),
+            None,
+            cpu_context,
+        );
 
         // SAFETY: Safe because call is behind a lock.
         self.lock.call(|| unsafe {
-            assert!((*tasks).is_empty());
-            assert!((*queue).is_empty());
+            assert!(self.tasks().is_empty());
+            assert!(self.queue().is_empty());
             assert!(core_num == 0);
 
-            (*tasks).insert(id, Box::new(task));
+            self.tasks().insert(id, Box::new(task));
 
             // Skip the queue and set as current task.
-            (*current_task)[core_num] = Some(id);
+            self.current_task()[core_num] = Some(id);
         });
 
         id
@@ -120,26 +130,27 @@ impl Scheduler {
 
     /// Spawns a new kernel thread that will execute the given function.
     pub fn create_kthread(&self, func: fn()) -> TaskId {
-        let tasks = self.tasks.get();
-        let queue = self.queue.get();
+        // SAFETY: Safe because the page is reserved.
+        let page;
+        let cpu_context;
+        unsafe {
+            page = self.page_allocator.alloc();
+            cpu_context = CpuContext::new_with_task_entry(func, page.end_exclusive() as *mut u64);
+        }
 
         let id = TaskId::next();
-        let mut task = Task::new(id, ParentTaskId::Root, "kthread".to_owned());
-
-        // SAFETY: Safe because these are basic conversions from references to pointers.
-        unsafe {
-            task.cpu_context.set_task_entry(func as *const u64);
-
-            let page = self.page_allocator.alloc();
-            task.cpu_context
-                .set_stack_pointer(page.end_exclusive() as *mut u64);
-            task.pages.push(page);
-        }
+        let task = Task::new(
+            id,
+            ParentTaskId::Root,
+            "kthread".to_owned(),
+            Some(page),
+            cpu_context,
+        );
 
         // SAFETY: Safe because call is behind a lock.
         self.lock.call(|| unsafe {
-            (*tasks).insert(id, Box::new(task));
-            (*queue).push_back(id);
+            self.tasks().insert(id, Box::new(task));
+            self.queue().push_back(id);
         });
 
         id
@@ -147,21 +158,18 @@ impl Scheduler {
 
     /// Determines the next task to run and performs a context switch.
     pub unsafe fn schedule(&self) {
-        let tasks = self.tasks.get();
-        let queue = self.queue.get();
-        let current_task = self.current_task.get();
         let core_num = self.current_core();
 
         self.lock.lock();
 
         // Put the current task back into the queue and get the next task.
-        let prev_task_id = (*current_task)[core_num].unwrap();
-        (*queue).push_back(prev_task_id);
-        let next_task_id = (*queue).pop_front().unwrap();
-        (*current_task)[core_num] = Some(next_task_id);
+        let prev_task_id = self.current_task()[core_num].unwrap();
+        self.queue().push_back(prev_task_id);
+        let next_task_id = self.queue().pop_front().unwrap();
+        self.current_task()[core_num] = Some(next_task_id);
 
-        let prev_task = &(*tasks).get(&prev_task_id).unwrap();
-        let next_task = &(*tasks).get(&next_task_id).unwrap();
+        let prev_task = self.tasks().get(&prev_task_id).unwrap();
+        let next_task = self.tasks().get(&next_task_id).unwrap();
 
         // SAFETY: The `cpu_context` objects are passed as immutable references. This is safe as
         // long as all access is gated by the exclusive lock.
@@ -190,6 +198,18 @@ impl Scheduler {
     fn current_core(&self) -> usize {
         // TODO: Only one core is currently supported.
         0
+    }
+
+    unsafe fn tasks(&self) -> &mut BTreeMap<TaskId, Box<Task>> {
+        &mut *self.tasks.get()
+    }
+
+    unsafe fn queue(&self) -> &mut VecDeque<TaskId> {
+        &mut *self.queue.get()
+    }
+
+    unsafe fn current_task(&self) -> &mut Vec<Option<TaskId>> {
+        &mut *self.current_task.get()
     }
 }
 

@@ -46,11 +46,11 @@ pub unsafe extern "C" fn kernel_init() -> ! {
 
     let scheduler = Arc::new(Scheduler::new(
         1,
-        QUANTUM,
         timer.clone(),
+        QUANTUM,
         page_allocator.clone(),
     ));
-    scheduler.create_and_become_init();
+    scheduler.create_and_become_kinit();
 
     let interrupt_controller = Arc::new(Bcm2837InterruptController::new());
     local_interrupt_handler.enable(
