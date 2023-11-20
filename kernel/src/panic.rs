@@ -1,6 +1,6 @@
+use core::arch::asm;
 use core::panic::PanicInfo;
 
-use crate::abi;
 use crate::println;
 
 #[panic_handler]
@@ -17,5 +17,17 @@ fn panic(info: &PanicInfo) -> ! {
         println!("{}", message);
     }
 
-    abi::hang();
+    hang();
+}
+
+/// Halts the current core and enters a low-power state.
+#[cfg(target_arch = "aarch64")]
+fn hang() -> ! {
+    // SAFETY: This is the point of no return.
+    unsafe {
+        asm!("msr daifset, #0b1111");
+        loop {
+            asm!("wfe");
+        }
+    }
 }

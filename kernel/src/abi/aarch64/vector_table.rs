@@ -6,28 +6,17 @@ use alloc::boxed::Box;
 use crate::abi::LocalInterruptHandler;
 use crate::sync::{Arc, OnceLock};
 
-/// Shuts down the current core and causes it to enter a low-power state.
-pub fn hang() -> ! {
-    // SAFETY: This is the point of no return.
-    unsafe {
-        asm!("msr daifset, #0b1111");
-        loop {
-            asm!("wfe");
-        }
-    }
-}
-
 extern "C" {
     static mut vector_table: u8;
 }
 
 /// A vector table manager.
 #[derive(Debug)]
-pub struct Entry {
+pub struct VectorTable {
     ptr: NonNull<EntryInner>,
 }
 
-impl Entry {
+impl VectorTable {
     pub fn new(local_interrupt_handler: Arc<LocalInterruptHandler>) -> Self {
         let inner = Box::new(EntryInner {
             local_interrupt_handler,
@@ -54,15 +43,6 @@ impl Entry {
             "isb",
             in(reg) vbar_el1,
         );
-    }
-}
-
-impl Drop for Entry {
-    fn drop(&mut self) {
-        // SAFETY: The vector table is no longer valid.
-        unsafe {
-            asm!("msr daifset, #0b1111");
-        }
     }
 }
 
@@ -105,6 +85,6 @@ unsafe impl Send for EntryInnerPtr {}
 static INSTALLED_ENTRY: OnceLock<EntryInnerPtr> = OnceLock::new();
 
 global_asm!(
-    include_str!("entry.s"),
+    include_str!("vector_table.s"),
     TASK_REGS_SIZE = const 34 * 8,
 );

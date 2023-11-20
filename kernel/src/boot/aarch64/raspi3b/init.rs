@@ -3,7 +3,7 @@ use core::time::Duration;
 
 use alloc::vec;
 
-use crate::abi::{hang, Entry, LocalInterruptHandler};
+use crate::abi::{LocalInterruptHandler, VectorTable};
 use crate::device::driver::armv8_timer::ArmV8Timer;
 use crate::device::driver::bcm2837_interrupt::{Bcm2837InterruptController, CNTPNSIRQ};
 use crate::device::driver::bcm2837_serial::Bcm2837Serial;
@@ -41,7 +41,7 @@ pub unsafe extern "C" fn kernel_init() -> ! {
 
     let local_interrupt_handler = Arc::new(LocalInterruptHandler::new());
 
-    let entry = Entry::new(local_interrupt_handler.clone());
+    let entry = VectorTable::new(local_interrupt_handler.clone());
     entry.install();
 
     let scheduler = Arc::new(Scheduler::new(
@@ -84,5 +84,5 @@ pub unsafe extern "C" fn kernel_init() -> ! {
 
     kernel_main();
 
-    hang();
+    unimplemented!("shutdown");
 }

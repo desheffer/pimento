@@ -1,3 +1,3 @@
-pub use self::entry::{hang, Entry};
+pub use self::vector_table::VectorTable;
 
-mod entry;
+mod vector_table;

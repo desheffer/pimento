@@ -1,6 +1,6 @@
 use core::fmt::{self, Write};
 
-use crate::device::{Monotonic, Logger};
+use crate::device::{Logger, Monotonic};
 use crate::sync::{Arc, OnceLock};
 
 #[macro_export]
