@@ -6,7 +6,6 @@ use crate::task::InterruptMask;
 /// disabled when the lock is held and restored (if previously enabled) when the lock is released.
 ///
 /// This lock assumes that the system has a single core.
-#[derive(Debug)]
 pub struct UninterruptibleLock {}
 
 impl UninterruptibleLock {

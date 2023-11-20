@@ -15,7 +15,7 @@ use crate::task::{cpu_context_switch, CpuContext};
 use super::InterruptMask;
 
 /// An auto-incrementing task ID.
-#[derive(Clone, Copy, Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd)]
 pub struct TaskId {
     id: u64,
 }
@@ -31,14 +31,12 @@ impl TaskId {
 }
 
 /// A task's parent task ID.
-#[derive(Debug)]
 pub enum ParentTaskId {
     Root,
     TaskId(TaskId),
 }
 
 /// A task and the context it needs to run.
-#[derive(Debug)]
 pub struct Task {
     id: TaskId,
     parent_id: ParentTaskId,
@@ -66,7 +64,6 @@ impl Task {
 }
 
 /// A round-robin task scheduler.
-#[derive(Debug)]
 pub struct Scheduler {
     lock: UninterruptibleLock,
     tasks: UnsafeCell<BTreeMap<TaskId, Box<Task>>>,

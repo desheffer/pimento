@@ -52,7 +52,6 @@ pub fn _println(args: fmt::Arguments) {
 }
 
 /// A registry supporting different print implementations.
-#[derive(Debug)]
 pub struct PrintRegistry {
     logger: OnceLock<Arc<dyn Logger>>,
     monotonic: OnceLock<Arc<dyn Monotonic>>,
@@ -72,11 +71,11 @@ impl PrintRegistry {
     }
 
     pub fn set_monotonic(monotonic: Arc<dyn Monotonic>) {
-        Self::instance().monotonic.set(monotonic).unwrap();
+        Self::instance().monotonic.set(monotonic).unwrap_or_else(|_| panic!("setting monotonic failed"))
     }
 
     pub fn set_logger(logger: Arc<dyn Logger>) {
-        Self::instance().logger.set(logger).unwrap();
+        Self::instance().logger.set(logger).unwrap_or_else(|_| panic!("setting monotonic failed"))
     }
 
     pub fn monotonic() -> Option<&'static dyn Monotonic> {
@@ -93,7 +92,6 @@ impl PrintRegistry {
 }
 
 /// A writer for kernel log messages.
-#[derive(Debug)]
 struct Writer {
     print_registry: &'static PrintRegistry,
 }

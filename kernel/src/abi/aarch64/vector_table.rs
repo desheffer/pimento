@@ -11,7 +11,6 @@ extern "C" {
 }
 
 /// A vector table manager.
-#[derive(Debug)]
 pub struct VectorTable {
     ptr: NonNull<EntryInner>,
 }
@@ -35,7 +34,7 @@ impl VectorTable {
     /// Installs a vector table pointing to this instance.
     pub unsafe fn install(&self) {
         let ptr = EntryInnerPtr { ptr: self.ptr };
-        INSTALLED_ENTRY.set(ptr).unwrap();
+        INSTALLED_ENTRY.set(ptr).unwrap_or_else(|_| panic!("installing vector table failed"));
 
         let vbar_el1 = &vector_table as *const u8;
         asm!(
@@ -68,7 +67,6 @@ pub extern "C" fn _vector_invalid(code: u64, esr_el1: u64, far_el1: u64) -> ! {
 }
 
 /// A pointer to the inner datum that can be shared between cores.
-#[derive(Debug)]
 struct EntryInnerPtr {
     ptr: NonNull<EntryInner>,
 }

@@ -7,7 +7,6 @@ use crate::sync::Mutex;
 /// A simple page allocator.
 ///
 /// Allocations are made linearly. Deallocations are not implemented.
-#[derive(Debug)]
 pub struct PageAllocator {
     page_size: usize,
     capacity: usize,
@@ -63,7 +62,6 @@ impl PageAllocator {
 }
 
 /// An allocated page of physical memory.
-#[derive(Debug)]
 pub struct Page {
     start: *mut u8,
     size: usize,

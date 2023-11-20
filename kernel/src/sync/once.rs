@@ -5,7 +5,6 @@ use crate::sync::Lock;
 /// A synchronization primitive which can be used to run a one-time global initialization.
 ///
 /// This is a simplified version of `Once` from the Rust Standard Library.
-#[derive(Debug)]
 pub struct Once {
     lock: Lock,
     completed: UnsafeCell<bool>,

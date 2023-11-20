@@ -19,7 +19,6 @@ use crate::sync::Lock;
 /// *SHARED.lock() = 456;
 /// println!("{}", *SHARED.lock());
 /// ```
-#[derive(Debug)]
 pub struct Mutex<T: ?Sized> {
     lock: Lock,
     data: UnsafeCell<T>,
@@ -47,7 +46,6 @@ unsafe impl<T: ?Sized + Send> Sync for Mutex<T> {}
 /// An RAII implementation of a "scoped lock" of a mutex.
 ///
 /// This is a simplified version of `MutexGuard` from the Rust Standard Library.
-#[derive(Debug)]
 pub struct MutexGuard<'a, T: ?Sized> {
     lock: &'a Mutex<T>,
 }

@@ -41,7 +41,6 @@ const AUX_MU_LSR_TX_EMPTY: u8 = 0b1 << 5; // Transmitter empty
 /// Broadcom chip used in the Raspberry Pi 3 Model B and others.
 ///
 /// This implements basic serial input and output capabilities for this chip.
-#[derive(Debug)]
 pub struct Bcm2837Serial {
     lock: Lock,
 }

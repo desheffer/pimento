@@ -1,7 +1,6 @@
-use core::fmt::Debug;
 use core::time::Duration;
 
 /// A monotonic clock.
-pub trait Monotonic: Debug + Send + Sync {
+pub trait Monotonic: Send + Sync {
     fn monotonic(&self) -> Duration;
 }

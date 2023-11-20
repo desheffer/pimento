@@ -64,7 +64,7 @@ pub unsafe extern "C" fn kernel_init() -> ! {
 
     // Create example threads:
     static MONOTONIC: OnceLock<Arc<dyn Monotonic>> = OnceLock::new();
-    MONOTONIC.set(timer.clone()).unwrap();
+    MONOTONIC.set(timer.clone()).unwrap_or_else(|_| panic!("setting monotonic failed"));
     scheduler.create_kthread(|| loop {
         let monotonic = MONOTONIC.get().unwrap();
         let target = monotonic.monotonic().add(Duration::from_secs(1));

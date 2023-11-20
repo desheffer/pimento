@@ -6,7 +6,6 @@ use crate::task::InterruptMask;
 /// A simple spin lock.
 ///
 /// This lock assumes that the system has a single core.
-#[derive(Debug)]
 pub struct Lock {
     locked: UnsafeCell<bool>,
 }

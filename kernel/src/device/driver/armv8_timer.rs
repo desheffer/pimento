@@ -7,7 +7,6 @@ use crate::sync::Lock;
 const NANOS: u64 = 1_000_000_000;
 
 /// AArch64 timer.
-#[derive(Debug)]
 pub struct ArmV8Timer {
     lock: Lock,
 }

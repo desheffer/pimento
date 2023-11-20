@@ -6,7 +6,6 @@ use crate::sync::Once;
 /// A synchronization primitive which can be written to only once.
 ///
 /// This is a simplified version of `OnceLock` from the Rust Standard Library.
-#[derive(Debug)]
 pub struct OnceLock<T> {
     once: Once,
     data: UnsafeCell<MaybeUninit<T>>,

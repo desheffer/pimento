@@ -1,6 +1,4 @@
-use core::fmt::Debug;
-
 /// A logger for kernel output.
-pub trait Logger: Debug + Send + Sync {
+pub trait Logger: Send + Sync {
     fn write_str(&self, s: &str);
 }
