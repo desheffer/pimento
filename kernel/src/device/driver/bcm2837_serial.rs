@@ -16,27 +16,26 @@ const AUX_MU_LSR: *mut u8 = 0x3F215054 as *mut u8; // Mini UART line status
 const AUX_MU_CNTL: *mut u8 = 0x3F215060 as *mut u8; // Mini UART extra control
 const AUX_MU_BAUD: *mut u16 = 0x3F215068 as *mut u16; // Mini UART baud rate
 
-const AUX_ENABLES_MU: u8 = 0b1 << 0; // Enable mini UART
-
-const AUX_MU_LCR_8BIT: u8 = 0b11 << 0; // Enable 8-bit mode
-
 const GPFSEL1_FSEL14_MASK: u32 = 0b111 << 12; // Mask GPIO pin 14 function
 const GPFSEL1_FSEL14_F5: u32 = 0b010 << 12; // Set GPIO pin 14 to take function 5
-
 const GPFSEL1_FSEL15_MASK: u32 = 0b111 << 15; // Mask GPIO pin 15 function
 const GPFSEL1_FSEL15_F5: u32 = 0b010 << 15; // Set GPIO pin 15 to take function 5
 
 const GPPUDCLK0_PUD14: u32 = 0b1 << 14; // Enable GPIO pin 14
 const GPPUDCLK0_PUD15: u32 = 0b1 << 15; // Enable GPIO pin 15
 
-const AUX_MU_CNTL_RX: u8 = 0b1 << 0; // Enable RX
-const AUX_MU_CNTL_TX: u8 = 0b1 << 1; // Enable TX
+const AUX_ENABLES_MU: u8 = 0b1 << 0; // Enable mini UART
 
 const AUX_MU_IIR_TX: u8 = 0b1 << 0; // Clear TX
 const AUX_MU_IIR_RX: u8 = 0b1 << 1; // Clear RX
 
+const AUX_MU_LCR_8BIT: u8 = 0b11 << 0; // Enable 8-bit mode
+
 const AUX_MU_LSR_RX_READY: u8 = 0b1 << 0; // Receiver ready
 const AUX_MU_LSR_TX_EMPTY: u8 = 0b1 << 5; // Transmitter empty
+
+const AUX_MU_CNTL_RX: u8 = 0b1 << 0; // Enable RX
+const AUX_MU_CNTL_TX: u8 = 0b1 << 1; // Enable TX
 
 /// Broadcom chip used in the Raspberry Pi 3 Model B and others.
 ///
