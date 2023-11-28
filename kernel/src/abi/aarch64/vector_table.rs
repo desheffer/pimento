@@ -1,7 +1,4 @@
 use core::arch::{asm, global_asm};
-use core::ptr::NonNull;
-
-use alloc::boxed::Box;
 
 use crate::abi::LocalInterruptHandler;
 use crate::sync::{Arc, OnceLock};
@@ -12,29 +9,23 @@ extern "C" {
 
 /// A vector table manager.
 pub struct VectorTable {
-    ptr: NonNull<EntryInner>,
+    inner: Arc<TableInner>,
 }
 
 impl VectorTable {
     pub fn new(local_interrupt_handler: Arc<LocalInterruptHandler>) -> Self {
-        let inner = Box::new(EntryInner {
+        let inner = Arc::new(TableInner {
             local_interrupt_handler,
         });
 
-        Self {
-            ptr: Box::leak(inner).into(),
-        }
-    }
-
-    fn inner(&self) -> &EntryInner {
-        // SAFETY: Safe because this is a managed pointer.
-        unsafe { self.ptr.as_ref() }
+        Self { inner }
     }
 
     /// Installs a vector table pointing to this instance.
     pub unsafe fn install(&self) {
-        let ptr = EntryInnerPtr { ptr: self.ptr };
-        INSTALLED_ENTRY.set(ptr).unwrap_or_else(|_| panic!("installing vector table failed"));
+        INSTALLED_TABLE
+            .set(self.inner.clone())
+            .unwrap_or_else(|_| panic!("installing vector table failed"));
 
         let vbar_el1 = &vector_table as *const u8;
         asm!(
@@ -46,14 +37,16 @@ impl VectorTable {
 }
 
 /// The inner datum whose memory is managed.
-struct EntryInner {
+struct TableInner {
     local_interrupt_handler: Arc<LocalInterruptHandler>,
 }
+
+static INSTALLED_TABLE: OnceLock<Arc<TableInner>> = OnceLock::new();
 
 /// Wraps the `handle` function so that it can be called from the vector table.
 #[no_mangle]
 pub unsafe extern "C" fn _vector_irq() {
-    let inner = INSTALLED_ENTRY.get().unwrap().inner();
+    let inner = &**INSTALLED_TABLE.get().unwrap();
     inner.local_interrupt_handler.handle();
 }
 
@@ -65,22 +58,6 @@ pub extern "C" fn _vector_invalid(code: u64, esr_el1: u64, far_el1: u64) -> ! {
         code, esr_el1, far_el1
     );
 }
-
-/// A pointer to the inner datum that can be shared between cores.
-struct EntryInnerPtr {
-    ptr: NonNull<EntryInner>,
-}
-
-impl EntryInnerPtr {
-    fn inner(&self) -> &EntryInner {
-        // SAFETY: Safe because this is a managed pointer.
-        unsafe { self.ptr.as_ref() }
-    }
-}
-
-unsafe impl Send for EntryInnerPtr {}
-
-static INSTALLED_ENTRY: OnceLock<EntryInnerPtr> = OnceLock::new();
 
 global_asm!(
     include_str!("vector_table.s"),
