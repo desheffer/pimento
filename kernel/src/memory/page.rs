@@ -1,4 +1,5 @@
 use core::ops::Range;
+use core::ptr;
 
 use alloc::vec::Vec;
 
@@ -55,10 +56,15 @@ impl PageAllocator {
             break;
         }
 
+        // Zero out the page.
+        ptr::write_bytes(alloc_start as *mut u8, 0, self.page_size);
+
         Page::new(alloc_start as *mut u8, self.page_size)
     }
 
-    pub unsafe fn dealloc(&self, _page: &mut Page) {} // TODO
+    pub unsafe fn dealloc(&self, _page: &mut Page) {
+        // TODO: Implement deallocation.
+    }
 }
 
 /// An allocated page of physical memory.
