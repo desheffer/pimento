@@ -1,7 +1,6 @@
 use core::borrow::Borrow;
 use core::marker::Unsize;
 use core::ops::{CoerceUnsized, Deref, DispatchFromDyn};
-use core::ptr::NonNull;
 
 use alloc::boxed::Box;
 
@@ -11,7 +10,7 @@ use crate::sync::Mutex;
 ///
 /// This is a simplified version of `Arc` from the Rust Standard Library.
 pub struct Arc<T: ?Sized> {
-    ptr: NonNull<ArcInner<T>>,
+    ptr: *mut ArcInner<T>,
 }
 
 impl<T> Arc<T> {
@@ -22,7 +21,7 @@ impl<T> Arc<T> {
         });
 
         Self {
-            ptr: Box::leak(inner).into(),
+            ptr: Box::into_raw(inner),
         }
     }
 }
@@ -30,7 +29,7 @@ impl<T> Arc<T> {
 impl<T: ?Sized> Arc<T> {
     fn inner(&self) -> &ArcInner<T> {
         // SAFETY: Safe because this is a managed pointer.
-        unsafe { self.ptr.as_ref() }
+        unsafe { &*self.ptr }
     }
 }
 
@@ -54,8 +53,7 @@ impl<T: ?Sized> Drop for Arc<T> {
         if *strong == 0 {
             // SAFETY: The inner datum is no longer used.
             unsafe {
-                let inner = Box::from_raw(self.ptr.as_ptr());
-                drop(inner);
+                drop(Box::from_raw(self.ptr));
             }
         }
     }
