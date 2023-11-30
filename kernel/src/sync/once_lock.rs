@@ -1,4 +1,5 @@
 use core::cell::UnsafeCell;
+use core::marker::PhantomData;
 use core::mem::MaybeUninit;
 
 use crate::sync::Once;
@@ -9,6 +10,7 @@ use crate::sync::Once;
 pub struct OnceLock<T> {
     once: Once,
     data: UnsafeCell<MaybeUninit<T>>,
+    phantom: PhantomData<T>,
 }
 
 impl<T> OnceLock<T> {
@@ -16,6 +18,7 @@ impl<T> OnceLock<T> {
         Self {
             once: Once::new(),
             data: UnsafeCell::new(MaybeUninit::uninit()),
+            phantom: PhantomData,
         }
     }
 

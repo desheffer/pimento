@@ -1,5 +1,5 @@
 use core::borrow::Borrow;
-use core::marker::Unsize;
+use core::marker::{PhantomData, Unsize};
 use core::ops::{CoerceUnsized, Deref, DispatchFromDyn};
 
 use alloc::boxed::Box;
@@ -11,6 +11,7 @@ use crate::sync::Mutex;
 /// This is a simplified version of `Arc` from the Rust Standard Library.
 pub struct Arc<T: ?Sized> {
     ptr: *mut ArcInner<T>,
+    phantom: PhantomData<ArcInner<T>>,
 }
 
 impl<T> Arc<T> {
@@ -22,6 +23,7 @@ impl<T> Arc<T> {
 
         Self {
             ptr: Box::into_raw(inner),
+            phantom: PhantomData,
         }
     }
 }
@@ -41,7 +43,10 @@ impl<T: ?Sized> Clone for Arc<T> {
         let mut strong = self.inner().strong.lock();
         *strong += 1;
 
-        Self { ptr: self.ptr }
+        Self {
+            ptr: self.ptr,
+            phantom: PhantomData,
+        }
     }
 }
 
