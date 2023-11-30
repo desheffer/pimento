@@ -40,8 +40,7 @@ impl Timer for ArmV8Timer {
         // SAFETY: Safe because call is behind a lock.
         self.lock.call(|| unsafe {
             // Set the timer.
-            let tval =
-                (duration.as_nanos() as u128 * self.frequency() as u128 / NANOS as u128) as u64;
+            let tval = (duration.as_nanos() * self.frequency() as u128 / NANOS as u128) as u64;
             asm!("msr cntp_tval_el0, {}", in(reg) tval);
 
             // Enable the timer.

@@ -3,7 +3,7 @@ use core::ptr;
 
 use alloc::vec::Vec;
 
-use crate::sync::Mutex;
+use crate::sync::{Mutex, OnceLock};
 
 /// A simple page allocator.
 ///
@@ -15,8 +15,51 @@ pub struct PageAllocator {
     allocated: Mutex<usize>,
 }
 
+static INSTANCE: OnceLock<PageAllocator> = OnceLock::new();
+static INIT_PAGE_SIZE: Mutex<Option<usize>> = Mutex::new(None);
+static INIT_CAPACITY: Mutex<Option<usize>> = Mutex::new(None);
+static INIT_RESERVED_RANGES: Mutex<Option<Vec<Range<usize>>>> = Mutex::new(None);
+
 impl PageAllocator {
-    pub fn new(page_size: usize, capacity: usize, reserved_ranges: Vec<Range<usize>>) -> Self {
+    /// Sets the page size for the system.
+    pub fn set_page_size(page_size: usize) {
+        assert!(!INSTANCE.is_initialized());
+        *INIT_PAGE_SIZE.lock() = Some(page_size);
+    }
+
+    /// Sets the memory capacity for the system.
+    pub fn set_capacity(capacity: usize) {
+        assert!(!INSTANCE.is_initialized());
+        *INIT_CAPACITY.lock() = Some(capacity);
+    }
+
+    /// Sets one of more ranges of memory as reserved.
+    pub fn set_reserved_ranges(reserved_ranges: Vec<Range<usize>>) {
+        assert!(!INSTANCE.is_initialized());
+        *INIT_RESERVED_RANGES.lock() = Some(reserved_ranges);
+    }
+
+    /// Gets or initializes the page allocator.
+    pub fn instance() -> &'static Self {
+        INSTANCE.get_or_init(|| {
+            let page_size = INIT_PAGE_SIZE
+                .lock()
+                .take()
+                .expect("PageAllocator::set_page_size() was expected");
+            let capacity = INIT_CAPACITY
+                .lock()
+                .take()
+                .expect("PageAllocator::set_capacity() was expected");
+            let reserved_ranges = INIT_RESERVED_RANGES
+                .lock()
+                .take()
+                .expect("PageAllocator::set_reserved_ranges() was expected");
+
+            Self::new(page_size, capacity, reserved_ranges)
+        })
+    }
+
+    fn new(page_size: usize, capacity: usize, reserved_ranges: Vec<Range<usize>>) -> Self {
         Self {
             page_size,
             capacity,

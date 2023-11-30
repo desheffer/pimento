@@ -1,7 +1,6 @@
 #![allow(dead_code)]
 #![feature(asm_const)]
 #![feature(coerce_unsized)]
-#![feature(core_intrinsics)]
 #![feature(dispatch_from_dyn)]
 #![feature(format_args_nl)]
 #![feature(panic_info_message)]
@@ -24,5 +23,6 @@ pub fn kernel_main() {
     println!("Hello, world!");
 
     // TODO: Remove when kernel is capable of starting other processes.
+    #[allow(clippy::empty_loop)]
     loop {}
 }

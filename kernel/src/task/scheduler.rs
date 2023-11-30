@@ -7,9 +7,9 @@ use alloc::collections::{BTreeMap, VecDeque};
 use alloc::string::String;
 use alloc::vec::Vec;
 
-use crate::device::Timer;
+use crate::device::{Timer, TimerImpl};
 use crate::memory::{Page, PageAllocator};
-use crate::sync::{Arc, Mutex, UninterruptibleLock};
+use crate::sync::{Mutex, OnceLock, UninterruptibleLock};
 use crate::task::{cpu_context_switch, CpuContext};
 
 use super::InterruptMask;
@@ -64,22 +64,59 @@ impl Task {
 }
 
 /// A round-robin task scheduler.
-pub struct Scheduler {
+pub struct Scheduler<'a> {
     lock: UninterruptibleLock,
     tasks: UnsafeCell<BTreeMap<TaskId, Box<Task>>>,
     queue: UnsafeCell<VecDeque<TaskId>>,
     current_task: UnsafeCell<Vec<Option<TaskId>>>,
-    timer: Arc<dyn Timer>,
+    timer: &'a TimerImpl,
     quantum: Duration,
-    page_allocator: Arc<PageAllocator>,
+    page_allocator: &'a PageAllocator,
 }
 
-impl Scheduler {
-    pub fn new(
+static INSTANCE: OnceLock<Scheduler> = OnceLock::new();
+static INIT_NUM_CORES: Mutex<Option<usize>> = Mutex::new(None);
+static INIT_QUANTUM: Mutex<Option<Duration>> = Mutex::new(None);
+
+impl<'a> Scheduler<'a> {
+    /// Sets the number of cores for the system.
+    pub fn set_num_cores(num_cores: usize) {
+        assert!(!INSTANCE.is_initialized());
+        *INIT_NUM_CORES.lock() = Some(num_cores);
+    }
+
+    /// Sets the quantum (time slot size) as a duration of time.
+    pub fn set_quantum(quantum: Duration) {
+        assert!(!INSTANCE.is_initialized());
+        *INIT_QUANTUM.lock() = Some(quantum);
+    }
+
+    /// Gets or initializes the scheduler.
+    pub fn instance() -> &'static Self {
+        INSTANCE.get_or_init(|| {
+            let num_cores = INIT_NUM_CORES
+                .lock()
+                .take()
+                .expect("Scheduler::set_num_cores() was expected");
+            let quantum = INIT_QUANTUM
+                .lock()
+                .take()
+                .expect("Scheduler::set_quantum() was expected");
+
+            Self::new(
+                num_cores,
+                TimerImpl::instance(),
+                quantum,
+                PageAllocator::instance(),
+            )
+        })
+    }
+
+    fn new(
         num_cores: usize,
-        timer: Arc<dyn Timer>,
+        timer: &'a TimerImpl,
         quantum: Duration,
-        page_allocator: Arc<PageAllocator>,
+        page_allocator: &'a PageAllocator,
     ) -> Self {
         let mut current_task = Vec::new();
         current_task.extend((0..num_cores).map(|_| None));
@@ -132,7 +169,7 @@ impl Scheduler {
         let cpu_context;
         unsafe {
             page = self.page_allocator.alloc();
-            cpu_context = CpuContext::new_with_task_entry(func, page.end_exclusive() as *mut u64);
+            cpu_context = CpuContext::new_with_task_entry(func, page.end_exclusive());
         }
 
         let id = TaskId::next();
@@ -174,15 +211,13 @@ impl Scheduler {
             &prev_task.cpu_context,
             &next_task.cpu_context,
             _scheduler_after_schedule,
-            self as *const Scheduler as *const (),
         );
 
         // The previous function call might not return or might return in a different context. All
         // clean up should be handled before that call or in the `after_schedule` function.
     }
 
-    /// Cleans up after the `schedule` function. This is required due to the complex nature of a
-    /// context switch.
+    /// Releases the lock and cleans up after the `schedule` function.
     unsafe fn after_schedule(&self) {
         self.lock.unlock();
 
@@ -197,14 +232,17 @@ impl Scheduler {
         0
     }
 
+    #[allow(clippy::mut_from_ref)]
     unsafe fn tasks(&self) -> &mut BTreeMap<TaskId, Box<Task>> {
         &mut *self.tasks.get()
     }
 
+    #[allow(clippy::mut_from_ref)]
     unsafe fn queue(&self) -> &mut VecDeque<TaskId> {
         &mut *self.queue.get()
     }
 
+    #[allow(clippy::mut_from_ref)]
     unsafe fn current_task(&self) -> &mut Vec<Option<TaskId>> {
         &mut *self.current_task.get()
     }
@@ -212,17 +250,15 @@ impl Scheduler {
 
 /// Wraps the `schedule` function so that it can be called from the interrupt handler.
 #[no_mangle]
-pub unsafe fn _scheduler_schedule(scheduler: *const ()) {
-    let scheduler = &*(scheduler as *const Arc<Scheduler>);
-    scheduler.schedule();
+pub unsafe fn _scheduler_schedule() {
+    Scheduler::instance().schedule()
 }
 
 /// Wraps the `after_schedule` function so that it can be called from the context switch function.
 #[no_mangle]
-unsafe extern "C" fn _scheduler_after_schedule(scheduler: *const ()) {
-    let scheduler = &*(scheduler as *const Scheduler);
-    scheduler.after_schedule();
+unsafe extern "C" fn _scheduler_after_schedule() {
+    Scheduler::instance().after_schedule()
 }
 
-unsafe impl Send for Scheduler {}
-unsafe impl Sync for Scheduler {}
+unsafe impl Send for Scheduler<'_> {}
+unsafe impl Sync for Scheduler<'_> {}

@@ -3,19 +3,19 @@ use core::arch::global_asm;
 /// AArch64 registers to persist between context switches.
 #[repr(C)]
 pub struct CpuContext {
-    x19: u64,
-    x20: u64,
-    x21: u64,
-    x22: u64,
-    x23: u64,
-    x24: u64,
-    x25: u64,
-    x26: u64,
-    x27: u64,
-    x28: u64,
-    lr: u64, // x29
-    pc: u64, // x30
-    sp: u64, // x31
+    x19: usize,
+    x20: usize,
+    x21: usize,
+    x22: usize,
+    x23: usize,
+    x24: usize,
+    x25: usize,
+    x26: usize,
+    x27: usize,
+    x28: usize,
+    lr: usize, // x29
+    pc: usize, // x30
+    sp: usize, // x31
 }
 
 impl CpuContext {
@@ -37,7 +37,7 @@ impl CpuContext {
         }
     }
 
-    pub unsafe fn new_with_task_entry(entry: fn(), sp: *mut u64) -> Self {
+    pub unsafe fn new_with_task_entry(entry: fn(), sp: *mut u8) -> Self {
         let mut new = Self::new();
         new.set_task_entry(entry);
         new.set_stack_pointer(sp);
@@ -45,29 +45,25 @@ impl CpuContext {
     }
 
     unsafe fn set_task_entry(&mut self, entry: fn()) {
-        self.pc = task_entry as *const fn() as u64;
-        self.x19 = entry as u64;
+        self.pc = task_entry as *const fn() as usize;
+        self.x19 = entry as usize;
     }
 
-    unsafe fn set_stack_pointer(&mut self, sp: *mut u64) {
-        self.sp = sp as u64;
+    unsafe fn set_stack_pointer(&mut self, sp: *mut u8) {
+        self.sp = sp as usize;
     }
 }
 
 extern "C" {
-    pub fn cpu_context_switch(
-        prev: &CpuContext,
-        next: &CpuContext,
-        after: unsafe extern "C" fn(*const ()),
-        data: *const (),
-    );
+    pub fn cpu_context_switch(prev: &CpuContext, next: &CpuContext, after: unsafe extern "C" fn());
 
-    pub fn task_entry(pc: u64);
+    pub fn task_entry(pc: usize);
 }
 
 #[no_mangle]
 pub extern "C" fn task_exit() -> ! {
     // TODO: Queue the task for removal.
+    #[allow(clippy::empty_loop)]
     loop {}
 }
 

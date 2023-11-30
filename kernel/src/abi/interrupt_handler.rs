@@ -12,7 +12,13 @@ pub struct LocalInterruptHandler {
 }
 
 impl LocalInterruptHandler {
-    pub const fn new() -> Self {
+    /// Gets the generic interrupt handler.
+    pub fn instance() -> &'static Self {
+        static INSTANCE: LocalInterruptHandler = LocalInterruptHandler::new();
+        &INSTANCE
+    }
+
+    const fn new() -> Self {
         Self {
             interrupts: Mutex::new(Vec::new()),
         }
@@ -24,39 +30,33 @@ impl LocalInterruptHandler {
         &self,
         interrupt_controller: Arc<dyn InterruptController>,
         number: u64,
-        handler: unsafe fn(*const ()),
-        data: *const (),
+        handler: unsafe fn(),
     ) {
         let mut handlers = self.interrupts.lock();
         handlers.push(Interrupt {
             controller: interrupt_controller.clone(),
             number,
             handler,
-            data,
         });
         interrupt_controller.enable(number);
     }
 
     /// Handles an interrupt after it has been detected.
     pub unsafe fn handle(&self) {
-        let mut handler: Option<unsafe fn(*const ())> = None;
-        let mut data: Option<*const ()> = None;
+        let mut handler: Option<unsafe fn()> = None;
 
         let interrupts = self.interrupts.lock();
         for interrupt in &*interrupts {
             if interrupt.controller.is_pending(interrupt.number) {
                 interrupt.controller.clear(interrupt.number);
                 handler = Some(interrupt.handler);
-                data = Some(interrupt.data);
                 break;
             }
         }
         drop(interrupts);
 
         if let Some(handler) = handler {
-            if let Some(data) = data {
-                (handler)(data);
-            }
+            (handler)();
         }
     }
 }
@@ -65,8 +65,7 @@ impl LocalInterruptHandler {
 struct Interrupt {
     controller: Arc<dyn InterruptController>,
     number: u64,
-    handler: unsafe fn(*const ()),
-    data: *const (),
+    handler: unsafe fn(),
 }
 
 unsafe impl Send for Interrupt {}

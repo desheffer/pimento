@@ -8,6 +8,7 @@ pub struct InterruptMask {
 }
 
 impl InterruptMask {
+    /// Gets the interrupt mask.
     pub fn instance() -> &'static Self {
         static INSTANCE: InterruptMask = InterruptMask::new();
         &INSTANCE

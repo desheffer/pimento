@@ -29,7 +29,7 @@ const AUX_ENABLES_MU: u8 = 0b1 << 0; // Enable mini UART
 const AUX_MU_IIR_TX: u8 = 0b1 << 0; // Clear TX
 const AUX_MU_IIR_RX: u8 = 0b1 << 1; // Clear RX
 
-const AUX_MU_LCR_8BIT: u8 = 0b11 << 0; // Enable 8-bit mode
+const AUX_MU_LCR_8BIT: u8 = 0b11; // Enable 8-bit mode
 
 const AUX_MU_LSR_RX_READY: u8 = 0b1 << 0; // Receiver ready
 const AUX_MU_LSR_TX_EMPTY: u8 = 0b1 << 5; // Transmitter empty
@@ -110,7 +110,7 @@ impl Bcm2837Serial {
             // Wait until transmitter is empty.
             while AUX_MU_LSR.read_volatile() & AUX_MU_LSR_TX_EMPTY == 0 {}
 
-            AUX_MU_IO.write_volatile(c as u8);
+            AUX_MU_IO.write_volatile(c);
         });
     }
 

@@ -7,11 +7,10 @@ use crate::abi::{LocalInterruptHandler, VectorTable};
 use crate::device::driver::armv8_timer::ArmV8Timer;
 use crate::device::driver::bcm2837_interrupt::{Bcm2837InterruptController, CNTPNSIRQ};
 use crate::device::driver::bcm2837_serial::Bcm2837Serial;
-use crate::device::Monotonic;
+use crate::device::{LoggerImpl, Monotonic, MonotonicImpl, TimerImpl};
 use crate::kernel_main;
 use crate::memory::PageAllocator;
-use crate::print::PrintRegistry;
-use crate::sync::{Arc, OnceLock};
+use crate::sync::Arc;
 use crate::task::{Scheduler, _scheduler_schedule};
 
 const QUANTUM: Duration = Duration::from_millis(10);
@@ -26,63 +25,53 @@ extern "C" {
 /// loaded from a Device Tree Blob (DTB).
 #[no_mangle]
 pub unsafe extern "C" fn kernel_init() -> ! {
-    let timer = Arc::new(ArmV8Timer::new());
     let serial = Arc::new(Bcm2837Serial::new());
     serial.init();
-    PrintRegistry::set_monotonic(timer.clone());
-    PrintRegistry::set_logger(serial.clone());
+    LoggerImpl::instance().set_inner(serial.clone());
 
-    let end = &mut __end as *mut u8;
-    let page_allocator = Arc::new(PageAllocator::new(
-        4096,
-        0x40000000,
-        vec![0..(end as usize), 0x3F000000..0x40000000],
-    ));
+    let timer = Arc::new(ArmV8Timer::new());
+    MonotonicImpl::instance().set_inner(timer.clone());
+    TimerImpl::instance().set_inner(timer.clone());
 
-    let local_interrupt_handler = Arc::new(LocalInterruptHandler::new());
+    let end = &mut __end as *mut u8 as usize;
+    PageAllocator::set_page_size(4096);
+    PageAllocator::set_capacity(0x40000000);
+    PageAllocator::set_reserved_ranges(vec![0..end, 0x3F000000..0x40000000]);
 
-    let entry = VectorTable::new(local_interrupt_handler.clone());
-    entry.install();
+    VectorTable::instance().install();
 
-    let scheduler = Arc::new(Scheduler::new(
-        1,
-        timer.clone(),
-        QUANTUM,
-        page_allocator.clone(),
-    ));
-    scheduler.create_and_become_kinit();
+    Scheduler::set_num_cores(1);
+    Scheduler::set_quantum(QUANTUM);
+    Scheduler::instance().create_and_become_kinit();
 
     let interrupt_controller = Arc::new(Bcm2837InterruptController::new());
-    local_interrupt_handler.enable(
-        interrupt_controller,
-        CNTPNSIRQ,
-        _scheduler_schedule,
-        &scheduler as *const Arc<Scheduler> as *const (),
-    );
+    LocalInterruptHandler::instance().enable(interrupt_controller, CNTPNSIRQ, _scheduler_schedule);
 
-    scheduler.schedule();
+    Scheduler::instance().schedule();
 
     // Create example threads:
-    static MONOTONIC: OnceLock<Arc<dyn Monotonic>> = OnceLock::new();
-    MONOTONIC.set(timer.clone()).unwrap_or_else(|_| panic!("setting monotonic failed"));
-    scheduler.create_kthread(|| loop {
-        let monotonic = MONOTONIC.get().unwrap();
-        let target = monotonic.monotonic().add(Duration::from_secs(1));
-        while monotonic.monotonic() < target {
-            core::arch::asm!("wfi");
-        }
+    Scheduler::instance().create_kthread(|| loop {
         crate::print!("1");
+        sleep(Duration::from_secs(1));
     });
-    scheduler.create_kthread(|| loop {
-        let monotonic = MONOTONIC.get().unwrap();
-        let target = monotonic.monotonic().add(Duration::from_secs(2));
-        while monotonic.monotonic() < target {
-            core::arch::asm!("wfi");
-        }
+    Scheduler::instance().create_kthread(|| loop {
         crate::print!("2");
+        sleep(Duration::from_secs(2));
     });
 
     kernel_main();
 
     unimplemented!("shutdown");
+}
+
+/// A simple sleep that burns CPU cycles.
+fn sleep(duration: Duration) {
+    let monotonic = MonotonicImpl::instance();
+    let target = monotonic.monotonic().add(duration);
+
+    while monotonic.monotonic() < target {
+        unsafe {
+            core::arch::asm!("wfi");
+        }
+    }
 }

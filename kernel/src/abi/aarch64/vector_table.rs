@@ -12,8 +12,15 @@ pub struct VectorTable {
     inner: Arc<TableInner>,
 }
 
+static INSTANCE: OnceLock<VectorTable> = OnceLock::new();
+
 impl VectorTable {
-    pub fn new(local_interrupt_handler: Arc<LocalInterruptHandler>) -> Self {
+    /// Gets or initializes the vector table manager.
+    pub fn instance() -> &'static Self {
+        INSTANCE.get_or_init(|| Self::new(LocalInterruptHandler::instance()))
+    }
+
+    fn new(local_interrupt_handler: &'static LocalInterruptHandler) -> Self {
         let inner = Arc::new(TableInner {
             local_interrupt_handler,
         });
@@ -38,7 +45,7 @@ impl VectorTable {
 
 /// The inner datum whose memory is managed.
 struct TableInner {
-    local_interrupt_handler: Arc<LocalInterruptHandler>,
+    local_interrupt_handler: &'static LocalInterruptHandler,
 }
 
 static INSTALLED_TABLE: OnceLock<Arc<TableInner>> = OnceLock::new();
