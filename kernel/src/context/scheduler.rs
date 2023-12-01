@@ -1,67 +1,14 @@
 use core::cell::UnsafeCell;
 use core::time::Duration;
 
-use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 use alloc::collections::{BTreeMap, VecDeque};
-use alloc::string::String;
 use alloc::vec::Vec;
 
+use crate::context::{ContextSwitcher, InterruptMask, Task, TaskId};
 use crate::device::{Timer, TimerImpl};
-use crate::memory::{Page, PageAllocator};
+use crate::memory::PageAllocator;
 use crate::sync::{Mutex, OnceLock, UninterruptibleLock};
-use crate::task::{cpu_context_switch, CpuContext};
-
-use super::InterruptMask;
-
-/// An auto-incrementing task ID.
-#[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd)]
-pub struct TaskId {
-    id: u64,
-}
-
-impl TaskId {
-    pub fn next() -> Self {
-        static NEXT: Mutex<u64> = Mutex::new(1);
-        let mut next = NEXT.lock();
-        let task_id = TaskId { id: *next };
-        *next += 1;
-        task_id
-    }
-}
-
-/// A task's parent task ID.
-pub enum ParentTaskId {
-    Root,
-    TaskId(TaskId),
-}
-
-/// A task and the context it needs to run.
-pub struct Task {
-    id: TaskId,
-    parent_id: ParentTaskId,
-    name: String,
-    stack: Option<Page>,
-    cpu_context: CpuContext,
-}
-
-impl Task {
-    fn new(
-        id: TaskId,
-        parent_id: ParentTaskId,
-        name: String,
-        stack: Option<Page>,
-        cpu_context: CpuContext,
-    ) -> Self {
-        Task {
-            id,
-            parent_id,
-            name,
-            stack,
-            cpu_context,
-        }
-    }
-}
 
 /// A round-robin task scheduler.
 pub struct Scheduler<'a> {
@@ -72,6 +19,7 @@ pub struct Scheduler<'a> {
     timer: &'a TimerImpl,
     quantum: Duration,
     page_allocator: &'a PageAllocator,
+    context_switcher: &'a ContextSwitcher,
 }
 
 static INSTANCE: OnceLock<Scheduler> = OnceLock::new();
@@ -108,6 +56,7 @@ impl<'a> Scheduler<'a> {
                 TimerImpl::instance(),
                 quantum,
                 PageAllocator::instance(),
+                ContextSwitcher::instance(),
             )
         })
     }
@@ -117,6 +66,7 @@ impl<'a> Scheduler<'a> {
         timer: &'a TimerImpl,
         quantum: Duration,
         page_allocator: &'a PageAllocator,
+        context_switcher: &'a ContextSwitcher,
     ) -> Self {
         let mut current_task = Vec::new();
         current_task.extend((0..num_cores).map(|_| None));
@@ -129,23 +79,14 @@ impl<'a> Scheduler<'a> {
             timer,
             quantum,
             page_allocator,
+            context_switcher,
         }
     }
 
-    /// Creates a task for the kernel "init" process, which is presumed to be the currently running
-    /// process. This is required after initialization.
-    pub fn create_and_become_kinit(&self) -> TaskId {
+    /// Assumes the role of the kernel initialization task.
+    pub fn become_kinit(&self, task: Task) {
+        let id = task.id;
         let core_num = self.current_core();
-
-        let id = TaskId::next();
-        let cpu_context = CpuContext::new();
-        let task = Task::new(
-            id,
-            ParentTaskId::Root,
-            "kinit".to_owned(),
-            None,
-            cpu_context,
-        );
 
         // SAFETY: Safe because call is behind a lock.
         self.lock.call(|| unsafe {
@@ -158,36 +99,17 @@ impl<'a> Scheduler<'a> {
             // Skip the queue and set as current task.
             self.current_task()[core_num] = Some(id);
         });
-
-        id
     }
 
-    /// Spawns a new kernel thread that will execute the given function.
-    pub fn create_kthread(&self, func: fn()) -> TaskId {
-        // SAFETY: Safe because the page is reserved.
-        let page;
-        let cpu_context;
-        unsafe {
-            page = self.page_allocator.alloc();
-            cpu_context = CpuContext::new_with_task_entry(func, page.end_exclusive());
-        }
-
-        let id = TaskId::next();
-        let task = Task::new(
-            id,
-            ParentTaskId::Root,
-            "kthread".to_owned(),
-            Some(page),
-            cpu_context,
-        );
+    /// Adds a task to the scheduling queue.
+    pub fn add_task(&self, task: Task) {
+        let id = task.id;
 
         // SAFETY: Safe because call is behind a lock.
         self.lock.call(|| unsafe {
             self.tasks().insert(id, Box::new(task));
             self.queue().push_back(id);
         });
-
-        id
     }
 
     /// Determines the next task to run and performs a context switch.
@@ -202,16 +124,13 @@ impl<'a> Scheduler<'a> {
         let next_task_id = self.queue().pop_front().unwrap();
         self.current_task()[core_num] = Some(next_task_id);
 
-        let prev_task = self.tasks().get(&prev_task_id).unwrap();
-        let next_task = self.tasks().get(&next_task_id).unwrap();
+        let prev_task = self.tasks().get_mut(&prev_task_id).unwrap();
+        let next_task = self.tasks().get_mut(&next_task_id).unwrap();
 
         // SAFETY: The `cpu_context` objects are passed as immutable references. This is safe as
         // long as all access is gated by the exclusive lock.
-        cpu_context_switch(
-            &prev_task.cpu_context,
-            &next_task.cpu_context,
-            _scheduler_after_schedule,
-        );
+        self.context_switcher
+            .switch(prev_task, next_task, _scheduler_after_schedule);
 
         // The previous function call might not return or might return in a different context. All
         // clean up should be handled before that call or in the `after_schedule` function.
@@ -248,13 +167,7 @@ impl<'a> Scheduler<'a> {
     }
 }
 
-/// Wraps the `schedule` function so that it can be called from the interrupt handler.
-#[no_mangle]
-pub unsafe fn _scheduler_schedule() {
-    Scheduler::instance().schedule()
-}
-
-/// Wraps the `after_schedule` function so that it can be called from the context switch function.
+/// Wraps the `after_schedule` function so that it can be called after a context switch.
 #[no_mangle]
 unsafe extern "C" fn _scheduler_after_schedule() {
     Scheduler::instance().after_schedule()

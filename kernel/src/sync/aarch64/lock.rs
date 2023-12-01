@@ -1,7 +1,7 @@
 use core::arch::asm;
 use core::cell::UnsafeCell;
 
-use crate::task::InterruptMask;
+use crate::context::InterruptMask;
 
 /// A simple spin lock.
 ///

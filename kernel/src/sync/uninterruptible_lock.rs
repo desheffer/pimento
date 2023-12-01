@@ -1,4 +1,4 @@
-use crate::task::InterruptMask;
+use crate::context::InterruptMask;
 
 /// A lock that cannot be interrupted while the lock is held.
 ///

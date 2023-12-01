@@ -23,9 +23,3 @@ cpu_context_switch:
     // Call `after(data)`.
     mov x0, x3
     br x2
-
-.globl task_entry
-task_entry:
-    mov x0, x20
-    blr x19
-    b task_exit

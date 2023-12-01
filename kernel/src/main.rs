@@ -12,12 +12,12 @@ extern crate alloc;
 
 mod abi;
 mod boot;
+mod context;
 mod device;
 mod memory;
 mod panic;
 mod print;
 mod sync;
-mod task;
 
 pub fn kernel_main() {
     println!("Hello, world!");
