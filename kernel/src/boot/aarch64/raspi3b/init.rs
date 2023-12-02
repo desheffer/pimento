@@ -33,8 +33,8 @@ pub unsafe extern "C" fn kernel_init() -> ! {
 
     let end = &mut __end as *mut u8 as usize;
     PageAllocator::set_page_size(4096);
-    PageAllocator::set_capacity(0x40000000);
-    PageAllocator::set_reserved_ranges(vec![0..end, 0x3F000000..0x40000000]);
+    PageAllocator::set_capacity(0x4000_0000);
+    PageAllocator::set_reserved_ranges(vec![0..end, 0x3F00_0000..0x4000_0000]);
 
     Scheduler::set_num_cores(1);
     Scheduler::set_quantum(Duration::from_millis(10));
