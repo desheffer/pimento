@@ -32,7 +32,6 @@ pub unsafe extern "C" fn kernel_init() -> ! {
     TimerImpl::instance().set_inner(timer.clone());
 
     let end = &mut __end as *mut u8 as usize;
-    PageAllocator::set_page_size(4096);
     PageAllocator::set_capacity(0x4000_0000);
     PageAllocator::set_reserved_ranges(vec![0..end, 0x3F00_0000..0x4000_0000]);
 

@@ -3,6 +3,7 @@ use core::ptr;
 
 use alloc::vec::Vec;
 
+use crate::memory::PAGE_SIZE;
 use crate::sync::{Mutex, OnceLock};
 
 /// A simple page allocator.
@@ -16,17 +17,10 @@ pub struct PageAllocator {
 }
 
 static INSTANCE: OnceLock<PageAllocator> = OnceLock::new();
-static INIT_PAGE_SIZE: Mutex<Option<usize>> = Mutex::new(None);
 static INIT_CAPACITY: Mutex<Option<usize>> = Mutex::new(None);
 static INIT_RESERVED_RANGES: Mutex<Option<Vec<Range<usize>>>> = Mutex::new(None);
 
 impl PageAllocator {
-    /// Sets the page size for the system.
-    pub fn set_page_size(page_size: usize) {
-        assert!(!INSTANCE.is_initialized());
-        *INIT_PAGE_SIZE.lock() = Some(page_size);
-    }
-
     /// Sets the memory capacity for the system.
     pub fn set_capacity(capacity: usize) {
         assert!(!INSTANCE.is_initialized());
@@ -42,10 +36,6 @@ impl PageAllocator {
     /// Gets or initializes the page allocator.
     pub fn instance() -> &'static Self {
         INSTANCE.get_or_init(|| {
-            let page_size = INIT_PAGE_SIZE
-                .lock()
-                .take()
-                .expect("PageAllocator::set_page_size() was expected");
             let capacity = INIT_CAPACITY
                 .lock()
                 .take()
@@ -55,7 +45,7 @@ impl PageAllocator {
                 .take()
                 .expect("PageAllocator::set_reserved_ranges() was expected");
 
-            Self::new(page_size, capacity, reserved_ranges)
+            Self::new(PAGE_SIZE, capacity, reserved_ranges)
         })
     }
 
