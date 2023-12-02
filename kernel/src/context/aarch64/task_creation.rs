@@ -51,8 +51,8 @@ impl<'a> TaskCreationService<'a> {
         let page;
         unsafe {
             // Set program counter by proxy.
-            cpu_context.lr = task_raw_entry as *const fn() as usize;
-            cpu_context.x19 = task_start as *const fn() as usize;
+            cpu_context.lr = task_raw_entry as usize;
+            cpu_context.x19 = task_start as usize;
             cpu_context.x20 = func as usize;
 
             // Set stack pointer.

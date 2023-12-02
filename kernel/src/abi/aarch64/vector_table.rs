@@ -34,11 +34,10 @@ impl VectorTable {
             .set(self.inner.clone())
             .unwrap_or_else(|_| panic!("installing vector table failed"));
 
-        let vbar_el1 = &vector_table as *const u8;
         asm!(
             "msr vbar_el1, {}",
             "isb",
-            in(reg) vbar_el1,
+            in(reg) &vector_table,
         );
     }
 }
