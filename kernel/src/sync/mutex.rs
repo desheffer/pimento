@@ -1,4 +1,3 @@
-use core::borrow::{Borrow, BorrowMut};
 use core::cell::UnsafeCell;
 use core::ops::{Deref, DerefMut};
 
@@ -27,8 +26,8 @@ pub struct Mutex<T: ?Sized> {
 impl<T> Mutex<T> {
     pub const fn new(data: T) -> Self {
         Self {
-            data: UnsafeCell::new(data),
             lock: Lock::new(),
+            data: UnsafeCell::new(data),
         }
     }
 }
@@ -73,20 +72,6 @@ impl<T: ?Sized> Deref for MutexGuard<'_, T> {
 
 impl<T: ?Sized> DerefMut for MutexGuard<'_, T> {
     fn deref_mut(&mut self) -> &mut T {
-        // SAFETY: Safe because data is behind a lock.
-        unsafe { &mut *self.lock.data.get() }
-    }
-}
-
-impl<T: ?Sized> Borrow<T> for MutexGuard<'_, T> {
-    fn borrow(&self) -> &T {
-        // SAFETY: Safe because data is behind a lock.
-        unsafe { &*self.lock.data.get() }
-    }
-}
-
-impl<T: ?Sized> BorrowMut<T> for MutexGuard<'_, T> {
-    fn borrow_mut(&mut self) -> &mut T {
         // SAFETY: Safe because data is behind a lock.
         unsafe { &mut *self.lock.data.get() }
     }

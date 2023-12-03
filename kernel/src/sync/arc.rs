@@ -1,4 +1,3 @@
-use core::borrow::Borrow;
 use core::marker::{PhantomData, Unsize};
 use core::ops::{CoerceUnsized, Deref, DispatchFromDyn};
 
@@ -68,12 +67,6 @@ impl<T: ?Sized> Deref for Arc<T> {
     type Target = T;
 
     fn deref(&self) -> &T {
-        &self.inner().data
-    }
-}
-
-impl<T: ?Sized> Borrow<T> for Arc<T> {
-    fn borrow(&self) -> &T {
         &self.inner().data
     }
 }
