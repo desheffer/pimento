@@ -2,7 +2,8 @@ use core::arch::global_asm;
 
 use alloc::borrow::ToOwned;
 
-use crate::context::{CpuContext, ParentTaskId, Scheduler, Task, TaskId};
+use crate::context::{ParentTaskId, Scheduler, Task, TaskId};
+use crate::cpu::CpuContext;
 use crate::memory::PageAllocator;
 use crate::sync::OnceLock;
 
@@ -50,14 +51,12 @@ impl<'a> TaskCreationService<'a> {
         let mut cpu_context = CpuContext::zeroed();
         let page;
         unsafe {
-            // Set program counter by proxy.
-            cpu_context.lr = task_raw_entry as usize;
-            cpu_context.x19 = task_start as usize;
-            cpu_context.x20 = func as usize;
-
             // Set stack pointer.
             page = self.page_allocator.alloc();
-            cpu_context.sp = page.end_exclusive() as usize;
+            cpu_context.set_sp(page.end_exclusive() as usize);
+
+            // Set program counter by proxy.
+            cpu_context.set_pc(task_raw_entry as usize, task_start as usize, func as usize);
         }
 
         let id = TaskId::next();

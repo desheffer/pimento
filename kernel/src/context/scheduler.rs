@@ -5,7 +5,8 @@ use alloc::boxed::Box;
 use alloc::collections::{BTreeMap, VecDeque};
 use alloc::vec::Vec;
 
-use crate::context::{ContextSwitcher, InterruptMask, Task, TaskId};
+use crate::context::{ContextSwitcher, Task, TaskId};
+use crate::cpu::InterruptMask;
 use crate::device::{Timer, TimerImpl};
 use crate::memory::PageAllocator;
 use crate::sync::{Mutex, OnceLock, UninterruptibleLock};

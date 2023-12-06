@@ -1,6 +1,6 @@
 use alloc::string::String;
 
-use crate::context::CpuContext;
+use crate::cpu::CpuContext;
 use crate::memory::Page;
 use crate::sync::Mutex;
 

@@ -13,6 +13,7 @@ extern crate alloc;
 mod abi;
 mod boot;
 mod context;
+mod cpu;
 mod device;
 mod memory;
 mod panic;

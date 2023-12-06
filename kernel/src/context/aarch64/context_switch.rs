@@ -1,6 +1,5 @@
-use core::arch::global_asm;
-
-use crate::context::{CpuContext, Task};
+use crate::context::Task;
+use crate::cpu::cpu_context_switch;
 
 /// AArch64 CPU context manager.
 pub struct ContextSwitcher {}
@@ -20,13 +19,3 @@ impl ContextSwitcher {
         cpu_context_switch(&mut prev.cpu_context, &mut next.cpu_context, after);
     }
 }
-
-extern "C" {
-    fn cpu_context_switch(
-        prev: &mut CpuContext,
-        next: &mut CpuContext,
-        after: unsafe extern "C" fn(),
-    );
-}
-
-global_asm!(include_str!("context_switch.s"));
