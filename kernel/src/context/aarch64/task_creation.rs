@@ -53,7 +53,8 @@ impl<'a> TaskCreationService<'a> {
         unsafe {
             // Set stack pointer.
             page = self.page_allocator.alloc();
-            cpu_context.set_sp(page.end_exclusive() as usize);
+            let address: usize = page.address().into();
+            cpu_context.set_sp(address + page.size());
 
             // Set program counter by proxy.
             cpu_context.set_pc(task_raw_entry as usize, task_start as usize, func as usize);

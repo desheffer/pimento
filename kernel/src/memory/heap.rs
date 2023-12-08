@@ -45,8 +45,8 @@ unsafe impl<const N: usize> GlobalAlloc for Allocator<N> {
     }
 
     unsafe fn dealloc(&self, ptr: *mut u8, layout: Layout) {
-        // Zero out the allocation so that reuse can be detected.
-        ptr::write_bytes(ptr, 0, layout.size());
+        // Flag the allocation so that re-use can be detected.
+        ptr::write_bytes(ptr, 0xDE, layout.size());
 
         // TODO: Implement deallocation.
     }

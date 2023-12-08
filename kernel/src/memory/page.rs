@@ -1,16 +1,16 @@
+use core::mem::size_of;
 use core::ops::Range;
 use core::ptr;
 
 use alloc::vec::Vec;
 
-use crate::memory::PAGE_SIZE;
+use crate::memory::{Page, PhysicalAddress};
 use crate::sync::{Mutex, OnceLock};
 
 /// A simple page allocator.
 ///
 /// Allocations are made linearly. Deallocations are not implemented.
 pub struct PageAllocator {
-    page_size: usize,
     capacity: usize,
     reserved_ranges: Vec<Range<usize>>,
     allocated: Mutex<usize>,
@@ -22,15 +22,20 @@ static INIT_RESERVED_RANGES: Mutex<Option<Vec<Range<usize>>>> = Mutex::new(None)
 
 impl PageAllocator {
     /// Sets the memory capacity for the system.
-    pub fn set_capacity(capacity: usize) {
+    pub unsafe fn set_capacity(capacity: usize) {
         assert!(!INSTANCE.is_initialized());
         *INIT_CAPACITY.lock() = Some(capacity);
     }
 
     /// Sets one of more ranges of memory as reserved.
-    pub fn set_reserved_ranges(reserved_ranges: Vec<Range<usize>>) {
+    pub unsafe fn set_reserved_ranges(reserved_ranges: Vec<Range<PhysicalAddress<u8>>>) {
         assert!(!INSTANCE.is_initialized());
-        *INIT_RESERVED_RANGES.lock() = Some(reserved_ranges);
+        *INIT_RESERVED_RANGES.lock() = Some(
+            reserved_ranges
+                .iter()
+                .map(|v| v.start.into()..v.end.into())
+                .collect(),
+        );
     }
 
     /// Gets or initializes the page allocator.
@@ -45,20 +50,20 @@ impl PageAllocator {
                 .take()
                 .expect("PageAllocator::set_reserved_ranges() was expected");
 
-            Self::new(PAGE_SIZE, capacity, reserved_ranges)
+            Self::new(capacity, reserved_ranges)
         })
     }
 
-    fn new(page_size: usize, capacity: usize, reserved_ranges: Vec<Range<usize>>) -> Self {
+    fn new(capacity: usize, reserved_ranges: Vec<Range<usize>>) -> Self {
         Self {
-            page_size,
             capacity,
             reserved_ranges,
             allocated: Mutex::new(0),
         }
     }
 
-    pub unsafe fn alloc(&self) -> Page {
+    /// Allocate a new page. The page will be zeroed out.
+    pub unsafe fn alloc(&self) -> PageAllocation {
         let mut allocated = self.allocated.lock();
         let mut alloc_start;
 
@@ -67,7 +72,7 @@ impl PageAllocator {
             alloc_start = *allocated;
 
             // Reserve space to accommodate the page size.
-            *allocated += self.page_size;
+            *allocated += size_of::<Page>();
 
             // Return a null pointer if memory is exhausted.
             if *allocated > self.capacity {
@@ -75,7 +80,7 @@ impl PageAllocator {
             }
 
             // Retry if this allocation intersects a reserved range.
-            let alloc_range = alloc_start..(alloc_start + self.page_size);
+            let alloc_range = alloc_start..(alloc_start + size_of::<Page>());
             for reserved_range in &self.reserved_ranges {
                 if alloc_range.contains(&reserved_range.start)
                     || alloc_range.contains(&(reserved_range.end - 1))
@@ -89,41 +94,53 @@ impl PageAllocator {
             break;
         }
 
-        // Zero out the page.
-        ptr::write_bytes(alloc_start as *mut u8, 0, self.page_size);
+        let page = PageAllocation::new(alloc_start as *mut Page);
 
-        Page::new(alloc_start as *mut u8, self.page_size)
+        // Zero out the page.
+        ptr::write_bytes(page.page, 0, 1);
+
+        page
     }
 
-    pub unsafe fn dealloc(&self, _page: &mut Page) {
+    /// Deallocate a page.
+    pub unsafe fn dealloc(&self, page: &mut PageAllocation) {
+        // Flag the allocation so that re-use can be detected.
+        ptr::write_bytes(page.page, 0xDE, 1);
+
         // TODO: Implement deallocation.
     }
 }
 
 /// An allocated page of physical memory.
-pub struct Page {
-    start: *mut u8,
-    size: usize,
+pub struct PageAllocation {
+    page: *mut Page,
 }
 
-impl Page {
-    fn new(start: *mut u8, size: usize) -> Self {
-        Page { start, size }
+impl PageAllocation {
+    fn new(start: *mut Page) -> Self {
+        PageAllocation { page: start }
     }
 
-    pub fn start(&self) -> *mut u8 {
-        self.start
+    /// The physical address of the start of the allocation.
+    pub fn address(&self) -> PhysicalAddress<Page> {
+        PhysicalAddress::from_ptr(self.page)
     }
 
-    pub fn end_exclusive(&self) -> *mut u8 {
-        // SAFETY: Usage of this pointer is also unsafe.
-        unsafe { self.start.add(self.size) }
-    }
-
-    pub fn size(&self) -> usize {
-        self.size
+    /// The size of the allocation.
+    pub const fn size(&self) -> usize {
+        size_of::<Page>()
     }
 }
 
-unsafe impl Send for Page {}
-unsafe impl Sync for Page {}
+impl Drop for PageAllocation {
+    fn drop(&mut self) {
+        // SAFETY: Safe because the allocation was created above, but only if all pointers have
+        // been discarded.
+        unsafe {
+            PageAllocator::instance().dealloc(self);
+        }
+    }
+}
+
+unsafe impl Send for PageAllocation {}
+unsafe impl Sync for PageAllocation {}

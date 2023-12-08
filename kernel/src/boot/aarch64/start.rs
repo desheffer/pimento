@@ -1,5 +1,7 @@
 use core::arch::global_asm;
 
+use crate::memory::VA_START;
+
 const HCR_EL2_RW: u64 = 0b1 << 31; // Enable AArch64
 
 const SPSR_EL2_M_EL0T: u64 = 0b0000; // EL0 with SP_EL0 (EL0t)
@@ -17,4 +19,5 @@ global_asm!(
     include_str!("start.s"),
     HCR_EL2_RW = const HCR_EL2_RW,
     SPSR_EL2_INIT = const SPSR_EL2_INIT,
+    VA_START = const VA_START,
 );

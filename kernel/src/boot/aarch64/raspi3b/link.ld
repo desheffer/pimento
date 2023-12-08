@@ -1,6 +1,6 @@
 SECTIONS
 {
-    . = 0x80000;
+    . = 0xFFFF000000080000;
     __start = .;
 
     __stack_start = .;
@@ -11,28 +11,28 @@ SECTIONS
         KEEP(*(.text._entry))
         *(.text*)
     }
-    . = ALIGN(4096);
+    . = ALIGN(4 * 1024);
     __text_end = .;
 
     __rodata_start = .;
     .rodata : {
         *(.rodata*)
     }
-    . = ALIGN(4096);
+    . = ALIGN(4 * 1024);
     __rodata_end = .;
 
     __data_start = .;
     .data : {
         *(.data*)
     }
-    . = ALIGN(4096);
+    . = ALIGN(4 * 1024);
     __data_end = .;
 
     __bss_start = .;
     .bss : {
         *(.bss*)
     }
-    . = ALIGN(4096);
+    . = ALIGN(4 * 1024);
     __bss_end = .;
 
     /DISCARD/ : { *(.comment) }

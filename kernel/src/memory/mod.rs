@@ -1,5 +1,5 @@
 pub use self::arch::*;
-pub use self::page::{Page, PageAllocator};
+pub use self::page::{PageAllocation, PageAllocator};
 
 mod heap;
 mod page;

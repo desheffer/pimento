@@ -1,7 +1,7 @@
 use alloc::string::String;
 
 use crate::cpu::CpuContext;
-use crate::memory::Page;
+use crate::memory::PageAllocation;
 use crate::sync::Mutex;
 
 /// An auto-incrementing task ID.
@@ -14,9 +14,9 @@ impl TaskId {
     pub fn next() -> Self {
         static NEXT: Mutex<u64> = Mutex::new(1);
         let mut next = NEXT.lock();
-        let task_id = TaskId { id: *next };
+        let id = *next;
         *next += 1;
-        task_id
+        Self { id }
     }
 }
 
@@ -31,7 +31,7 @@ pub struct Task {
     pub(super) id: TaskId,
     pub(super) parent_id: ParentTaskId,
     pub(super) name: String,
-    pub(super) kernel_stack: Option<Page>,
+    pub(super) kernel_stack: Option<PageAllocation>,
     pub(super) cpu_context: CpuContext,
 }
 
@@ -40,7 +40,7 @@ impl Task {
         id: TaskId,
         parent_id: ParentTaskId,
         name: String,
-        kernel_stack: Option<Page>,
+        kernel_stack: Option<PageAllocation>,
         cpu_context: CpuContext,
     ) -> Self {
         Task {

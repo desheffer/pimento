@@ -5,6 +5,8 @@ _start:
     // Get the range of BSS.
     ldr x9, =__bss_start
     ldr x10, =__bss_end
+    and x9, x9, ~{VA_START}
+    and x10, x10, ~{VA_START}
 
     // Zero out BSS.
 loop_clear_bss:
@@ -29,6 +31,21 @@ loop_clear_bss:
 enter_el1:
     // Set up initial stack pointer.
     ldr x9, =__stack_start
+    and x9, x9, ~{VA_START}
     mov sp, x9
 
+    // Enable virtual memory.
+    bl _virtual_memory_early_init
+
+    // Relocate stack pointer to kernel virtual memory.
+    mov x9, sp
+    orr x9, x9, {VA_START}
+    mov sp, x9
+
+    // Relocate program counter to kernel virtual memory.
+    adr x9, relocate
+    orr x9, x9, {VA_START}
+    br x9
+
+relocate:
     b kernel_init

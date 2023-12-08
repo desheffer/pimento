@@ -10,7 +10,7 @@ use crate::device::driver::bcm2837_interrupt::{Bcm2837InterruptController, CNTPN
 use crate::device::driver::bcm2837_serial::Bcm2837Serial;
 use crate::device::{LoggerImpl, Monotonic, MonotonicImpl, TimerImpl};
 use crate::kernel_main;
-use crate::memory::PageAllocator;
+use crate::memory::{PageAllocator, PhysicalAddress};
 use crate::sync::Arc;
 
 extern "C" {
@@ -31,9 +31,11 @@ pub unsafe extern "C" fn kernel_init() -> ! {
     MonotonicImpl::instance().set_inner(timer.clone());
     TimerImpl::instance().set_inner(timer.clone());
 
-    let end = &mut __end as *mut u8 as usize;
     PageAllocator::set_capacity(0x4000_0000);
-    PageAllocator::set_reserved_ranges(vec![0..end, 0x3F00_0000..0x4000_0000]);
+    PageAllocator::set_reserved_ranges(vec![
+        PhysicalAddress::new(0)..PhysicalAddress::from_ptr(&__end),
+        PhysicalAddress::new(0x3F00_0000)..PhysicalAddress::new(0x4000_0000),
+    ]);
 
     Scheduler::set_num_cores(1);
     Scheduler::set_quantum(Duration::from_millis(10));
