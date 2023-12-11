@@ -3,18 +3,18 @@ use core::arch::asm;
 use crate::device::Logger;
 use crate::sync::Lock;
 
-const GPFSEL1: *mut u32 = 0x3F20_0004 as *mut u32; // GPIO function select 1
-const GPPUD: *mut u32 = 0x3F20_0094 as *mut u32; // GPIO pin pull-up/down enable
-const GPPUDCLK0: *mut u32 = 0x3F20_0098 as *mut u32; // GPIO pin pull-up/down enable clock 0
-const AUX_ENABLES: *mut u8 = 0x3F21_5004 as *mut u8; // Auxiliary enables
-const AUX_MU_IO: *mut u8 = 0x3F21_5040 as *mut u8; // Mini UART I/O data
-const AUX_MU_IER: *mut u8 = 0x3F21_5044 as *mut u8; // Mini UART interrupt enable
-const AUX_MU_IIR: *mut u8 = 0x3F21_5048 as *mut u8; // Mini UART interrupt identify
-const AUX_MU_LCR: *mut u8 = 0x3F21_504C as *mut u8; // Mini UART line control
-const AUX_MU_MCR: *mut u8 = 0x3F21_5050 as *mut u8; // Mini UART modem control
-const AUX_MU_LSR: *mut u8 = 0x3F21_5054 as *mut u8; // Mini UART line status
-const AUX_MU_CNTL: *mut u8 = 0x3F21_5060 as *mut u8; // Mini UART extra control
-const AUX_MU_BAUD: *mut u16 = 0x3F21_5068 as *mut u16; // Mini UART baud rate
+const GPFSEL1: *mut u32 = 0xFFFF_0000_3F20_0004 as *mut u32; // GPIO function select 1
+const GPPUD: *mut u32 = 0xFFFF_0000_3F20_0094 as *mut u32; // GPIO pin pull-up/down enable
+const GPPUDCLK0: *mut u32 = 0xFFFF_0000_3F20_0098 as *mut u32; // GPIO pin pull-up/down enable clock 0
+const AUX_ENABLES: *mut u8 = 0xFFFF_0000_3F21_5004 as *mut u8; // Auxiliary enables
+const AUX_MU_IO: *mut u8 = 0xFFFF_0000_3F21_5040 as *mut u8; // Mini UART I/O data
+const AUX_MU_IER: *mut u8 = 0xFFFF_0000_3F21_5044 as *mut u8; // Mini UART interrupt enable
+const AUX_MU_IIR: *mut u8 = 0xFFFF_0000_3F21_5048 as *mut u8; // Mini UART interrupt identify
+const AUX_MU_LCR: *mut u8 = 0xFFFF_0000_3F21_504C as *mut u8; // Mini UART line control
+const AUX_MU_MCR: *mut u8 = 0xFFFF_0000_3F21_5050 as *mut u8; // Mini UART modem control
+const AUX_MU_LSR: *mut u8 = 0xFFFF_0000_3F21_5054 as *mut u8; // Mini UART line status
+const AUX_MU_CNTL: *mut u8 = 0xFFFF_0000_3F21_5060 as *mut u8; // Mini UART extra control
+const AUX_MU_BAUD: *mut u16 = 0xFFFF_0000_3F21_5068 as *mut u16; // Mini UART baud rate
 
 const GPFSEL1_FSEL14_MASK: u32 = 0b111 << 12; // Mask GPIO pin 14 function
 const GPFSEL1_FSEL14_F5: u32 = 0b010 << 12; // Set GPIO pin 14 to take function 5

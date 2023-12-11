@@ -1,7 +1,7 @@
 use alloc::string::String;
 
 use crate::cpu::CpuContext;
-use crate::memory::PageAllocation;
+use crate::memory::MemoryContext;
 use crate::sync::Mutex;
 
 /// An auto-incrementing task ID.
@@ -31,24 +31,23 @@ pub struct Task {
     pub(super) id: TaskId,
     pub(super) parent_id: ParentTaskId,
     pub(super) name: String,
-    pub(super) kernel_stack: Option<PageAllocation>,
     pub(super) cpu_context: CpuContext,
+    pub(super) memory_context: MemoryContext,
 }
 
 impl Task {
     pub(super) fn new(
-        id: TaskId,
         parent_id: ParentTaskId,
         name: String,
-        kernel_stack: Option<PageAllocation>,
         cpu_context: CpuContext,
+        memory_context: MemoryContext,
     ) -> Self {
         Task {
-            id,
+            id: TaskId::next(),
             parent_id,
             name,
-            kernel_stack,
             cpu_context,
+            memory_context,
         }
     }
 }

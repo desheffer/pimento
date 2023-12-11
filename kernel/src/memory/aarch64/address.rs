@@ -11,6 +11,7 @@ pub struct PhysicalAddress<T> {
 }
 
 impl<T> PhysicalAddress<T> {
+    /// Creates a physical address.
     pub fn new(address: usize) -> Self {
         Self {
             address,
@@ -18,15 +19,18 @@ impl<T> PhysicalAddress<T> {
         }
     }
 
+    /// Creates a physical address from a pointer in kernel virtual memory.
     pub fn from_ptr(ptr: *const T) -> Self {
         let address = (ptr as usize) & !VA_START;
         Self::new(address)
     }
 
+    /// Gets the physical address as a pointer in kernel virtual memory.
     pub unsafe fn as_ptr(&self) -> *const T {
         (self.address | VA_START) as *const T
     }
 
+    /// Gets the physical address as a mutable pointer in kernel virtual memory.
     pub unsafe fn as_mut_ptr(&self) -> *mut T {
         (self.address | VA_START) as *mut T
     }

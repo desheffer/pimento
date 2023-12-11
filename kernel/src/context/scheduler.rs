@@ -85,14 +85,15 @@ impl<'a> Scheduler<'a> {
     }
 
     /// Assumes the role of the kernel initialization task.
-    pub fn become_kinit(&self, task: Task) {
+    pub fn become_kinit(&self, task: Task) -> TaskId {
         let id = task.id;
-        let core_num = self.current_core();
 
         // SAFETY: Safe because call is behind a lock.
         self.lock.call(|| unsafe {
             assert!(self.tasks().is_empty());
             assert!(self.queue().is_empty());
+
+            let core_num = self.current_core();
             assert!(core_num == 0);
 
             self.tasks().insert(id, Box::new(task));
@@ -100,10 +101,12 @@ impl<'a> Scheduler<'a> {
             // Skip the queue and set as current task.
             self.current_task()[core_num] = Some(id);
         });
+
+        id
     }
 
     /// Adds a task to the scheduling queue.
-    pub fn add_task(&self, task: Task) {
+    pub fn add_task(&self, task: Task) -> TaskId {
         let id = task.id;
 
         // SAFETY: Safe because call is behind a lock.
@@ -111,6 +114,8 @@ impl<'a> Scheduler<'a> {
             self.tasks().insert(id, Box::new(task));
             self.queue().push_back(id);
         });
+
+        id
     }
 
     /// Determines the next task to run and performs a context switch.

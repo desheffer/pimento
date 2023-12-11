@@ -94,10 +94,10 @@ impl PageAllocator {
             break;
         }
 
-        let page = PageAllocation::new(alloc_start as *mut Page);
+        let page = PageAllocation::new(PhysicalAddress::new(alloc_start));
 
         // Zero out the page.
-        ptr::write_bytes(page.page, 0, 1);
+        ptr::write_bytes(page.as_mut_ptr(), 0, 1);
 
         page
     }
@@ -105,7 +105,7 @@ impl PageAllocator {
     /// Deallocate a page.
     pub unsafe fn dealloc(&self, page: &mut PageAllocation) {
         // Flag the allocation so that re-use can be detected.
-        ptr::write_bytes(page.page, 0xDE, 1);
+        ptr::write_bytes(page.as_mut_ptr(), 0xDE, 1);
 
         // TODO: Implement deallocation.
     }
@@ -113,22 +113,33 @@ impl PageAllocator {
 
 /// An allocated page of physical memory.
 pub struct PageAllocation {
-    page: *mut Page,
+    page: PhysicalAddress<Page>,
 }
 
 impl PageAllocation {
-    fn new(start: *mut Page) -> Self {
-        PageAllocation { page: start }
+    /// Creates a page allocation.
+    fn new(page: PhysicalAddress<Page>) -> Self {
+        PageAllocation { page }
     }
 
-    /// The physical address of the start of the allocation.
+    /// Gets the physical address of the allocated page.
     pub fn address(&self) -> PhysicalAddress<Page> {
-        PhysicalAddress::from_ptr(self.page)
+        self.page
     }
 
-    /// The size of the allocation.
+    /// Gets the size of the allocated page.
     pub const fn size(&self) -> usize {
         size_of::<Page>()
+    }
+
+    /// Gets the allocated page as a pointer in kernel virtual memory.
+    pub unsafe fn as_ptr(&self) -> *const Page {
+        self.page.as_ptr()
+    }
+
+    /// Gets the allocated page as a mutable pointer in kernel virtual memory.
+    pub unsafe fn as_mut_ptr(&self) -> *mut Page {
+        self.page.as_mut_ptr()
     }
 }
 

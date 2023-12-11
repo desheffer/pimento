@@ -1,8 +1,8 @@
 use crate::device::InterruptController;
 use crate::sync::Lock;
 
-const CORE0_TIMER_IRQCNTL: *mut u32 = 0x4000_0040 as *mut u32; // Core 0 timers interrupt control
-const CORE0_IRQ: *mut u32 = 0x4000_0060 as *mut u32; // Core 0 IRQ source
+const CORE0_TIMER_IRQCNTL: *mut u32 = 0xFFFF_0000_4000_0040 as *mut u32; // Core 0 timers interrupt control
+const CORE0_IRQ: *mut u32 = 0xFFFF_0000_4000_0060 as *mut u32; // Core 0 IRQ source
 
 pub const CNTPNSIRQ: u64 = 1;
 

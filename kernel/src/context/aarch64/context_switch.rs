@@ -1,5 +1,6 @@
 use crate::context::Task;
 use crate::cpu::cpu_context_switch;
+use crate::memory::memory_context_switch;
 
 /// AArch64 CPU context manager.
 pub struct ContextSwitcher {}
@@ -16,6 +17,7 @@ impl ContextSwitcher {
     }
 
     pub unsafe fn switch(&self, prev: &mut Task, next: &mut Task, after: unsafe extern "C" fn()) {
+        memory_context_switch(&mut next.memory_context);
         cpu_context_switch(&mut prev.cpu_context, &mut next.cpu_context, after);
     }
 }
