@@ -14,6 +14,7 @@ pub struct OnceLock<T> {
 }
 
 impl<T> OnceLock<T> {
+    /// Creates an empty cell.
     pub const fn new() -> Self {
         Self {
             once: Once::new(),
@@ -22,6 +23,7 @@ impl<T> OnceLock<T> {
         }
     }
 
+    /// Gets the reference to the underlying value.
     pub fn get(&self) -> Option<&T> {
         // SAFETY: Safe because call is behind a lock.
         unsafe {
@@ -33,6 +35,7 @@ impl<T> OnceLock<T> {
         }
     }
 
+    /// Sets the contents of this cell to the given value.
     pub fn set(&self, value: T) -> Result<(), T> {
         let mut value = Some(value);
         self.get_or_init(|| value.take().unwrap());
@@ -42,6 +45,7 @@ impl<T> OnceLock<T> {
         }
     }
 
+    /// Gets the contents of the cell, initializing it with the given closure if the cell is empty.
     pub fn get_or_init<F>(&self, f: F) -> &T
     where
         F: FnOnce() -> T,
@@ -56,7 +60,8 @@ impl<T> OnceLock<T> {
         }
     }
 
-    pub fn is_initialized(&self) -> bool {
+    /// Returns `true` if the cell has been initialized.
+    fn is_initialized(&self) -> bool {
         self.once.is_completed()
     }
 }

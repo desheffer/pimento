@@ -14,6 +14,7 @@ pub struct Bcm2837InterruptController {
 }
 
 impl Bcm2837InterruptController {
+    /// Creates an interrupt controller driver.
     pub const unsafe fn new() -> Self {
         Self { lock: Lock::new() }
     }

@@ -50,14 +50,14 @@ impl<'a> TaskCreationService<'a> {
             memory_context = MemoryContext::new();
         }
 
-        // SAFETY: Safe because the page is reserved.
         let mut cpu_context = CpuContext::zeroed();
         unsafe {
             // Set the stack pointer (to the end of the page).
             let kernel_stack = memory_context.alloc_unmapped_page();
             cpu_context.set_sp(kernel_stack.as_mut_ptr().add(1) as usize);
 
-            // Set program counter by proxy.
+            // Set the program counter by proxy. The `task_raw_entry` function calls `task_start`,
+            // which calls `func`.
             cpu_context.set_pc(task_raw_entry as usize, task_start as usize, func as usize);
         }
 

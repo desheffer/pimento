@@ -20,6 +20,9 @@ mod panic;
 mod print;
 mod sync;
 
+/// Starts the main thread of the kernel.
+///
+/// This function is called after all architecture-specific initialization is complete.
 pub fn kernel_main() {
     println!("Hello, world!");
 

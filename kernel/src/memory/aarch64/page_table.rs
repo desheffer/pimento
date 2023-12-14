@@ -31,16 +31,19 @@ pub struct Table {
 }
 
 impl Table {
+    /// Creates a table initialized with all zeroes.
     pub const fn zeroed() -> Self {
         Self {
             data: [0; ROW_COUNT],
         }
     }
 
+    /// Returns the length (row count) of the table.
     pub const fn len() -> usize {
         ROW_COUNT
     }
 
+    /// Sets the value of a row using a row builder.
     pub unsafe fn set_row(&mut self, row: usize, builder: &dyn RowBuilder) {
         assert!(row < ROW_COUNT);
         self.data[row] = builder.build();
@@ -49,6 +52,7 @@ impl Table {
 
 /// A builder for adding rows to a translation table.
 pub trait RowBuilder {
+    /// Builds the row value.
     unsafe fn build(&self) -> u64;
 }
 
@@ -59,6 +63,7 @@ pub struct TableRowBuilder {
 }
 
 impl TableRowBuilder {
+    /// Creates a table row builder.
     pub fn new(address: PhysicalAddress<Table>) -> Self {
         Self {
             address: Into::into(address),
@@ -66,6 +71,7 @@ impl TableRowBuilder {
         }
     }
 
+    /// Sets the given access flag value.
     pub fn with_access_flag(mut self, access_flag: bool) -> Self {
         self.access_flag = access_flag;
         self
@@ -87,6 +93,7 @@ pub struct BlockRowBuilder {
 }
 
 impl BlockRowBuilder {
+    /// Creates a block row builder.
     pub fn new<const COUNT: usize>(address: PhysicalAddress<[u8; COUNT]>) -> Self {
         Self {
             address: Into::into(address),
@@ -96,16 +103,19 @@ impl BlockRowBuilder {
         }
     }
 
+    /// Sets the given memory attribute.
     pub fn with_attribute(mut self, attribute: Attribute) -> Self {
         self.attribute = attribute;
         self
     }
 
+    /// Sets the given global value.
     pub fn with_global(mut self, global: bool) -> Self {
         self.global = global;
         self
     }
 
+    /// Sets the given access flag value.
     pub fn with_access_flag(mut self, access_flag: bool) -> Self {
         self.access_flag = access_flag;
         self
@@ -131,6 +141,7 @@ pub struct PageRowBuilder {
 }
 
 impl PageRowBuilder {
+    /// Creates a page row builder.
     pub fn new(address: PhysicalAddress<Page>) -> Self {
         Self {
             address: Into::into(address),
@@ -140,16 +151,19 @@ impl PageRowBuilder {
         }
     }
 
+    /// Sets the given memory attribute.
     pub fn with_attribute(mut self, attribute: Attribute) -> Self {
         self.attribute = attribute;
         self
     }
 
+    /// Sets the given global value.
     pub fn with_global(mut self, global: bool) -> Self {
         self.global = global;
         self
     }
 
+    /// Sets the given access flag value.
     pub fn with_access_flag(mut self, access_flag: bool) -> Self {
         self.access_flag = access_flag;
         self

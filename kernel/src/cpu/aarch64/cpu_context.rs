@@ -19,6 +19,7 @@ pub struct CpuContext {
 }
 
 impl CpuContext {
+    /// Creates a CPU context initialized with all zeroes.
     pub fn zeroed() -> Self {
         Self {
             x19: 0,
@@ -37,10 +38,13 @@ impl CpuContext {
         }
     }
 
+    /// Sets the stack pointer.
     pub unsafe fn set_sp(&mut self, sp: usize) {
         self.sp = sp;
     }
 
+    /// Sets the program counter by proxy. The given values can be chained to call multiple
+    /// functions.
     pub unsafe fn set_pc(&mut self, lr: usize, x19: usize, x20: usize) {
         self.lr = lr;
         self.x19 = x19;
@@ -49,6 +53,7 @@ impl CpuContext {
 }
 
 extern "C" {
+    /// Performs the CPU-specific steps of a context switch.
     pub fn cpu_context_switch(
         prev: &mut CpuContext,
         next: &mut CpuContext,

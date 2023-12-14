@@ -11,6 +11,7 @@ pub struct Once {
 }
 
 impl Once {
+    /// Creates a one-time global initialization.
     pub const fn new() -> Self {
         Self {
             lock: Lock::new(),
@@ -18,6 +19,9 @@ impl Once {
         }
     }
 
+    /// Performs an initialization routine once and only once. The given closure will be executed
+    /// if this is the first time `call_once` has been called, and otherwise the routine will not
+    /// be invoked.
     pub fn call_once<F>(&self, f: F)
     where
         F: FnOnce(),
@@ -31,6 +35,7 @@ impl Once {
         })
     }
 
+    /// Returns `true` if some `call_once()` call has completed successfully.
     pub fn is_completed(&self) -> bool {
         // SAFETY: Safe because call is behind a lock.
         self.lock.call(|| unsafe { *self.completed.get() })

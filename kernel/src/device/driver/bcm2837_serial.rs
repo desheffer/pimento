@@ -45,10 +45,12 @@ pub struct Bcm2837Serial {
 }
 
 impl Bcm2837Serial {
+    /// Creates a serial driver.
     pub unsafe fn new() -> Self {
         Self { lock: Lock::new() }
     }
 
+    /// Initializes the serial device.
     pub fn init(&self) {
         // SAFETY: Safe because call is behind a lock.
         self.lock.call(|| unsafe {

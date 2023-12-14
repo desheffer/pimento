@@ -21,6 +21,7 @@ impl InterruptMask {
         }
     }
 
+    /// Enables interrupts.
     pub fn enable_interrupts(&self) {
         // SAFETY: Safe because interrupts are disabled.
         unsafe {
@@ -31,6 +32,7 @@ impl InterruptMask {
         }
     }
 
+    /// Disables interrupts.
     pub fn disable_interrupts(&self) {
         // SAFETY: Safe because interrupts are disabled.
         unsafe {
@@ -39,6 +41,8 @@ impl InterruptMask {
         }
     }
 
+    /// Disables interrupts and obtains the lock. If the lock was not previously held, then the
+    /// original interrupt state is saved.
     pub fn lock(&self) {
         // SAFETY: Safe because interrupts are disabled.
         unsafe {
@@ -53,6 +57,8 @@ impl InterruptMask {
         }
     }
 
+    /// Releases the lock. If the lock is no longer held, then the original interrupt state is
+    /// restored.
     pub fn unlock(&self) {
         // SAFETY: Safe because interrupts are disabled.
         unsafe {
@@ -67,6 +73,7 @@ impl InterruptMask {
         }
     }
 
+    /// Executes the given closure while holding the lock.
     pub fn call<F, R>(&self, f: F) -> R
     where
         F: FnOnce() -> R,

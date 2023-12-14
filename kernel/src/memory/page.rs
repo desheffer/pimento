@@ -23,13 +23,13 @@ static INIT_RESERVED_RANGES: Mutex<Option<Vec<Range<usize>>>> = Mutex::new(None)
 impl PageAllocator {
     /// Sets the memory capacity for the system.
     pub unsafe fn set_capacity(capacity: usize) {
-        assert!(!INSTANCE.is_initialized());
+        assert!(INSTANCE.get().is_none());
         *INIT_CAPACITY.lock() = Some(capacity);
     }
 
-    /// Sets one of more ranges of memory as reserved.
+    /// Sets ranges of memory as reserved.
     pub unsafe fn set_reserved_ranges(reserved_ranges: Vec<Range<PhysicalAddress<u8>>>) {
-        assert!(!INSTANCE.is_initialized());
+        assert!(INSTANCE.get().is_none());
         *INIT_RESERVED_RANGES.lock() = Some(
             reserved_ranges
                 .iter()
@@ -62,7 +62,7 @@ impl PageAllocator {
         }
     }
 
-    /// Allocate a new page. The page will be zeroed out.
+    /// Allocates a page. The page is zeroed out.
     pub unsafe fn alloc(&self) -> PageAllocation {
         let mut allocated = self.allocated.lock();
         let mut alloc_start;
@@ -102,7 +102,7 @@ impl PageAllocator {
         page
     }
 
-    /// Deallocate a page.
+    /// Deallocates a page.
     pub unsafe fn dealloc(&self, page: &mut PageAllocation) {
         // Flag the allocation so that re-use can be detected.
         ptr::write_bytes(page.as_mut_ptr(), 0xDE, 1);
@@ -123,7 +123,7 @@ impl PageAllocation {
     }
 
     /// Gets the physical address of the allocated page.
-    pub fn address(&self) -> PhysicalAddress<Page> {
+    pub fn addr(&self) -> PhysicalAddress<Page> {
         self.page
     }
 

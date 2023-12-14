@@ -24,6 +24,7 @@ pub struct Mutex<T: ?Sized> {
 }
 
 impl<T> Mutex<T> {
+    /// Creates a mutex.
     pub const fn new(data: T) -> Self {
         Self {
             lock: Lock::new(),
@@ -33,6 +34,7 @@ impl<T> Mutex<T> {
 }
 
 impl<T: ?Sized> Mutex<T> {
+    /// Acquires a mutex, blocking the current thread until it is able to do so.
     pub fn lock(&self) -> MutexGuard<'_, T> {
         self.lock.lock();
         MutexGuard::new(self)
@@ -50,7 +52,7 @@ pub struct MutexGuard<'a, T: ?Sized> {
 }
 
 impl<'a, T: ?Sized> MutexGuard<'a, T> {
-    pub fn new(lock: &'a Mutex<T>) -> Self {
+    fn new(lock: &'a Mutex<T>) -> Self {
         Self { lock }
     }
 }

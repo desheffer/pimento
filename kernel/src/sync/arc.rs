@@ -14,6 +14,7 @@ pub struct Arc<T: ?Sized> {
 }
 
 impl<T> Arc<T> {
+    /// Creates a reference-counting pointer.
     pub fn new(data: T) -> Self {
         let inner = Box::new(ArcInner {
             strong: Mutex::new(1),

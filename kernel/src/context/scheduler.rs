@@ -30,13 +30,13 @@ static INIT_QUANTUM: Mutex<Option<Duration>> = Mutex::new(None);
 impl<'a> Scheduler<'a> {
     /// Sets the number of cores for the system.
     pub fn set_num_cores(num_cores: usize) {
-        assert!(!INSTANCE.is_initialized());
+        assert!(INSTANCE.get().is_none());
         *INIT_NUM_CORES.lock() = Some(num_cores);
     }
 
     /// Sets the quantum (time slot size) as a duration of time.
     pub fn set_quantum(quantum: Duration) {
-        assert!(!INSTANCE.is_initialized());
+        assert!(INSTANCE.get().is_none());
         *INIT_QUANTUM.lock() = Some(quantum);
     }
 

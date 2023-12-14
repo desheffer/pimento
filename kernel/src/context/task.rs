@@ -11,6 +11,7 @@ pub struct TaskId {
 }
 
 impl TaskId {
+    /// Generates the next available task ID.
     pub fn next() -> Self {
         static NEXT: Mutex<u64> = Mutex::new(1);
         let mut next = NEXT.lock();
@@ -36,6 +37,7 @@ pub struct Task {
 }
 
 impl Task {
+    /// Creates a task.
     pub(super) fn new(
         parent_id: ParentTaskId,
         name: String,

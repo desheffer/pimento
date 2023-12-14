@@ -16,6 +16,7 @@ impl ContextSwitcher {
         Self {}
     }
 
+    /// Performs a context switch.
     pub unsafe fn switch(&self, prev: &mut Task, next: &mut Task, after: unsafe extern "C" fn()) {
         memory_context_switch(&mut next.memory_context);
         cpu_context_switch(&mut prev.cpu_context, &mut next.cpu_context, after);

@@ -15,6 +15,7 @@ pub struct AddressSpaceId {
 }
 
 impl AddressSpaceId {
+    /// Generates the next available Address Space ID.
     pub fn next() -> Self {
         static NEXT: Mutex<u16> = Mutex::new(1);
         let mut next = NEXT.lock();
@@ -32,19 +33,25 @@ pub struct MemoryContext {
 }
 
 impl MemoryContext {
+    /// Creates a memory context for the kernel initialization task.
+    ///
+    /// This function is called early in the initialization process.
     pub unsafe fn new_for_kinit(table_l0: *mut Table) -> Self {
+        let page_allocations = Vec::new();
+
         Self {
-            page_allocations: Vec::new(),
+            page_allocations,
             asid: AddressSpaceId::next(),
             table_l0,
         }
     }
 
+    /// Creates a memory context.
     pub unsafe fn new() -> Self {
         let mut page_allocations = Vec::new();
 
         let table_l0_page = Arc::new(PageAllocator::instance().alloc());
-        let table_l0 = table_l0_page.address().as_mut_ptr() as *mut Table;
+        let table_l0 = table_l0_page.as_mut_ptr() as *mut Table;
         page_allocations.push(table_l0_page);
 
         Self {
@@ -61,6 +68,7 @@ impl MemoryContext {
         allocation
     }
 
+    /// Generates the TTBR (Translation Table Base Register) value for this memory context.
     pub unsafe fn ttbr(&self) -> u64 {
         let asid = self.asid.id as u64;
         let table: u64 = PhysicalAddress::from_ptr(self.table_l0).into();
@@ -68,6 +76,7 @@ impl MemoryContext {
     }
 }
 
+/// Performs the memory-specific steps of a context switch.
 pub unsafe fn memory_context_switch(next: &mut MemoryContext) {
     // Set the translation table for user space.
     asm!(
