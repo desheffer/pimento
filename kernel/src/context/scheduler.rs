@@ -8,26 +8,24 @@ use alloc::vec::Vec;
 use crate::context::{ContextSwitcher, Task, TaskId};
 use crate::cpu::InterruptMask;
 use crate::device::{Timer, TimerImpl};
-use crate::memory::PageAllocator;
 use crate::sync::{Mutex, OnceLock, UninterruptibleLock};
 
 /// A round-robin task scheduler.
-pub struct Scheduler<'a> {
+pub struct Scheduler {
     lock: UninterruptibleLock,
     tasks: UnsafeCell<BTreeMap<TaskId, Box<Task>>>,
     queue: UnsafeCell<VecDeque<TaskId>>,
     current_task: UnsafeCell<Vec<Option<TaskId>>>,
-    timer: &'a TimerImpl,
+    timer: &'static TimerImpl,
     quantum: Duration,
-    page_allocator: &'a PageAllocator,
-    context_switcher: &'a ContextSwitcher,
+    context_switcher: &'static ContextSwitcher,
 }
 
 static INSTANCE: OnceLock<Scheduler> = OnceLock::new();
 static INIT_NUM_CORES: Mutex<Option<usize>> = Mutex::new(None);
 static INIT_QUANTUM: Mutex<Option<Duration>> = Mutex::new(None);
 
-impl<'a> Scheduler<'a> {
+impl Scheduler {
     /// Sets the number of cores for the system.
     pub fn set_num_cores(num_cores: usize) {
         assert!(INSTANCE.get().is_none());
@@ -56,7 +54,6 @@ impl<'a> Scheduler<'a> {
                 num_cores,
                 TimerImpl::instance(),
                 quantum,
-                PageAllocator::instance(),
                 ContextSwitcher::instance(),
             )
         })
@@ -64,10 +61,9 @@ impl<'a> Scheduler<'a> {
 
     fn new(
         num_cores: usize,
-        timer: &'a TimerImpl,
+        timer: &'static TimerImpl,
         quantum: Duration,
-        page_allocator: &'a PageAllocator,
-        context_switcher: &'a ContextSwitcher,
+        context_switcher: &'static ContextSwitcher,
     ) -> Self {
         let mut current_task = Vec::new();
         current_task.extend((0..num_cores).map(|_| None));
@@ -79,7 +75,6 @@ impl<'a> Scheduler<'a> {
             current_task: UnsafeCell::new(current_task),
             timer,
             quantum,
-            page_allocator,
             context_switcher,
         }
     }
@@ -179,5 +174,5 @@ unsafe extern "C" fn _scheduler_after_schedule() {
     Scheduler::instance().after_schedule()
 }
 
-unsafe impl Send for Scheduler<'_> {}
-unsafe impl Sync for Scheduler<'_> {}
+unsafe impl Send for Scheduler {}
+unsafe impl Sync for Scheduler {}

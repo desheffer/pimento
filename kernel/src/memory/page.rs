@@ -62,7 +62,10 @@ impl PageAllocator {
         }
     }
 
-    /// Allocates a page. The page is zeroed out.
+    /// Allocates a page of memory.
+    ///
+    /// If the `PageAllocation` is dropped, then the page will be deallocated. Therefore, it is
+    /// important that the `PageAllocation` is kept alive while the page is being used.
     pub unsafe fn alloc(&self) -> PageAllocation {
         let mut allocated = self.allocated.lock();
         let mut alloc_start;
@@ -102,7 +105,7 @@ impl PageAllocator {
         page
     }
 
-    /// Deallocates a page.
+    /// Deallocates a page of memory.
     pub unsafe fn dealloc(&self, page: &mut PageAllocation) {
         // Flag the allocation so that re-use can be detected.
         ptr::write_bytes(page.as_mut_ptr(), 0xDE, 1);
@@ -112,6 +115,8 @@ impl PageAllocator {
 }
 
 /// An allocated page of physical memory.
+///
+/// The page will be deallocated if the `PageAllocation` is dropped.
 pub struct PageAllocation {
     page: PhysicalAddress<Page>,
 }

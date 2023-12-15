@@ -4,32 +4,33 @@ use alloc::borrow::ToOwned;
 
 use crate::context::{ParentTaskId, Scheduler, Task, TaskId};
 use crate::cpu::CpuContext;
-use crate::memory::MemoryContext;
+use crate::memory::{MemoryContext, PageAllocator};
 use crate::sync::OnceLock;
 
-pub struct TaskCreationService<'a> {
-    scheduler: &'a Scheduler<'a>,
+pub struct TaskCreationService {
+    scheduler: &'static Scheduler,
+    page_allocator: &'static PageAllocator,
 }
 
 static INSTANCE: OnceLock<TaskCreationService> = OnceLock::new();
 
-impl<'a> TaskCreationService<'a> {
+impl TaskCreationService {
     /// Gets or initializes the task creation service.
     pub fn instance() -> &'static Self {
-        INSTANCE.get_or_init(|| Self::new(Scheduler::instance()))
+        INSTANCE.get_or_init(|| Self::new(Scheduler::instance(), PageAllocator::instance()))
     }
 
-    fn new(scheduler: &'a Scheduler) -> Self {
-        Self { scheduler }
+    fn new(scheduler: &'static Scheduler, page_allocator: &'static PageAllocator) -> Self {
+        Self {
+            scheduler,
+            page_allocator,
+        }
     }
 
     /// Creates and assumes the role of the kernel initialization task. This is necessary because
     /// this task effectively creates itself.
     pub fn create_and_become_kinit(&self) -> TaskId {
-        let memory_context;
-        unsafe {
-            memory_context = MemoryContext::new();
-        }
+        let memory_context = MemoryContext::new(self.page_allocator);
 
         let cpu_context = CpuContext::zeroed();
 
@@ -45,10 +46,7 @@ impl<'a> TaskCreationService<'a> {
 
     /// Spawns a new kernel thread to execute the given function.
     pub fn create_kthread(&self, func: fn()) -> TaskId {
-        let mut memory_context;
-        unsafe {
-            memory_context = MemoryContext::new();
-        }
+        let mut memory_context = MemoryContext::new(self.page_allocator);
 
         let mut cpu_context = CpuContext::zeroed();
         unsafe {
