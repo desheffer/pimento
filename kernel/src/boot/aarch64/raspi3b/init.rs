@@ -1,4 +1,5 @@
 use core::ops::Add;
+use core::ptr::addr_of;
 use core::time::Duration;
 
 use alloc::vec;
@@ -33,7 +34,7 @@ pub unsafe extern "C" fn kernel_init() -> ! {
 
     PageAllocator::set_capacity(0x4000_0000);
     PageAllocator::set_reserved_ranges(vec![
-        PhysicalAddress::new(0)..PhysicalAddress::from_ptr(&__end),
+        PhysicalAddress::new(0)..PhysicalAddress::from_ptr(addr_of!(__end)),
         PhysicalAddress::new(0x3F00_0000)..PhysicalAddress::new(0x4000_0000),
     ]);
 

@@ -1,4 +1,5 @@
 use core::arch::{asm, global_asm};
+use core::ptr::addr_of;
 
 use crate::abi::LocalInterruptHandler;
 use crate::sync::{Arc, OnceLock};
@@ -37,7 +38,7 @@ impl VectorTable {
         asm!(
             "msr vbar_el1, {}",
             "isb",
-            in(reg) &vector_table,
+            in(reg) addr_of!(vector_table),
         );
     }
 }

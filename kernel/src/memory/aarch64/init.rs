@@ -1,5 +1,6 @@
 use core::arch::asm;
 use core::mem::size_of;
+use core::ptr::{addr_of, addr_of_mut};
 
 use crate::memory::PhysicalAddress;
 use crate::sync::OnceLock;
@@ -49,7 +50,7 @@ unsafe extern "C" fn _virtual_memory_early_init() {
     );
 
     // Initialize level 0 as an identity map.
-    let addr = PhysicalAddress::from_ptr(&INIT_TABLE_L1);
+    let addr = PhysicalAddress::from_ptr(addr_of!(INIT_TABLE_L1));
     let row = TableRowBuilder::new(addr).with_access_flag(true);
     INIT_TABLE_L0.set_row(0, &row);
 
@@ -63,7 +64,7 @@ unsafe extern "C" fn _virtual_memory_early_init() {
         INIT_TABLE_L1.set_row(i, &row);
     }
 
-    let memory_context = MemoryContext::new_for_kinit(&mut INIT_TABLE_L0);
+    let memory_context = MemoryContext::new_for_kinit(addr_of_mut!(INIT_TABLE_L0));
     let ttbr = memory_context.ttbr();
 
     // Set the translation tables for user space (temporary) and kernel space.
