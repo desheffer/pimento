@@ -43,12 +43,12 @@ impl PageAllocator {
         INSTANCE.get_or_init(|| {
             let capacity = INIT_CAPACITY
                 .lock()
-                .take()
                 .expect("PageAllocator::set_capacity() was expected");
             let reserved_ranges = INIT_RESERVED_RANGES
                 .lock()
-                .take()
-                .expect("PageAllocator::set_reserved_ranges() was expected");
+                .as_ref()
+                .expect("PageAllocator::set_reserved_ranges() was expected")
+                .clone();
 
             Self::new(capacity, reserved_ranges)
         })

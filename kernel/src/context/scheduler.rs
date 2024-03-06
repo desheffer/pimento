@@ -43,11 +43,9 @@ impl Scheduler {
         INSTANCE.get_or_init(|| {
             let num_cores = INIT_NUM_CORES
                 .lock()
-                .take()
                 .expect("Scheduler::set_num_cores() was expected");
             let quantum = INIT_QUANTUM
                 .lock()
-                .take()
                 .expect("Scheduler::set_quantum() was expected");
 
             Self::new(
