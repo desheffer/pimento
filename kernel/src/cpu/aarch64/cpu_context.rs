@@ -3,19 +3,19 @@ use core::arch::global_asm;
 /// AArch64 registers to persist between context switches.
 #[repr(C)]
 pub struct CpuContext {
-    x19: usize,
-    x20: usize,
-    x21: usize,
-    x22: usize,
-    x23: usize,
-    x24: usize,
-    x25: usize,
-    x26: usize,
-    x27: usize,
-    x28: usize,
-    fp: usize, // x29
-    lr: usize, // x30
-    sp: usize,
+    x19: u64,
+    x20: u64,
+    x21: u64,
+    x22: u64,
+    x23: u64,
+    x24: u64,
+    x25: u64,
+    x26: u64,
+    x27: u64,
+    x28: u64,
+    fp: u64, // x29
+    lr: u64, // x30
+    sp: u64,
 }
 
 impl CpuContext {
@@ -39,16 +39,16 @@ impl CpuContext {
     }
 
     /// Sets the stack pointer.
-    pub unsafe fn set_sp(&mut self, sp: usize) {
-        self.sp = sp;
+    pub unsafe fn set_stack_pointer(&mut self, sp: usize) {
+        assert!(self.sp == 0);
+        self.sp = sp as u64;
     }
 
-    /// Sets the program counter by proxy. The given values can be chained to call multiple
-    /// functions.
-    pub unsafe fn set_pc(&mut self, lr: usize, x19: usize, x20: usize) {
-        self.lr = lr;
-        self.x19 = x19;
-        self.x20 = x20;
+    /// Sets the link register.
+    pub unsafe fn set_link_register(&mut self, lr: usize, x19: usize) {
+        assert!(self.lr == 0);
+        self.lr = lr as u64;
+        self.x19 = x19 as u64;
     }
 }
 

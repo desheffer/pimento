@@ -45,18 +45,17 @@ impl TaskCreationService {
     }
 
     /// Spawns a new kernel thread to execute the given function.
-    pub fn create_kthread(&self, func: fn()) -> TaskId {
+    pub fn create_kthread(&self, func: fn() -> !) -> TaskId {
         let mut memory_context = MemoryContext::new(self.page_allocator);
 
         let mut cpu_context = CpuContext::zeroed();
         unsafe {
             // Set the stack pointer (to the end of the page).
             let kernel_stack = memory_context.alloc_unmapped_page();
-            cpu_context.set_sp(kernel_stack.as_mut_ptr().add(1) as usize);
+            cpu_context.set_stack_pointer(kernel_stack.as_mut_ptr().add(1) as usize);
 
-            // Set the program counter by proxy. The `task_raw_entry` function calls `task_start`,
-            // which calls `func`.
-            cpu_context.set_pc(task_raw_entry as usize, task_start as usize, func as usize);
+            // Set the program counter (link register) by proxy.
+            cpu_context.set_link_register(cpu_context_entry as usize, func as usize);
         }
 
         let task = Task::new(
@@ -70,15 +69,8 @@ impl TaskCreationService {
     }
 }
 
-fn task_start(func: fn()) {
-    func();
-
-    // TODO: Queue the task for removal.
-    unimplemented!("task exit");
-}
-
 extern "C" {
-    fn task_raw_entry(func: *const ());
+    fn cpu_context_entry(func: *const ());
 }
 
 global_asm!(include_str!("task_creation.s"));
