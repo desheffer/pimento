@@ -21,7 +21,7 @@ loop_clear_bss:
     msr hcr_el2, x9
     isb
 
-    // Change execution level to EL1h.
+    // Change exception level to EL1h.
     ldr x9, ={SPSR_EL2_INIT}
     msr spsr_el2, x9
     adr x9, enter_el1
@@ -43,9 +43,9 @@ enter_el1:
     mov sp, x9
 
     // Relocate program counter to kernel virtual memory.
-    adr x9, relocate
+    adr x9, after_relocate
     orr x9, x9, {VA_START}
     br x9
 
-relocate:
+after_relocate:
     b kernel_init

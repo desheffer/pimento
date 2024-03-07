@@ -53,10 +53,10 @@ vector_table:
     stp x22, x23, [sp, #16 * 11]
     stp x24, x25, [sp, #16 * 12]
     stp x26, x27, [sp, #16 * 13]
-    stp x28, x29, [sp, #16 * 14]
+    stp x28, fp, [sp, #16 * 14]
 
     mrs x21, sp_el0
-    stp x30, x21, [sp, #16 * 15]
+    stp lr, x21, [sp, #16 * 15]
 
     mrs x21, elr_el1
     mrs x22, spsr_el1
@@ -68,7 +68,7 @@ vector_table:
     msr elr_el1, x21
     msr spsr_el1, x22
 
-    ldp x30, x21, [sp, #16 * 15]
+    ldp lr, x21, [sp, #16 * 15]
     msr sp_el0, x21
 
     ldp x0, x1, [sp, #16 * 0]
@@ -85,7 +85,7 @@ vector_table:
     ldp x22, x23, [sp, #16 * 11]
     ldp x24, x25, [sp, #16 * 12]
     ldp x26, x27, [sp, #16 * 13]
-    ldp x28, x29, [sp, #16 * 14]
+    ldp x28, fp, [sp, #16 * 14]
 
     add sp, sp, {TASK_REGS_SIZE}
 .endm
