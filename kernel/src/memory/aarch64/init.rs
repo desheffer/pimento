@@ -59,7 +59,7 @@ unsafe extern "C" fn _virtual_memory_early_init() {
         let addr: PhysicalAddress<BlockLevel1> = PhysicalAddress::new(size_of::<BlockLevel1>() * i);
         let row = BlockRowBuilder::new(addr)
             .with_attribute(Attribute::Device)
-            .with_global(false)
+            .with_global(true)
             .with_access_flag(true);
         INIT_TABLE_L1.set_row(i, &row);
     }

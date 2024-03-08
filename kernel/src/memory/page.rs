@@ -119,16 +119,31 @@ impl PageAllocator {
 /// The page will be deallocated if the `PageAllocation` is dropped.
 pub struct PageAllocation {
     page: PhysicalAddress<Page>,
+    allocated: Mutex<bool>,
 }
 
 impl PageAllocation {
     /// Creates a page allocation.
     fn new(page: PhysicalAddress<Page>) -> Self {
-        PageAllocation { page }
+        PageAllocation {
+            page,
+            allocated: Mutex::new(true),
+        }
+    }
+
+    /// Deallocates the page allocation.
+    pub unsafe fn dealloc(&mut self) {
+        let mut allocated = self.allocated.lock();
+        assert!(*allocated);
+        *allocated = false;
+        drop(allocated);
+
+        PageAllocator::instance().dealloc(self);
     }
 
     /// Gets the physical address of the allocated page.
     pub fn addr(&self) -> PhysicalAddress<Page> {
+        assert!(*self.allocated.lock());
         self.page
     }
 
@@ -139,22 +154,20 @@ impl PageAllocation {
 
     /// Gets the allocated page as a pointer in kernel virtual memory.
     pub unsafe fn as_ptr(&self) -> *const Page {
+        assert!(*self.allocated.lock());
         self.page.as_ptr()
     }
 
     /// Gets the allocated page as a mutable pointer in kernel virtual memory.
     pub unsafe fn as_mut_ptr(&self) -> *mut Page {
+        assert!(*self.allocated.lock());
         self.page.as_mut_ptr()
     }
 }
 
 impl Drop for PageAllocation {
     fn drop(&mut self) {
-        // SAFETY: Safe because the allocation was created above, but only if all pointers have
-        // been discarded.
-        unsafe {
-            PageAllocator::instance().dealloc(self);
-        }
+        assert!(*self.allocated.lock() == false);
     }
 }
 

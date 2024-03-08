@@ -66,7 +66,7 @@ pub unsafe extern "C" fn kernel_init() -> ! {
     unimplemented!("shutdown");
 }
 
-/// A simple sleep that burns CPU cycles.
+/// Burns CPU cycles for the given Duration.
 fn sleep(duration: Duration) {
     let monotonic = MonotonicImpl::instance();
     let target = monotonic.monotonic().add(duration);
