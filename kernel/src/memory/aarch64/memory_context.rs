@@ -6,7 +6,6 @@ use crate::memory::{PageAllocation, PageAllocator, PhysicalAddress, Table};
 use crate::sync::{Arc, Mutex};
 
 const TTBR_EL1_ASID_SHIFT: u64 = 48;
-const TABLE_ADDR_MASK: u64 = 0x0000_FFFF_FFFF_F000;
 
 /// AArch64 auto-incrementing Address Space ID (ASID).
 #[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd)]

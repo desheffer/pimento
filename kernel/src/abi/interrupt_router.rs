@@ -3,18 +3,20 @@ use alloc::vec::Vec;
 use crate::device::InterruptController;
 use crate::sync::{Arc, Mutex};
 
-/// A generic interrupt handler.
+type HandlerFn = unsafe fn();
+
+/// A generic interrupt router.
 ///
-/// When an interrupt is raised, the local interrupt handler will determine the source of the
-/// interrupt, and then it will call the handler registered with that source.
-pub struct LocalInterruptHandler {
+/// When an interrupt is raised, the interrupt router finds the source of the interrupt and calls
+/// the handler registered with that source.
+pub struct InterruptRouter {
     interrupts: Mutex<Vec<Interrupt>>,
 }
 
-impl LocalInterruptHandler {
+impl InterruptRouter {
     /// Gets the generic interrupt handler.
     pub fn instance() -> &'static Self {
-        static INSTANCE: LocalInterruptHandler = LocalInterruptHandler::new();
+        static INSTANCE: InterruptRouter = InterruptRouter::new();
         &INSTANCE
     }
 
@@ -30,7 +32,7 @@ impl LocalInterruptHandler {
         &self,
         interrupt_controller: Arc<dyn InterruptController>,
         number: u64,
-        handler: unsafe fn(),
+        handler: HandlerFn,
     ) {
         let mut handlers = self.interrupts.lock();
         handlers.push(Interrupt {
@@ -43,7 +45,7 @@ impl LocalInterruptHandler {
 
     /// Handles an interrupt after it has been detected.
     pub unsafe fn handle(&self) {
-        let mut handler: Option<unsafe fn()> = None;
+        let mut handler: Option<HandlerFn> = None;
 
         let interrupts = self.interrupts.lock();
         for interrupt in &*interrupts {
@@ -65,7 +67,7 @@ impl LocalInterruptHandler {
 struct Interrupt {
     controller: Arc<dyn InterruptController>,
     number: u64,
-    handler: unsafe fn(),
+    handler: HandlerFn,
 }
 
 unsafe impl Send for Interrupt {}

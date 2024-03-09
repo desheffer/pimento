@@ -4,7 +4,7 @@ use core::time::Duration;
 
 use alloc::vec;
 
-use crate::abi::{LocalInterruptHandler, VectorTable};
+use crate::abi::{register_system_calls, InterruptRouter, VectorTable};
 use crate::context::{Scheduler, TaskCreationService};
 use crate::device::driver::armv8_timer::ArmV8Timer;
 use crate::device::driver::bcm2837_interrupt::{Bcm2837InterruptController, CNTPNSIRQ};
@@ -42,10 +42,11 @@ pub unsafe extern "C" fn kernel_init() -> ! {
     Scheduler::set_quantum(Duration::from_millis(10));
     TaskCreationService::instance().create_and_become_kinit();
 
+    register_system_calls();
     VectorTable::instance().install();
 
     let interrupt_controller = Arc::new(Bcm2837InterruptController::new());
-    LocalInterruptHandler::instance().enable(interrupt_controller, CNTPNSIRQ, || {
+    InterruptRouter::instance().enable(interrupt_controller, CNTPNSIRQ, || {
         Scheduler::instance().schedule()
     });
 

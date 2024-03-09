@@ -8,33 +8,35 @@
 .macro vector_entry_invalid code
     .balign 0x80
     mov x0, \code
-    mrs x1, esr_el1
-    mrs x2, far_el1
     b _vector_invalid
 .endm
 
 .globl vector_table
 .balign 0x800
 vector_table:
-    vector_entry_invalid 0x0
-    vector_entry_invalid 0x1
-    vector_entry_invalid 0x2
-    vector_entry_invalid 0x3
+    // EL1t:
+    vector_entry el1t_sync   // Synchronous
+    vector_entry_invalid 0x1 // IRQ
+    vector_entry_invalid 0x2 // FIQ
+    vector_entry_invalid 0x3 // SError
 
-    vector_entry_invalid 0x4
-    vector_entry el1_irq
-    vector_entry_invalid 0x6
-    vector_entry_invalid 0x7
+    // EL1h:
+    vector_entry el1h_sync   // Synchronous
+    vector_entry el1h_irq    // IRQ
+    vector_entry_invalid 0x6 // FIQ
+    vector_entry_invalid 0x7 // SError
 
-    vector_entry_invalid 0x8
-    vector_entry el0_irq
-    vector_entry_invalid 0xA
-    vector_entry_invalid 0xB
+    // EL0:
+    vector_entry el0_sync    // Synchronous
+    vector_entry el0_irq     // IRQ
+    vector_entry_invalid 0xA // FIQ
+    vector_entry_invalid 0xB // SError
 
-    vector_entry_invalid 0xC
-    vector_entry_invalid 0xD
-    vector_entry_invalid 0xE
-    vector_entry_invalid 0xF
+    // EL0 32-bit:
+    vector_entry_invalid 0xC // Synchronous
+    vector_entry_invalid 0xD // IRQ
+    vector_entry_invalid 0xE // FIQ
+    vector_entry_invalid 0xF // SError
 
 .macro save_regs
     sub sp, sp, {TASK_REGS_SIZE}
@@ -90,12 +92,26 @@ vector_table:
     add sp, sp, {TASK_REGS_SIZE}
 .endm
 
-el1_irq:
+el1t_sync:
+el1h_sync:
     save_regs
-    bl _vector_irq
+    mov x0, sp
+    mrs x1, esr_el1
+    mrs x2, far_el1
+    bl _vector_sync_el1
     load_regs
     eret
 
+el0_sync:
+    save_regs
+    mov x0, sp
+    mrs x1, esr_el1
+    mrs x2, far_el1
+    bl _vector_sync_el0
+    load_regs
+    eret
+
+el1h_irq:
 el0_irq:
     save_regs
     bl _vector_irq
