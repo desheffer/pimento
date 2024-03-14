@@ -5,22 +5,15 @@ use alloc::borrow::ToOwned;
 use crate::context::{ParentTaskId, Scheduler, Task, TaskId};
 use crate::cpu::CpuContext;
 use crate::memory::{MemoryContext, PageAllocator};
-use crate::sync::OnceLock;
 
 pub struct TaskCreationService {
     scheduler: &'static Scheduler,
     page_allocator: &'static PageAllocator,
 }
 
-static INSTANCE: OnceLock<TaskCreationService> = OnceLock::new();
-
 impl TaskCreationService {
-    /// Gets or initializes the task creation service.
-    pub fn instance() -> &'static Self {
-        INSTANCE.get_or_init(|| Self::new(Scheduler::instance(), PageAllocator::instance()))
-    }
-
-    fn new(scheduler: &'static Scheduler, page_allocator: &'static PageAllocator) -> Self {
+    /// Creates a task creation service.
+    pub fn new(scheduler: &'static Scheduler, page_allocator: &'static PageAllocator) -> Self {
         Self {
             scheduler,
             page_allocator,
@@ -29,7 +22,7 @@ impl TaskCreationService {
 
     /// Creates and assumes the role of the kernel initialization task. This is necessary because
     /// this task effectively creates itself.
-    pub fn create_and_become_kinit(&self) -> TaskId {
+    pub unsafe fn create_and_become_kinit(&self) -> TaskId {
         let memory_context = MemoryContext::new(self.page_allocator);
 
         let cpu_context = CpuContext::zeroed();
@@ -45,18 +38,18 @@ impl TaskCreationService {
     }
 
     /// Spawns a new kernel thread to execute the given function.
-    pub fn create_kthread(&self, func: fn() -> !) -> TaskId {
+    pub unsafe fn create_kthread<T>(&self, func: fn(&T) -> !, data: &'static T) -> TaskId {
         let mut memory_context = MemoryContext::new(self.page_allocator);
 
         let mut cpu_context = CpuContext::zeroed();
-        unsafe {
-            // Set the stack pointer (to the end of the page).
-            let kernel_stack = memory_context.alloc_unmapped_page();
-            cpu_context.set_stack_pointer(kernel_stack.as_mut_ptr().add(1) as usize);
 
-            // Set the program counter (link register) by proxy.
-            cpu_context.set_link_register(cpu_context_entry as usize, func as usize);
-        }
+        // Set the stack pointer (to the end of the page).
+        let kernel_stack = memory_context.alloc_unmapped_page();
+        cpu_context.set_stack_pointer(kernel_stack.as_mut_ptr().add(1) as usize);
+
+        // Set the program counter (link register) by proxy.
+        let data_ptr = data as *const _ as *const _;
+        cpu_context.set_link_register(cpu_context_entry as usize, func as usize, data_ptr as usize);
 
         let task = Task::new(
             ParentTaskId::Root,
@@ -70,7 +63,7 @@ impl TaskCreationService {
 }
 
 extern "C" {
-    fn cpu_context_entry(func: *const ());
+    fn cpu_context_entry(func: unsafe extern "C" fn(*const (), ...));
 }
 
 global_asm!(include_str!("task_creation.s"));

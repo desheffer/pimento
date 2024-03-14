@@ -35,7 +35,7 @@ enter_el1:
     mov sp, x9
 
     // Enable virtual memory.
-    bl _virtual_memory_early_init
+    bl virtual_memory_early_init
 
     // Relocate stack pointer to kernel virtual memory.
     mov x9, sp

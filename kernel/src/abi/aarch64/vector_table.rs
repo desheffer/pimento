@@ -19,16 +19,9 @@ pub struct VectorTable {
     inner: Arc<TableInner>,
 }
 
-static INSTANCE: OnceLock<VectorTable> = OnceLock::new();
-
 impl VectorTable {
-    /// Gets or initializes the vector table manager.
-    pub fn instance() -> &'static Self {
-        INSTANCE
-            .get_or_init(|| Self::new(InterruptRouter::instance(), SystemCallRouter::instance()))
-    }
-
-    fn new(
+    /// Creates a vector table.
+    pub fn new(
         local_interrupt_handler: &'static InterruptRouter,
         system_call_handler: &'static SystemCallRouter,
     ) -> Self {
@@ -103,7 +96,7 @@ pub struct Registers {
 
 /// Handles synchronous kernel exceptions from the vector table.
 #[no_mangle]
-pub unsafe extern "C" fn _vector_sync_el1(_regs: *mut Registers, esr_el1: u64, far_el1: u64) {
+pub unsafe extern "C" fn vector_sync_el1(_regs: *mut Registers, esr_el1: u64, far_el1: u64) {
     panic!(
         "synchronous exception in EL1 (ESR = {:#018x}, FAR = {:#018x})",
         esr_el1, far_el1
@@ -112,7 +105,7 @@ pub unsafe extern "C" fn _vector_sync_el1(_regs: *mut Registers, esr_el1: u64, f
 
 /// Handles synchronous user exceptions from the vector table.
 #[no_mangle]
-pub unsafe extern "C" fn _vector_sync_el0(regs: *mut Registers, esr_el1: u64, far_el1: u64) {
+pub unsafe extern "C" fn vector_sync_el0(regs: *mut Registers, esr_el1: u64, far_el1: u64) {
     match (esr_el1 & ESR_EL1_EC_MASK) >> ESR_EL1_EC_SHIFT {
         ESR_EL1_EC_SVC64 => {
             let inner = &**INSTALLED_TABLE.get().unwrap();
@@ -137,14 +130,14 @@ pub unsafe extern "C" fn _vector_sync_el0(regs: *mut Registers, esr_el1: u64, fa
 
 /// Handles IRQ exceptions from the vector table.
 #[no_mangle]
-pub unsafe extern "C" fn _vector_irq() {
+pub unsafe extern "C" fn vector_irq() {
     let inner = &**INSTALLED_TABLE.get().unwrap();
     inner.local_interrupt_handler.handle();
 }
 
 /// Handles invalid entries from the vector table.
 #[no_mangle]
-pub extern "C" fn _vector_invalid(code: u64, esr_el1: u64, far_el1: u64) -> ! {
+pub extern "C" fn vector_invalid(code: u64, esr_el1: u64, far_el1: u64) -> ! {
     panic!(
         "invalid vector entry {:#03x} (ESR = {:#018x}, FAR = {:#018x})",
         code, esr_el1, far_el1

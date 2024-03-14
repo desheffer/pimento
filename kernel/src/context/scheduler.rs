@@ -3,12 +3,13 @@ use core::time::Duration;
 
 use alloc::boxed::Box;
 use alloc::collections::{BTreeMap, VecDeque};
+use alloc::vec;
 use alloc::vec::Vec;
 
-use crate::context::{ContextSwitcher, Task, TaskId};
-use crate::cpu::InterruptMask;
-use crate::device::{Timer, TimerImpl};
-use crate::sync::{Mutex, OnceLock, UninterruptibleLock};
+use crate::context::{ContextSwitch, Task, TaskId};
+use crate::cpu::INTERRUPT_MASK;
+use crate::device::Timer;
+use crate::sync::{Arc, UninterruptibleLock};
 
 /// A round-robin task scheduler.
 pub struct Scheduler {
@@ -16,64 +17,27 @@ pub struct Scheduler {
     tasks: UnsafeCell<BTreeMap<TaskId, Box<Task>>>,
     queue: UnsafeCell<VecDeque<TaskId>>,
     current_task: UnsafeCell<Vec<Option<TaskId>>>,
-    timer: &'static TimerImpl,
+    timer: Arc<dyn Timer>,
     quantum: Duration,
-    context_switcher: &'static ContextSwitcher,
+    context_switch: &'static dyn ContextSwitch,
 }
 
-static INSTANCE: OnceLock<Scheduler> = OnceLock::new();
-static INIT_NUM_CORES: Mutex<Option<usize>> = Mutex::new(None);
-static INIT_QUANTUM: Mutex<Option<Duration>> = Mutex::new(None);
-
 impl Scheduler {
-    /// Sets the number of cores for the system.
-    pub fn set_num_cores(num_cores: usize) {
-        assert!(INSTANCE.get().is_none());
-        *INIT_NUM_CORES.lock() = Some(num_cores);
-    }
-
-    /// Sets the quantum (time slot size) as a duration of time.
-    pub fn set_quantum(quantum: Duration) {
-        assert!(INSTANCE.get().is_none());
-        *INIT_QUANTUM.lock() = Some(quantum);
-    }
-
-    /// Gets or initializes the scheduler.
-    pub fn instance() -> &'static Self {
-        INSTANCE.get_or_init(|| {
-            let num_cores = INIT_NUM_CORES
-                .lock()
-                .expect("Scheduler::set_num_cores() was expected");
-            let quantum = INIT_QUANTUM
-                .lock()
-                .expect("Scheduler::set_quantum() was expected");
-
-            Self::new(
-                num_cores,
-                TimerImpl::instance(),
-                quantum,
-                ContextSwitcher::instance(),
-            )
-        })
-    }
-
-    fn new(
+    /// Creates a scheduler.
+    pub fn new(
         num_cores: usize,
-        timer: &'static TimerImpl,
+        timer: Arc<dyn Timer>,
         quantum: Duration,
-        context_switcher: &'static ContextSwitcher,
+        context_switch: &'static dyn ContextSwitch,
     ) -> Self {
-        let mut current_task = Vec::new();
-        current_task.extend((0..num_cores).map(|_| None));
-
         Self {
             lock: UninterruptibleLock::new(),
             tasks: UnsafeCell::new(BTreeMap::new()),
             queue: UnsafeCell::new(VecDeque::new()),
-            current_task: UnsafeCell::new(current_task),
+            current_task: UnsafeCell::new(vec![None; num_cores]),
             timer,
             quantum,
-            context_switcher,
+            context_switch,
         }
     }
 
@@ -126,10 +90,15 @@ impl Scheduler {
         let prev_task = self.tasks().get_mut(&prev_task_id).unwrap();
         let next_task = self.tasks().get_mut(&next_task_id).unwrap();
 
-        // SAFETY: The `cpu_context` objects are passed as immutable references. This is safe as
-        // long as all access is gated by the exclusive lock.
-        self.context_switcher
-            .switch(prev_task, next_task, _scheduler_after_schedule);
+        /// Wraps the `after_schedule` function so that it can be called after the context switch.
+        unsafe extern "C" fn after_schedule_trampoline(scheduler: &Scheduler) {
+            scheduler.after_schedule();
+        }
+
+        // SAFETY: Tasks are passed as immutable references. This is safe as long as all access is
+        // gated by the exclusive lock.
+        self.context_switch
+            .switch(prev_task, next_task, after_schedule_trampoline, self);
 
         // The previous function call might not return or might return in a different context. All
         // clean up should be handled before that call or in the `after_schedule` function.
@@ -141,12 +110,12 @@ impl Scheduler {
 
         self.timer.set_duration(self.quantum);
 
-        InterruptMask::instance().enable_interrupts();
+        INTERRUPT_MASK.enable_interrupts();
     }
 
     /// Gets the index number of the current CPU core.
     fn current_core(&self) -> usize {
-        // TODO: Only one core is currently supported.
+        // TODO: Update to support multiple cores.
         0
     }
 
@@ -164,12 +133,6 @@ impl Scheduler {
     unsafe fn current_task(&self) -> &mut Vec<Option<TaskId>> {
         &mut *self.current_task.get()
     }
-}
-
-/// Wraps the `after_schedule` function so that it can be called after a context switch.
-#[no_mangle]
-unsafe extern "C" fn _scheduler_after_schedule() {
-    Scheduler::instance().after_schedule()
 }
 
 unsafe impl Send for Scheduler {}

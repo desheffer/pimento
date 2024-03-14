@@ -55,7 +55,7 @@ impl MemoryContext {
         let table_l0: *mut Table;
         unsafe {
             let table_l0_page = Arc::new(page_allocator.alloc());
-            table_l0 = table_l0_page.as_mut_ptr() as *mut Table;
+            table_l0 = table_l0_page.as_mut_ptr() as *mut _;
             page_allocations.push(table_l0_page);
         }
 

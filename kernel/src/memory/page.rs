@@ -5,7 +5,7 @@ use core::ptr;
 use alloc::vec::Vec;
 
 use crate::memory::{Page, PhysicalAddress};
-use crate::sync::{Mutex, OnceLock};
+use crate::sync::Mutex;
 
 /// A simple page allocator.
 ///
@@ -16,45 +16,14 @@ pub struct PageAllocator {
     allocated: Mutex<usize>,
 }
 
-static INSTANCE: OnceLock<PageAllocator> = OnceLock::new();
-static INIT_CAPACITY: Mutex<Option<usize>> = Mutex::new(None);
-static INIT_RESERVED_RANGES: Mutex<Option<Vec<Range<usize>>>> = Mutex::new(None);
-
 impl PageAllocator {
-    /// Sets the memory capacity for the system.
-    pub unsafe fn set_capacity(capacity: usize) {
-        assert!(INSTANCE.get().is_none());
-        *INIT_CAPACITY.lock() = Some(capacity);
-    }
+    /// Creates a page allocator.
+    pub fn new(capacity: usize, reserved_ranges: Vec<Range<PhysicalAddress<u8>>>) -> Self {
+        let reserved_ranges = reserved_ranges
+            .iter()
+            .map(|v| v.start.into()..v.end.into())
+            .collect();
 
-    /// Sets ranges of memory as reserved.
-    pub unsafe fn set_reserved_ranges(reserved_ranges: Vec<Range<PhysicalAddress<u8>>>) {
-        assert!(INSTANCE.get().is_none());
-        *INIT_RESERVED_RANGES.lock() = Some(
-            reserved_ranges
-                .iter()
-                .map(|v| v.start.into()..v.end.into())
-                .collect(),
-        );
-    }
-
-    /// Gets or initializes the page allocator.
-    pub fn instance() -> &'static Self {
-        INSTANCE.get_or_init(|| {
-            let capacity = INIT_CAPACITY
-                .lock()
-                .expect("PageAllocator::set_capacity() was expected");
-            let reserved_ranges = INIT_RESERVED_RANGES
-                .lock()
-                .as_ref()
-                .expect("PageAllocator::set_reserved_ranges() was expected")
-                .clone();
-
-            Self::new(capacity, reserved_ranges)
-        })
-    }
-
-    fn new(capacity: usize, reserved_ranges: Vec<Range<usize>>) -> Self {
         Self {
             capacity,
             reserved_ranges,
@@ -63,10 +32,7 @@ impl PageAllocator {
     }
 
     /// Allocates a page of memory.
-    ///
-    /// If the `PageAllocation` is dropped, then the page will be deallocated. Therefore, it is
-    /// important that the `PageAllocation` is kept alive while the page is being used.
-    pub unsafe fn alloc(&self) -> PageAllocation {
+    pub unsafe fn alloc(&'static self) -> PageAllocation {
         let mut allocated = self.allocated.lock();
         let mut alloc_start;
 
@@ -111,12 +77,12 @@ impl PageAllocator {
         ptr::write_bytes(page.as_mut_ptr(), 0xDE, 1);
 
         // TODO: Implement deallocation.
+
+        page.set_deallocated();
     }
 }
 
 /// An allocated page of physical memory.
-///
-/// The page will be deallocated if the `PageAllocation` is dropped.
 pub struct PageAllocation {
     page: PhysicalAddress<Page>,
     allocated: Mutex<bool>,
@@ -129,16 +95,6 @@ impl PageAllocation {
             page,
             allocated: Mutex::new(true),
         }
-    }
-
-    /// Deallocates the page allocation.
-    pub unsafe fn dealloc(&mut self) {
-        let mut allocated = self.allocated.lock();
-        assert!(*allocated);
-        *allocated = false;
-        drop(allocated);
-
-        PageAllocator::instance().dealloc(self);
     }
 
     /// Gets the physical address of the allocated page.
@@ -163,11 +119,19 @@ impl PageAllocation {
         assert!(*self.allocated.lock());
         self.page.as_mut_ptr()
     }
+
+    /// Sets the page allocation as deallocated.
+    fn set_deallocated(&mut self) {
+        let mut allocated = self.allocated.lock();
+        assert!(*allocated);
+        *allocated = false;
+    }
 }
 
 impl Drop for PageAllocation {
+    /// Drops the page allocation.
     fn drop(&mut self) {
-        assert!(*self.allocated.lock() == false);
+        assert!(!*self.allocated.lock());
     }
 }
 

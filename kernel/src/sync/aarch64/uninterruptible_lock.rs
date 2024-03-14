@@ -1,4 +1,4 @@
-use crate::cpu::InterruptMask;
+use crate::cpu::INTERRUPT_MASK;
 
 /// A lock that cannot be interrupted while the lock is held.
 ///
@@ -6,6 +6,7 @@ use crate::cpu::InterruptMask;
 /// disabled when the lock is held and restored (if previously enabled) when the lock is released.
 ///
 /// This lock assumes that the system has a single core.
+// TODO: Update to support multiple cores.
 pub struct UninterruptibleLock {}
 
 impl UninterruptibleLock {
@@ -18,12 +19,12 @@ impl UninterruptibleLock {
     pub fn lock(&self) {
         // If the system has a single core, then disabling interrupts is sufficient.
         // However, it might be useful to spin if the lock is held and interrupts are enabled.
-        InterruptMask::instance().lock();
+        INTERRUPT_MASK.lock();
     }
 
     /// Releases the lock and enables interrupts.
     pub fn unlock(&self) {
-        InterruptMask::instance().unlock();
+        INTERRUPT_MASK.unlock();
     }
 
     /// Executes the given closure while holding the lock.

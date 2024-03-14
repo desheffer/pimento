@@ -1,7 +1,9 @@
 pub use self::arch::*;
+pub use self::context_switch::ContextSwitch;
 pub use self::scheduler::Scheduler;
 pub use self::task::{ParentTaskId, Task, TaskId};
 
+mod context_switch;
 mod scheduler;
 mod task;
 

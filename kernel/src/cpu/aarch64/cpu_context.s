@@ -20,6 +20,6 @@ cpu_context_switch:
     ldr x9, [x1, #16 * 6]
     mov sp, x9
 
-    // Call `after(data)`.
+    // Call `after_func(after_data)`.
     mov x0, x3
     br x2

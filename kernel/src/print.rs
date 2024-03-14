@@ -1,7 +1,26 @@
 use core::fmt::{self, Write};
 
-use crate::device::{Logger, LoggerImpl, Monotonic, MonotonicImpl};
+use crate::device::{Logger, Monotonic};
+use crate::sync::{Arc, OnceLock};
 
+static LOGGER: OnceLock<Arc<dyn Logger>> = OnceLock::new();
+static MONOTONIC: OnceLock<Arc<dyn Monotonic>> = OnceLock::new();
+
+/// Sets the kernel logger.
+pub fn set_logger(logger: Arc<dyn Logger>) {
+    if LOGGER.set(logger).is_err() {
+        panic!("logger already set");
+    }
+}
+
+/// Sets the monotonic clock to use when logging.
+pub fn set_monotonic(monotonic: Arc<dyn Monotonic>) {
+    if MONOTONIC.set(monotonic).is_err() {
+        panic!("monotonic already set");
+    }
+}
+
+/// Prints to the kernel logger.
 #[macro_export]
 macro_rules! print {
     ($($arg:tt)*) => {{
@@ -9,6 +28,7 @@ macro_rules! print {
     }};
 }
 
+/// Prints to the kernel logger, with a newline.
 #[macro_export]
 macro_rules! println {
     () => {
@@ -19,6 +39,7 @@ macro_rules! println {
     }};
 }
 
+/// Prints and returns the value of a given expression for quick debugging.
 #[macro_export]
 macro_rules! dbg {
     () => {
@@ -38,31 +59,27 @@ macro_rules! dbg {
 }
 
 pub fn _print(args: fmt::Arguments) {
-    let mut writer = Writer::new(LoggerImpl::instance());
+    let mut writer = Writer {};
     writer.write_fmt(args).unwrap();
 }
 
 pub fn _println(args: fmt::Arguments) {
-    let uptime = MonotonicImpl::instance().monotonic();
-    print!("[{:5}.{:03}] ", uptime.as_secs(), uptime.subsec_millis());
+    if let Some(monotonic) = MONOTONIC.get() {
+        let uptime = monotonic.monotonic();
+        print!("[{:5}.{:03}] ", uptime.as_secs(), uptime.subsec_millis());
+    }
 
     _print(args);
 }
 
 /// A writer for kernel log messages.
-struct Writer<'a> {
-    logger: &'a dyn Logger,
-}
+struct Writer {}
 
-impl<'a> Writer<'a> {
-    fn new(logger: &'a dyn Logger) -> Writer {
-        Writer { logger }
-    }
-}
-
-impl fmt::Write for Writer<'_> {
+impl fmt::Write for Writer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.logger.write_str(s);
+        if let Some(logger) = LOGGER.get() {
+            logger.write_str(s);
+        }
         Ok(())
     }
 }

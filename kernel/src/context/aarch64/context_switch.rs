@@ -1,24 +1,35 @@
-use crate::context::Task;
+use core::mem::transmute;
+
+use crate::context::{ContextSwitch, Scheduler, Task};
 use crate::cpu::cpu_context_switch;
 use crate::memory::memory_context_switch;
 
-/// AArch64 CPU context manager.
-pub struct ContextSwitcher {}
+/// AArch64 CPU context switcher.
+pub struct AArch64ContextSwitch {}
 
-impl ContextSwitcher {
-    /// Gets the CPU context manager.
-    pub fn instance() -> &'static Self {
-        static INSTANCE: ContextSwitcher = ContextSwitcher::new();
-        &INSTANCE
-    }
-
-    const fn new() -> Self {
+impl AArch64ContextSwitch {
+    /// Creates an AArch64 context switcher.
+    pub const fn new() -> Self {
         Self {}
     }
+}
 
+impl ContextSwitch for AArch64ContextSwitch {
     /// Performs a context switch.
-    pub unsafe fn switch(&self, prev: &mut Task, next: &mut Task, after: unsafe extern "C" fn()) {
+    unsafe fn switch(
+        &self,
+        prev: &mut Task,
+        next: &mut Task,
+        after_func: unsafe extern "C" fn(&Scheduler),
+        after_data: &Scheduler,
+    ) {
         memory_context_switch(&mut next.memory_context);
-        cpu_context_switch(&mut prev.cpu_context, &mut next.cpu_context, after);
+
+        cpu_context_switch(
+            &mut prev.cpu_context,
+            &mut next.cpu_context,
+            transmute(after_func),
+            after_data as *const _ as *const _,
+        );
     }
 }

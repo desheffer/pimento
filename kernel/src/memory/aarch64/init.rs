@@ -39,7 +39,7 @@ static INIT_MEMORY_CONTEXT: OnceLock<MemoryContext> = OnceLock::new();
 ///
 /// This function is called early in the initialization process.
 #[no_mangle]
-unsafe extern "C" fn _virtual_memory_early_init() {
+unsafe extern "C" fn virtual_memory_early_init() {
     // Set predefined memory attributes.
     asm!(
         "msr mair_el1, {mair_el1}",

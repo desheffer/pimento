@@ -8,7 +8,7 @@
 .macro vector_entry_invalid code
     .balign 0x80
     mov x0, \code
-    b _vector_invalid
+    b vector_invalid
 .endm
 
 .globl vector_table
@@ -98,7 +98,7 @@ el1h_sync:
     mov x0, sp
     mrs x1, esr_el1
     mrs x2, far_el1
-    bl _vector_sync_el1
+    bl vector_sync_el1
     load_regs
     eret
 
@@ -107,13 +107,13 @@ el0_sync:
     mov x0, sp
     mrs x1, esr_el1
     mrs x2, far_el1
-    bl _vector_sync_el0
+    bl vector_sync_el0
     load_regs
     eret
 
 el1h_irq:
 el0_irq:
     save_regs
-    bl _vector_irq
+    bl vector_irq
     load_regs
     eret

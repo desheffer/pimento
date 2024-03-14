@@ -8,5 +8,5 @@ cpu_context_entry:
     mov x5, x25
     mov x6, x26
     mov x7, x27
-    mov x9, x28
+    mov x8, x28
     br x19

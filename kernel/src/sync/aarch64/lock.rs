@@ -1,11 +1,12 @@
 use core::arch::asm;
 use core::cell::UnsafeCell;
 
-use crate::cpu::InterruptMask;
+use crate::cpu::INTERRUPT_MASK;
 
 /// A simple spin lock.
 ///
 /// This lock assumes that the system has a single core.
+// TODO: Update to support multiple cores.
 pub struct Lock {
     locked: UnsafeCell<bool>,
 }
@@ -25,7 +26,7 @@ impl Lock {
         unsafe {
             // Spin until the lock is acquired.
             loop {
-                let acquired = InterruptMask::instance().call(|| match *self.locked.get() {
+                let acquired = INTERRUPT_MASK.call(|| match *self.locked.get() {
                     true => false,
                     false => {
                         *self.locked.get() = true;
@@ -45,7 +46,7 @@ impl Lock {
         // TODO: Use the core::intrinsics::coreatomic_cxchg_* functions once the MMU is enabled.
         // SAFETY: Safe on a single core because interrupts are disabled.
         unsafe {
-            InterruptMask::instance().call(|| {
+            INTERRUPT_MASK.call(|| {
                 *self.locked.get() = false;
             });
         }

@@ -45,10 +45,11 @@ impl CpuContext {
     }
 
     /// Sets the link register.
-    pub unsafe fn set_link_register(&mut self, lr: usize, x19: usize) {
+    pub unsafe fn set_link_register(&mut self, lr: usize, x19: usize, x20: usize) {
         assert!(self.lr == 0);
         self.lr = lr as u64;
         self.x19 = x19 as u64;
+        self.x20 = x20 as u64;
     }
 }
 
@@ -57,7 +58,8 @@ extern "C" {
     pub fn cpu_context_switch(
         prev: &mut CpuContext,
         next: &mut CpuContext,
-        after: unsafe extern "C" fn(),
+        after_func: unsafe extern "C" fn(*const ()),
+        after_data: *const (),
     );
 }
 

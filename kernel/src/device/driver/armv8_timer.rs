@@ -13,7 +13,7 @@ pub struct ArmV8Timer {
 
 impl ArmV8Timer {
     /// Creates a timer.
-    pub const unsafe fn new() -> Self {
+    pub unsafe fn new() -> Self {
         Self { lock: Lock::new() }
     }
 
