@@ -71,7 +71,7 @@ pub unsafe extern "C" fn kernel_init() -> ! {
     interrupt_router.enable(
         interrupt_controller,
         CNTPNSIRQ,
-        |scheduler| (*scheduler).schedule(),
+        Scheduler::schedule,
         scheduler,
     );
 

@@ -30,7 +30,7 @@ impl InterruptRouter {
         &self,
         interrupt_controller: Arc<dyn InterruptController>,
         number: u64,
-        handler_func: fn(&T),
+        handler_func: unsafe fn(&T),
         handler_data: &'static T,
     ) {
         let mut interrupts = self.interrupts.lock();
