@@ -37,7 +37,7 @@ const AUX_MU_LSR_TX_EMPTY: u8 = 0b1 << 5; // Transmitter empty
 const AUX_MU_CNTL_RX: u8 = 0b1 << 0; // Enable RX
 const AUX_MU_CNTL_TX: u8 = 0b1 << 1; // Enable TX
 
-/// Broadcom chip used in the Raspberry Pi 3 Model B and others.
+/// The Broadcom chip used in the Raspberry Pi 3 Model B and others.
 ///
 /// This implements basic serial input and output capabilities for this chip.
 pub struct Bcm2837Serial {

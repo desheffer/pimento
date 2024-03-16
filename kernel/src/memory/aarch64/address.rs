@@ -2,7 +2,7 @@ use core::marker::PhantomData;
 
 use crate::memory::VA_START;
 
-/// AArch64 physical address.
+/// An AArch64 physical address.
 ///
 /// This is used to differentiate physical addresses from virtual addresses.
 pub struct PhysicalAddress<T> {

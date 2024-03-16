@@ -3,7 +3,7 @@ use core::mem::size_of;
 use core::ptr::addr_of;
 
 use crate::abi::{InterruptRouter, SystemCallRouter};
-use crate::sync::{Arc, OnceLock};
+use crate::sync::OnceLock;
 
 const ESR_EL1_EC_SHIFT: u64 = 26;
 const ESR_EL1_EC_MASK: u64 = 0b111111 << ESR_EL1_EC_SHIFT;
@@ -16,7 +16,8 @@ extern "C" {
 
 /// A vector table manager.
 pub struct VectorTable {
-    inner: Arc<TableInner>,
+    local_interrupt_handler: &'static InterruptRouter,
+    system_call_handler: &'static SystemCallRouter,
 }
 
 impl VectorTable {
@@ -25,18 +26,16 @@ impl VectorTable {
         local_interrupt_handler: &'static InterruptRouter,
         system_call_handler: &'static SystemCallRouter,
     ) -> Self {
-        let inner = Arc::new(TableInner {
+        Self {
             local_interrupt_handler,
             system_call_handler,
-        });
-
-        Self { inner }
+        }
     }
 
-    /// Installs a vector table pointing to this instance.
-    pub unsafe fn install(&self) {
+    /// Installs this vector table as the system vector table.
+    pub unsafe fn install(&'static self) {
         INSTALLED_TABLE
-            .set(self.inner.clone())
+            .set(self)
             .unwrap_or_else(|_| panic!("installing vector table failed"));
 
         asm!(
@@ -47,15 +46,9 @@ impl VectorTable {
     }
 }
 
-/// The inner datum whose memory is managed.
-struct TableInner {
-    local_interrupt_handler: &'static InterruptRouter,
-    system_call_handler: &'static SystemCallRouter,
-}
+static INSTALLED_TABLE: OnceLock<&'static VectorTable> = OnceLock::new();
 
-static INSTALLED_TABLE: OnceLock<Arc<TableInner>> = OnceLock::new();
-
-/// AArch64 registers to save when entering the vector table.
+/// The AArch64 registers to save when entering the vector table.
 #[repr(C)]
 pub struct Registers {
     x0: u64,

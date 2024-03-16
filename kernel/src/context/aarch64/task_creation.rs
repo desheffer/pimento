@@ -6,6 +6,7 @@ use crate::context::{ParentTaskId, Scheduler, Task, TaskId};
 use crate::cpu::CpuContext;
 use crate::memory::{MemoryContext, PageAllocator};
 
+/// A service for creating new tasks.
 pub struct TaskCreationService {
     scheduler: &'static Scheduler,
     page_allocator: &'static PageAllocator,

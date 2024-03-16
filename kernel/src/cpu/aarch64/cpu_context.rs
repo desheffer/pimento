@@ -1,6 +1,6 @@
 use core::arch::global_asm;
 
-/// AArch64 registers to persist between context switches.
+/// The AArch64 registers to persist between context switches.
 #[repr(C)]
 pub struct CpuContext {
     x19: u64,

@@ -62,10 +62,18 @@ pub unsafe extern "C" fn kernel_init() -> ! {
         )
     );
 
-    let task_creation = TaskCreationService::new(scheduler, page_allocator);
-    task_creation.create_and_become_kinit();
-
     let interrupt_router = static_get_or_init!(InterruptRouter, InterruptRouter::new());
+
+    let system_call_router = static_get_or_init!(
+        SystemCallRouter,
+        SystemCallRouter::new(system_calls_table())
+    );
+
+    let vector_table = static_get_or_init!(
+        VectorTable,
+        VectorTable::new(interrupt_router, system_call_router)
+    );
+    vector_table.install();
 
     let interrupt_controller = Arc::new(Bcm2837InterruptController::new());
     interrupt_router.enable(
@@ -75,14 +83,12 @@ pub unsafe extern "C" fn kernel_init() -> ! {
         scheduler,
     );
 
-    let system_call_router = static_get_or_init!(
-        SystemCallRouter,
-        SystemCallRouter::new(system_calls_table())
+    // Initialize the scheduler with a "kinit" task and context switch into it.
+    let task_creation = static_get_or_init!(
+        TaskCreationService,
+        TaskCreationService::new(scheduler, page_allocator)
     );
-
-    let vector_table = VectorTable::new(interrupt_router, system_call_router);
-    vector_table.install();
-
+    task_creation.create_and_become_kinit();
     scheduler.schedule();
 
     // Create example threads:

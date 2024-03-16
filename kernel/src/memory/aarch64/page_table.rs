@@ -21,7 +21,7 @@ const PT_NG: u64 = 0b1 << 11; // Not global (nG)
 const PT_PXN: u64 = 0b1 << 53; // Privileged execute-never
 const PT_XN: u64 = 0b1 << 54; // Execute-never
 
-/// AArch64 translation table.
+/// An AArch64 translation table.
 ///
 /// This is a generic type that covers all translation table levels.
 #[repr(align(4096))] // Align to size of page

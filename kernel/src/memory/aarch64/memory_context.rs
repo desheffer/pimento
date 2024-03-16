@@ -7,7 +7,7 @@ use crate::sync::{Arc, Mutex};
 
 const TTBR_EL1_ASID_SHIFT: u64 = 48;
 
-/// AArch64 auto-incrementing Address Space ID (ASID).
+/// An AArch64 auto-incrementing Address Space ID (ASID).
 #[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd)]
 pub struct AddressSpaceId {
     id: u16,
@@ -24,7 +24,7 @@ impl AddressSpaceId {
     }
 }
 
-/// AArch64 translation table for a task.
+/// An AArch64 translation table for a task.
 pub struct MemoryContext {
     page_allocator: Option<&'static PageAllocator>,
     page_allocations: Vec<Arc<PageAllocation>>,

@@ -4,7 +4,7 @@ use crate::context::{ContextSwitch, Scheduler, Task};
 use crate::cpu::cpu_context_switch;
 use crate::memory::memory_context_switch;
 
-/// AArch64 CPU context switcher.
+/// An AArch64 CPU context switcher.
 pub struct AArch64ContextSwitch {}
 
 impl AArch64ContextSwitch {

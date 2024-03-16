@@ -1,5 +1,6 @@
 use crate::context::{Scheduler, Task};
 
+/// A generic CPU context switcher.
 pub trait ContextSwitch {
     /// Performs a context switch.
     unsafe fn switch(

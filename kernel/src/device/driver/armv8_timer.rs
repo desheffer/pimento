@@ -6,7 +6,7 @@ use crate::sync::Lock;
 
 const NANOS: u64 = 1_000_000_000;
 
-/// AArch64 timer.
+/// An AArch64 timer.
 pub struct ArmV8Timer {
     lock: Lock,
 }
