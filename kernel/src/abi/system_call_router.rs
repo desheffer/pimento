@@ -1,16 +1,37 @@
+use alloc::vec;
 use alloc::vec::Vec;
 
-pub type HandlerFn = unsafe fn(usize, usize, usize, usize, usize, usize) -> usize;
+use crate::abi::SystemCallNumber;
+use crate::println;
+
+/// A system call to be defined.
+pub trait SystemCall {
+    fn number(&self) -> SystemCallNumber;
+    fn call(&self, _: usize, _: usize, _: usize, _: usize, _: usize, _: usize) -> isize;
+}
 
 /// A generic system call router.
 pub struct SystemCallRouter {
-    handlers: Vec<Option<HandlerFn>>,
+    handlers: Vec<Option<&'static dyn SystemCall>>,
 }
 
 impl SystemCallRouter {
     /// Creates a system call router.
-    pub fn new(handlers: Vec<Option<HandlerFn>>) -> Self {
-        Self { handlers }
+    pub fn new(handlers: Vec<&'static dyn SystemCall>) -> Self {
+        let max_number = handlers
+            .iter()
+            .map(|handler| handler.number() as usize)
+            .max()
+            .unwrap_or(0);
+
+        let mut handlers_indexed = vec![None; max_number + 1];
+        for handler in handlers {
+            handlers_indexed[handler.number() as usize] = Some(handler);
+        }
+
+        Self {
+            handlers: handlers_indexed,
+        }
     }
 
     /// Handles a system call that has been requested.
@@ -24,13 +45,14 @@ impl SystemCallRouter {
         d: usize,
         e: usize,
         f: usize,
-    ) -> usize {
+    ) -> isize {
         let handler = self.handlers.get(num).unwrap_or(&None);
 
         if let Some(handler) = handler {
-            handler(a, b, c, d, e, f)
+            handler.call(a, b, c, d, e, f)
         } else {
-            unimplemented!("system call ({:#x})", num)
+            println!("not implemented: system call {:#x}", num);
+            -1
         }
     }
 }

@@ -1,18 +1,21 @@
-use alloc::vec;
-use alloc::vec::Vec;
+use crate::abi::{SystemCall, SystemCallNumber};
+use crate::println;
 
-use crate::abi::Sys;
+pub struct SysWrite {}
 
-use super::system_call_router::HandlerFn;
+impl SysWrite {
+    pub fn new() -> Self {
+        Self {}
+    }
+}
 
-/// Generates a vector of system calls indexed by system call number.
-pub fn system_calls_table() -> Vec<Option<HandlerFn>> {
-    let mut table: Vec<Option<HandlerFn>> = vec![None; 256];
+impl SystemCall for SysWrite {
+    fn number(&self) -> SystemCallNumber {
+        SystemCallNumber::Write
+    }
 
-    table[Sys::Write as usize] = Some(|_, _, _, _, _, _| {
-        crate::print!("\n[WRITE]\n");
+    fn call(&self, _: usize, _: usize, _: usize, _: usize, _: usize, _: usize) -> isize {
+        println!("<WRITE>");
         0
-    });
-
-    table
+    }
 }

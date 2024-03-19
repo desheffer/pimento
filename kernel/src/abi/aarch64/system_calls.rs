@@ -1,4 +1,4 @@
 /// System call numbers.
-pub enum Sys {
+pub enum SystemCallNumber {
     Write = 64,
 }

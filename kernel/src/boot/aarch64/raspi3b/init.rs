@@ -2,8 +2,10 @@ use core::ops::Add;
 use core::time::Duration;
 
 use alloc::vec;
+use alloc::vec::Vec;
 
-use crate::abi::{system_calls_table, InterruptRouter, SystemCallRouter, VectorTable};
+use crate::abi::system_calls::SysWrite;
+use crate::abi::{InterruptRouter, SystemCall, SystemCallRouter, VectorTable};
 use crate::context::{AArch64ContextSwitch, Scheduler, TaskCreationService};
 use crate::device::driver::armv8_timer::ArmV8Timer;
 use crate::device::driver::bcm2837_interrupt::{Bcm2837InterruptController, CNTPNSIRQ};
@@ -64,10 +66,11 @@ pub unsafe extern "C" fn kernel_init() -> ! {
 
     let interrupt_router = static_get_or_init!(InterruptRouter, InterruptRouter::new());
 
-    let system_call_router = static_get_or_init!(
-        SystemCallRouter,
-        SystemCallRouter::new(system_calls_table())
-    );
+    let mut system_call_table: Vec<&dyn SystemCall> = Vec::with_capacity(64);
+    system_call_table.push(static_get_or_init!(SysWrite, SysWrite::new()));
+
+    let system_call_router =
+        static_get_or_init!(SystemCallRouter, SystemCallRouter::new(system_call_table));
 
     let vector_table = static_get_or_init!(
         VectorTable,
