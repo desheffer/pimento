@@ -32,7 +32,7 @@ impl TaskCreationService {
         let task = Task::new(
             ParentTaskId::Root,
             "kinit".to_owned(),
-            Box::new(|| {}),
+            Box::new(|| Ok(())),
             cpu_context,
             memory_context,
         );
@@ -43,7 +43,7 @@ impl TaskCreationService {
     /// Spawns a new kernel thread to execute the given function.
     pub fn create_kthread<F>(&self, func: F) -> TaskId
     where
-        F: Fn(),
+        F: Fn() -> Result<(), ()>,
         F: Send + 'static,
     {
         let mut memory_context = MemoryContext::new(self.page_allocator);
@@ -59,10 +59,10 @@ impl TaskCreationService {
         // Wrap the `Fn()` trait so that it can be accessed like a `fn()` pointer.
         unsafe fn fn_trait_wrapper<F>(func: *const F, scheduler: *const Scheduler) -> !
         where
-            F: Fn(),
+            F: Fn() -> Result<(), ()>,
             F: Send + 'static,
         {
-            (*func)();
+            let _ = (*func)();
 
             // TODO: Exit the task and remove it from the scheduling queue.
             loop {

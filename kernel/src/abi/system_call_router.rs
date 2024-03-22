@@ -1,13 +1,24 @@
 use alloc::vec;
 use alloc::vec::Vec;
 
-use crate::abi::SystemCallNumber;
+use crate::abi::{SystemCallError, SystemCallNumber};
 use crate::println;
 
 /// A system call to be defined.
 pub trait SystemCall {
+    /// Returns the system call number.
     fn number(&self) -> SystemCallNumber;
-    fn call(&self, _: usize, _: usize, _: usize, _: usize, _: usize, _: usize) -> isize;
+
+    /// Executes the system call.
+    fn call(
+        &self,
+        _: usize,
+        _: usize,
+        _: usize,
+        _: usize,
+        _: usize,
+        _: usize,
+    ) -> Result<usize, SystemCallError>;
 }
 
 /// A generic system call router.
@@ -49,7 +60,11 @@ impl SystemCallRouter {
         let handler = self.handlers.get(num).unwrap_or(&None);
 
         if let Some(handler) = handler {
-            handler.call(a, b, c, d, e, f)
+            let res = handler.call(a, b, c, d, e, f);
+            match res {
+                Ok(val) => val as isize,
+                Err(val) => -(val as isize),
+            }
         } else {
             println!("not implemented: system call {:#x}", num);
             -1

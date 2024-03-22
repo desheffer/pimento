@@ -33,7 +33,7 @@ pub struct Task {
     pub(super) id: TaskId,
     pub(super) parent_id: ParentTaskId,
     pub(super) name: String,
-    pub(super) func: Box<dyn Fn()>,
+    pub(super) func: Box<dyn Fn() -> Result<(), ()>>,
     pub(super) cpu_context: CpuContext,
     pub(super) memory_context: MemoryContext,
 }
@@ -43,7 +43,7 @@ impl Task {
     pub(super) fn new(
         parent_id: ParentTaskId,
         name: String,
-        func: Box<dyn Fn()>,
+        func: Box<dyn Fn() -> Result<(), ()>>,
         cpu_context: CpuContext,
         memory_context: MemoryContext,
     ) -> Self {
