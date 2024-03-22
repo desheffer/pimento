@@ -19,7 +19,7 @@ pub struct Scheduler {
     current_tasks: UnsafeCell<Vec<Option<TaskId>>>,
     timer: Arc<dyn Timer>,
     quantum: Duration,
-    context_switch: &'static dyn ContextSwitch,
+    context_switch: &'static ContextSwitch,
 }
 
 impl Scheduler {
@@ -28,7 +28,7 @@ impl Scheduler {
         num_cores: usize,
         timer: Arc<dyn Timer>,
         quantum: Duration,
-        context_switch: &'static dyn ContextSwitch,
+        context_switch: &'static ContextSwitch,
     ) -> Self {
         Self {
             lock: UninterruptibleLock::new(),

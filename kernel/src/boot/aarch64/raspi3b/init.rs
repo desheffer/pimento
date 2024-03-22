@@ -6,7 +6,7 @@ use alloc::vec::Vec;
 
 use crate::abi::system_calls::SysWrite;
 use crate::abi::{InterruptRouter, SystemCall, SystemCallRouter, VectorTable};
-use crate::context::{AArch64ContextSwitch, Scheduler, TaskCreationService};
+use crate::context::{ContextSwitch, Scheduler, TaskCreationService};
 use crate::device::driver::armv8_timer::ArmV8Timer;
 use crate::device::driver::bcm2837_interrupt::{Bcm2837InterruptController, CNTPNSIRQ};
 use crate::device::driver::bcm2837_serial::Bcm2837Serial;
@@ -52,7 +52,7 @@ pub unsafe extern "C" fn kernel_init() -> ! {
         )
     );
 
-    let context_switcher = static_get_or_init!(AArch64ContextSwitch, AArch64ContextSwitch::new());
+    let context_switcher = static_get_or_init!(ContextSwitch, ContextSwitch::new());
 
     let scheduler = static_get_or_init!(
         Scheduler,

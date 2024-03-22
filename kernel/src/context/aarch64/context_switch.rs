@@ -1,22 +1,20 @@
 use core::mem::transmute;
 
-use crate::context::{ContextSwitch, Scheduler, Task};
+use crate::context::{Scheduler, Task};
 use crate::cpu::cpu_context_switch;
 use crate::memory::memory_context_switch;
 
 /// An AArch64 CPU context switcher.
-pub struct AArch64ContextSwitch {}
+pub struct ContextSwitch {}
 
-impl AArch64ContextSwitch {
+impl ContextSwitch {
     /// Creates an AArch64 context switcher.
     pub const fn new() -> Self {
         Self {}
     }
-}
 
-impl ContextSwitch for AArch64ContextSwitch {
     /// Performs a context switch.
-    unsafe fn switch(
+    pub unsafe fn switch(
         &self,
         prev: &mut Task,
         next: &mut Task,
