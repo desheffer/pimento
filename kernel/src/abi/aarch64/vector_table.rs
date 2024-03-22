@@ -103,14 +103,14 @@ pub unsafe extern "C" fn vector_sync_el0(regs: *mut Registers, esr_el1: u64, far
         ESR_EL1_EC_SVC64 => {
             let inner = &**INSTALLED_TABLE.get().unwrap();
             (*regs).x0 = inner.system_call_handler.handle(
-                (*regs).x8 as usize,
-                (*regs).x0 as usize,
-                (*regs).x1 as usize,
-                (*regs).x2 as usize,
-                (*regs).x3 as usize,
-                (*regs).x4 as usize,
-                (*regs).x5 as usize,
-            ) as u64;
+                (*regs).x8 as _,
+                (*regs).x0 as _,
+                (*regs).x1 as _,
+                (*regs).x2 as _,
+                (*regs).x3 as _,
+                (*regs).x4 as _,
+                (*regs).x5 as _,
+            ) as _;
         }
         _ => {
             panic!(

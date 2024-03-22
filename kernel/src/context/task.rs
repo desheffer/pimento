@@ -1,3 +1,4 @@
+use alloc::boxed::Box;
 use alloc::string::String;
 
 use crate::cpu::CpuContext;
@@ -32,6 +33,7 @@ pub struct Task {
     pub(super) id: TaskId,
     pub(super) parent_id: ParentTaskId,
     pub(super) name: String,
+    pub(super) func: Box<dyn Fn()>,
     pub(super) cpu_context: CpuContext,
     pub(super) memory_context: MemoryContext,
 }
@@ -41,6 +43,7 @@ impl Task {
     pub(super) fn new(
         parent_id: ParentTaskId,
         name: String,
+        func: Box<dyn Fn()>,
         cpu_context: CpuContext,
         memory_context: MemoryContext,
     ) -> Self {
@@ -48,6 +51,7 @@ impl Task {
             id: TaskId::next(),
             parent_id,
             name,
+            func,
             cpu_context,
             memory_context,
         }

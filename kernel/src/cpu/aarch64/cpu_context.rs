@@ -39,17 +39,18 @@ impl CpuContext {
     }
 
     /// Sets the stack pointer.
-    pub unsafe fn set_stack_pointer(&mut self, sp: usize) {
+    pub unsafe fn set_stack_pointer(&mut self, sp: u64) {
         assert!(self.sp == 0);
-        self.sp = sp as u64;
+        self.sp = sp as _;
     }
 
     /// Sets the link register.
-    pub unsafe fn set_link_register(&mut self, lr: usize, x19: usize, x20: usize) {
+    pub unsafe fn set_link_register(&mut self, lr: u64, x19: u64, x20: u64, x21: u64) {
         assert!(self.lr == 0);
-        self.lr = lr as u64;
-        self.x19 = x19 as u64;
-        self.x20 = x20 as u64;
+        self.lr = lr;
+        self.x19 = x19;
+        self.x20 = x20;
+        self.x21 = x21;
     }
 }
 

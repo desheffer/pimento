@@ -46,12 +46,12 @@ impl<T> Copy for PhysicalAddress<T> {}
 
 impl<T> From<PhysicalAddress<T>> for usize {
     fn from(value: PhysicalAddress<T>) -> Self {
-        value.address
+        value.address as _
     }
 }
 
 impl<T> From<PhysicalAddress<T>> for u64 {
     fn from(value: PhysicalAddress<T>) -> Self {
-        value.address as u64
+        value.address as _
     }
 }

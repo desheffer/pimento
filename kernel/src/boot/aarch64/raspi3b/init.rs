@@ -94,36 +94,28 @@ pub unsafe extern "C" fn kernel_init() -> ! {
     task_creation.create_and_become_kinit();
     scheduler.schedule();
 
+    let example_thread = |num: u64| {
+        let timer = timer.clone();
+
+        let sleep = move |duration: Duration| {
+            let target = timer.monotonic().add(duration);
+
+            while timer.monotonic() < target {
+                scheduler.schedule();
+            }
+        };
+
+        move || loop {
+            crate::print!("{}", num);
+            sleep(Duration::from_secs(num));
+        }
+    };
+
     // Create example threads:
-    task_creation.create_kthread(
-        |_| loop {
-            crate::print!("1");
-            sleep_naively(Duration::from_secs(1));
-        },
-        &(),
-    );
-    task_creation.create_kthread(
-        |_| loop {
-            crate::print!("2");
-            sleep_naively(Duration::from_secs(2));
-        },
-        &(),
-    );
+    task_creation.create_kthread(example_thread(1));
+    task_creation.create_kthread(example_thread(2));
 
     kernel_main();
 
     unimplemented!("shutdown");
-}
-
-/// Burns CPU cycles for the given Duration.
-fn sleep_naively(duration: Duration) {
-    unsafe {
-        // TODO: Don't instantiate a new timer.
-        let monotonic = ArmV8Timer::new();
-        let target = monotonic.monotonic().add(duration);
-
-        while monotonic.monotonic() < target {
-            core::arch::asm!("wfi");
-        }
-    }
 }
