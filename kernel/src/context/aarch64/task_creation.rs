@@ -32,7 +32,7 @@ impl TaskCreationService {
         let task = Task::new(
             ParentTaskId::Root,
             "kinit".to_owned(),
-            Box::new(|| Ok(())),
+            None,
             cpu_context,
             memory_context,
         );
@@ -84,7 +84,7 @@ impl TaskCreationService {
         let task = Task::new(
             ParentTaskId::Root,
             "kthread".to_owned(),
-            func_box,
+            Some(func_box),
             cpu_context,
             memory_context,
         );
