@@ -21,6 +21,11 @@ loop_clear_bss:
     msr hcr_el2, x9
     isb
 
+    // Initialize SCTLR_EL1.
+    ldr x9, ={SCTLR_EL1_INIT}
+    msr sctlr_el1, x9
+    isb
+
     // Change exception level to EL1h.
     ldr x9, ={SPSR_EL2_INIT}
     msr spsr_el2, x9
