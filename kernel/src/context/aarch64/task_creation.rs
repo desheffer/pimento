@@ -27,7 +27,7 @@ impl TaskCreationService {
     pub unsafe fn create_and_become_kinit(&self) -> TaskId {
         let memory_context = MemoryContext::new(self.page_allocator);
 
-        let cpu_context = CpuContext::zeroed();
+        let cpu_context = CpuContext::new();
 
         let task = Task::new(
             ParentTaskId::Root,
@@ -48,7 +48,7 @@ impl TaskCreationService {
     {
         let mut memory_context = MemoryContext::new(self.page_allocator);
 
-        let mut cpu_context = CpuContext::zeroed();
+        let mut cpu_context = CpuContext::new();
 
         // Set the stack pointer (to the end of the page).
         let kernel_stack = memory_context.alloc_unmapped_page();

@@ -27,8 +27,6 @@ impl TaskExecutionService {
             static user_code_end: u8;
         }
 
-        // TODO: Move the user code into the memory context.
-
         // Jump into the user context.
         unsafe {
             enter_el0(&user_code_start as *const _ as _);

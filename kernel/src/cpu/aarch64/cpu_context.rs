@@ -20,7 +20,7 @@ pub struct CpuContext {
 
 impl CpuContext {
     /// Creates a CPU context initialized with all zeroes.
-    pub fn zeroed() -> Self {
+    pub fn new() -> Self {
         Self {
             x19: 0,
             x20: 0,

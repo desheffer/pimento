@@ -1,12 +1,14 @@
 use core::arch::asm;
-use core::mem::size_of;
-use core::ptr::{addr_of, addr_of_mut};
+use core::ptr::addr_of_mut;
 
+use crate::memory::arch::page_table::LEVEL_ROOT;
 use crate::memory::PhysicalAddress;
 use crate::sync::OnceLock;
 
 use super::memory_context::MemoryContext;
-use super::page_table::{Attribute, BlockLevel1, BlockRowBuilder, Table, TableRowBuilder};
+use super::page_table::{
+    Attribute, BlockDescriptorBuilder, Table, TableDescriptorBuilder, TableManager,
+};
 
 const VA_BITS: u64 = 48; // Virtual addresses have a 16-bit prefix and a 48-bit address
 pub const VA_START: usize = !((1 << VA_BITS) - 1); // Kernel memory starting address
@@ -35,8 +37,8 @@ const TCR_EL1: u64 = TCR_EL1_T0SZ
 
 const SCTLR_EL1_M: u64 = 0b1; // Enable MMU
 
-static mut INIT_TABLE_L0: Table = Table::zeroed();
-static mut INIT_TABLE_L1: Table = Table::zeroed();
+static mut INIT_TABLE_L0: Table = Table::new();
+static mut INIT_TABLE_L1: Table = Table::new();
 static INIT_MEMORY_CONTEXT: OnceLock<MemoryContext> = OnceLock::new();
 
 /// Enable virtual memory.
@@ -53,16 +55,26 @@ unsafe extern "C" fn virtual_memory_early_init() {
         tcr_el1 = in(reg) TCR_EL1,
     );
 
+    let table_l0_data = addr_of_mut!(INIT_TABLE_L0);
+    let table_l1_data = addr_of_mut!(INIT_TABLE_L1);
+
+    let table_l0 = TableManager::new(table_l0_data, LEVEL_ROOT, core::ptr::null());
+
     // Initialize level 0 as an identity map.
-    let addr = PhysicalAddress::from_ptr(addr_of!(INIT_TABLE_L1));
-    let row = TableRowBuilder::new(addr);
-    INIT_TABLE_L0.set_row(0, &row);
+    let row = table_l0.row(0);
+    let addr = PhysicalAddress::<Table>::new((table_l1_data as usize) & !VA_START);
+    let builder = TableDescriptorBuilder::new_with_address(addr);
+    row.write_table(builder);
+
+    let table_l1 = TableManager::new(table_l1_data, LEVEL_ROOT + 1, core::ptr::null());
 
     // Initialize level 1 as an identity map.
-    for i in 0..Table::len() {
-        let addr: PhysicalAddress<BlockLevel1> = PhysicalAddress::new(size_of::<BlockLevel1>() * i);
-        let row = BlockRowBuilder::new(addr).with_attribute(Attribute::Device);
-        INIT_TABLE_L1.set_row(i, &row);
+    for i in 0..table_l1.len() {
+        let row = table_l1.row(i);
+        let addr = PhysicalAddress::<()>::new((row.input_address_start() as usize) & !VA_START);
+        let mut builder = BlockDescriptorBuilder::new_with_address(addr);
+        builder.set_attribute(Attribute::Device);
+        row.write_block(builder);
     }
 
     let memory_context = MemoryContext::new_for_kinit(addr_of_mut!(INIT_TABLE_L0));
