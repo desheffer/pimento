@@ -28,6 +28,7 @@ impl TaskExecutionService {
         }
 
         // Jump into the user context.
+        // SAFETY: Safe because the entry point is allocated.
         unsafe {
             enter_el0(&user_code_start as *const _ as _);
         }

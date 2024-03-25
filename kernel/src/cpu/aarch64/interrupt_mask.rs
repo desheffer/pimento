@@ -1,6 +1,8 @@
 use core::arch::asm;
 use core::cell::UnsafeCell;
 
+pub static INTERRUPT_MASK: InterruptMask = InterruptMask::new();
+
 /// A simple wrapper for enabling and disabling interrupts.
 ///
 /// The logic for saving and restoring the interrupt mask (DAIF) assumes that the system has a
@@ -10,8 +12,6 @@ pub struct InterruptMask {
     level: UnsafeCell<i64>,
     saved_daif: UnsafeCell<u64>,
 }
-
-pub static INTERRUPT_MASK: InterruptMask = InterruptMask::new();
 
 impl InterruptMask {
     /// Creates an AArch64 interrupt mask.

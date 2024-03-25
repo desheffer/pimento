@@ -230,9 +230,9 @@ pub struct TableDescriptorBuilder {
 impl TableDescriptorBuilder {
     /// Creates a builder with the given address.
     pub fn new_with_address(address: PhysicalAddress<Table>) -> Self {
-        assert!(TableRow::from(address) & !TABLE_ADDRESS_MASK == 0);
+        assert!(address.address() as u64 & !TABLE_ADDRESS_MASK == 0);
         Self {
-            pending_value: TYPE_TABLE | TableRow::from(address),
+            pending_value: TYPE_TABLE | address.address() as u64,
         }
     }
 
@@ -257,9 +257,9 @@ impl BlockDescriptorBuilder {
     ///
     /// The caller is responsible for ensuring that the size of the block is appropriate.
     pub fn new_with_address(address: PhysicalAddress<()>) -> Self {
-        assert!(TableRow::from(address) & !BLOCK_ADDRESS_MASK == 0);
+        assert!(address.address() as u64 & !BLOCK_ADDRESS_MASK == 0);
         Self {
-            pending_value: TYPE_BLOCK | ACCESS_FLAG | NOT_GLOBAL | TableRow::from(address),
+            pending_value: TYPE_BLOCK | ACCESS_FLAG | NOT_GLOBAL | address.address() as u64,
         }
     }
 
@@ -283,9 +283,9 @@ pub struct PageDescriptorBuilder {
 impl PageDescriptorBuilder {
     /// Creates a builder with the given address.
     pub fn new_with_address(address: PhysicalAddress<Page>) -> Self {
-        assert!(TableRow::from(address) & !PAGE_ADDRESS_MASK == 0);
+        assert!(address.address() as u64 & !PAGE_ADDRESS_MASK == 0);
         Self {
-            pending_value: TYPE_PAGE | ACCESS_FLAG | NOT_GLOBAL | TableRow::from(address),
+            pending_value: TYPE_PAGE | ACCESS_FLAG | NOT_GLOBAL | address.address() as u64,
         }
     }
 

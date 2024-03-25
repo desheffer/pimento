@@ -51,9 +51,10 @@ impl TaskCreationService {
         let mut cpu_context = CpuContext::new();
 
         // Set the stack pointer (to the end of the page).
+        // SAFETY: Safe because the stack grows downward.
         let kernel_stack = memory_context.alloc_unmapped_page();
         unsafe {
-            cpu_context.set_stack_pointer(kernel_stack.as_mut_ptr().add(1) as _);
+            cpu_context.set_stack_pointer(kernel_stack.page().add(1) as _);
         }
 
         // Wrap the `Fn()` trait so that it can be accessed like a `fn()` pointer.
@@ -71,6 +72,7 @@ impl TaskCreationService {
         }
 
         // Set the program counter (link register) by proxy.
+        // SAFETY: Safe because values are allocated and tracked.
         let func_box = Box::new(func);
         unsafe {
             cpu_context.set_link_register(

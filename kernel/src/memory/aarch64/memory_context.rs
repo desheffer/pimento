@@ -3,7 +3,7 @@ use core::cell::UnsafeCell;
 
 use alloc::vec::Vec;
 
-use crate::memory::{PageAllocation, PageAllocator, PhysicalAddress, Table};
+use crate::memory::{PageAllocation, PageAllocator, Table, MEMORY_MAPPER};
 use crate::sync::{Arc, Lock, Mutex};
 
 const TTBR_EL1_ASID_SHIFT: u64 = 48;
@@ -58,7 +58,7 @@ impl MemoryContext {
         let table_l0: *mut Table;
         unsafe {
             let table_l0_page = Arc::new(page_allocator.alloc());
-            table_l0 = table_l0_page.as_mut_ptr() as *mut _;
+            table_l0 = table_l0_page.page() as _;
             page_allocations.push(table_l0_page);
         }
 
@@ -85,8 +85,8 @@ impl MemoryContext {
     /// Generates the TTBR (Translation Table Base Register) value for this memory context.
     pub fn ttbr(&self) -> u64 {
         let asid = self.asid.id as u64;
-        let table: u64 = PhysicalAddress::from_ptr(self.table_l0).into();
-        (asid << TTBR_EL1_ASID_SHIFT) | table
+        let table = MEMORY_MAPPER.physical_address(self.table_l0).address();
+        (asid << TTBR_EL1_ASID_SHIFT) | table as u64
     }
 }
 

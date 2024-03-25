@@ -4,6 +4,9 @@ use core::ptr;
 
 use crate::sync::Mutex;
 
+#[global_allocator]
+static ALLOCATOR: Allocator<{ 4 * 1024 * 1024 }> = Allocator::new();
+
 /// A simple heap allocator.
 ///
 /// Allocations are made linearly. Deallocations are not implemented.
@@ -54,8 +57,5 @@ unsafe impl<const N: usize> GlobalAlloc for Allocator<N> {
         // TODO: Implement deallocation.
     }
 }
-
-#[global_allocator]
-static ALLOCATOR: Allocator<{ 4 * 1024 * 1024 }> = Allocator::new();
 
 unsafe impl<const N: usize> Sync for Allocator<N> {}

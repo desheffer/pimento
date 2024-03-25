@@ -4,7 +4,7 @@ use core::ptr;
 
 use alloc::vec::Vec;
 
-use crate::memory::{Page, PhysicalAddress};
+use crate::memory::{Page, PhysicalAddress, MEMORY_MAPPER};
 use crate::sync::Mutex;
 
 /// A simple page allocator.
@@ -21,7 +21,7 @@ impl PageAllocator {
     pub fn new(capacity: usize, reserved_ranges: Vec<Range<PhysicalAddress<u8>>>) -> Self {
         let reserved_ranges = reserved_ranges
             .iter()
-            .map(|v| v.start.into()..v.end.into())
+            .map(|v| v.start.address()..v.end.address())
             .collect();
 
         Self {
@@ -63,18 +63,19 @@ impl PageAllocator {
             break;
         }
 
-        let page = PageAllocation::new(PhysicalAddress::new(alloc_start));
+        let addr = PhysicalAddress::new(alloc_start);
+        let ptr = MEMORY_MAPPER.virtual_address(addr);
 
         // Zero out the page.
-        ptr::write_bytes(page.as_mut_ptr(), 0, 1);
+        ptr::write_bytes(ptr, 0, 1);
 
-        page
+        PageAllocation::new(addr, ptr)
     }
 
     /// Deallocates a page of memory.
     pub unsafe fn dealloc(&self, page: &mut PageAllocation) {
         // Flag the allocation so that re-use can be detected.
-        ptr::write_bytes(page.as_mut_ptr(), 0xDE, 1);
+        ptr::write_bytes(page.ptr, 0xDE, 1);
 
         // TODO: Implement deallocation.
 
@@ -84,40 +85,31 @@ impl PageAllocator {
 
 /// An allocated page of physical memory.
 pub struct PageAllocation {
-    page: PhysicalAddress<Page>,
+    address: PhysicalAddress<Page>,
+    ptr: *mut Page,
     allocated: Mutex<bool>,
 }
 
 impl PageAllocation {
     /// Creates a page allocation.
-    fn new(page: PhysicalAddress<Page>) -> Self {
+    fn new(address: PhysicalAddress<Page>, ptr: *mut Page) -> Self {
         PageAllocation {
-            page,
+            address,
+            ptr,
             allocated: Mutex::new(true),
         }
     }
 
     /// Gets the physical address of the allocated page.
-    pub fn addr(&self) -> PhysicalAddress<Page> {
+    pub fn address(&self) -> PhysicalAddress<Page> {
         assert!(*self.allocated.lock());
-        self.page
+        self.address
     }
 
-    /// Gets the size of the allocated page.
-    pub const fn size(&self) -> usize {
-        size_of::<Page>()
-    }
-
-    /// Gets the allocated page as a pointer in kernel virtual memory.
-    pub unsafe fn as_ptr(&self) -> *const Page {
+    /// Gets the virtual address of the allocated page.
+    pub fn page(&self) -> *mut Page {
         assert!(*self.allocated.lock());
-        self.page.as_ptr()
-    }
-
-    /// Gets the allocated page as a mutable pointer in kernel virtual memory.
-    pub unsafe fn as_mut_ptr(&self) -> *mut Page {
-        assert!(*self.allocated.lock());
-        self.page.as_mut_ptr()
+        self.ptr
     }
 
     /// Sets the page allocation as deallocated.

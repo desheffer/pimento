@@ -13,7 +13,7 @@ use crate::device::driver::bcm2837_interrupt::{Bcm2837InterruptController, CNTPN
 use crate::device::driver::bcm2837_serial::Bcm2837Serial;
 use crate::device::Monotonic;
 use crate::kernel_main;
-use crate::memory::{PageAllocator, PhysicalAddress};
+use crate::memory::{PageAllocator, PhysicalAddress, MEMORY_MAPPER};
 use crate::print;
 use crate::sync::{Arc, OnceLock};
 
@@ -47,7 +47,7 @@ pub unsafe extern "C" fn kernel_init() -> ! {
         PageAllocator::new(
             0x4000_0000,
             vec![
-                PhysicalAddress::new(0)..PhysicalAddress::from_ptr(&__end),
+                PhysicalAddress::new(0)..MEMORY_MAPPER.physical_address(&__end),
                 PhysicalAddress::new(0x3F00_0000)..PhysicalAddress::new(0x4000_0000),
             ],
         )
