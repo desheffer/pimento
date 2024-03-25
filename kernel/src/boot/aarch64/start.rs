@@ -20,10 +20,10 @@ const SCTLR_EL1_INIT: u64 = SCTLR_EL1_SA
     | SCTLR_EL1_EIS
     | SCTLR_EL1_SPAN;
 
-const SPSR_EL2_D: u64 = 0b1 << 9; // Debug (Sync) exception mask
-const SPSR_EL2_A: u64 = 0b1 << 8; // Abort (SError) exception mask
-const SPSR_EL2_I: u64 = 0b1 << 7; // IRQ interrupt mask
 const SPSR_EL2_F: u64 = 0b1 << 6; // FIQ interrupt mask
+const SPSR_EL2_I: u64 = 0b1 << 7; // IRQ interrupt mask
+const SPSR_EL2_A: u64 = 0b1 << 8; // Abort (SError) exception mask
+const SPSR_EL2_D: u64 = 0b1 << 9; // Debug (Sync) exception mask
 
 const SPSR_EL2_M_EL1H: u64 = 0b0101; // EL1 with SP_EL1 (EL1h)
 

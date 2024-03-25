@@ -6,20 +6,22 @@ pub type Page = [u8; 4 * 1024]; // Pages are 4 KB
 
 const ROW_COUNT: usize = size_of::<Page>() / 8; // Number of rows in a translation table
 
-pub type BlockLevel1 = [u8; size_of::<BlockLevel2>() * ROW_COUNT]; // Block addressed by a level 1 translation table
-pub type BlockLevel2 = [u8; size_of::<Page>() * ROW_COUNT]; // Block addressed by a level 2 translation table
+const DESC_TABLE: u64 = 0b11; // Table descriptor (lookup levels < 3)
+const DESC_BLOCK: u64 = 0b01; // Block descriptor
+const DESC_PAGE: u64 = 0b11; // Page descriptor (lookup level 3)
 
-const PT_BLOCK: u64 = 0b01; // Block descriptor
-const PT_TABLE: u64 = 0b11; // Table descriptor
-const PT_PAGE: u64 = 0b11; // Page descriptor
-const PT_USER: u64 = 0b1 << 6; // Unprivileged
-const PT_RO: u64 = 0b1 << 7; // Read-Only
-const PT_OSH: u64 = 0b10 << 8; // Outer Shareable
-const PT_ISH: u64 = 0b11 << 8; // Inner Shareable
-const PT_AF: u64 = 0b1 << 10; // Access flag
-const PT_NG: u64 = 0b1 << 11; // Not global (nG)
-const PT_PXN: u64 = 0b1 << 53; // Privileged execute-never
-const PT_XN: u64 = 0b1 << 54; // Execute-never
+const UNPRIVILEGED: u64 = 0b1 << 6; // Unprivileged
+const READ_ONLY: u64 = 0b1 << 7; // Read-only
+const OUTER_SHAREABLE: u64 = 0b10 << 8; // Outer Shareable
+const INNER_SHAREABLE: u64 = 0b11 << 8; // Inner Shareable
+const ACCESS_FLAG: u64 = 0b1 << 10; // Access flag (AF)
+const NOT_GLOBAL: u64 = 0b1 << 11; // Not global (nG)
+const EXECUTE_NEVER: u64 = 0b1 << 54; // Execute-never (XN)
+
+pub type BlockLevel0 = [u8; size_of::<BlockLevel1>() * ROW_COUNT]; // Block addressed by a level 0 translation table
+pub type BlockLevel1 = [u8; size_of::<BlockLevel2>() * ROW_COUNT]; // Block addressed by a level 1 translation table
+pub type BlockLevel2 = [u8; size_of::<BlockLevel3>() * ROW_COUNT]; // Block addressed by a level 2 translation table
+pub type BlockLevel3 = Page; // Block addressed by a level 3 translation table
 
 /// An AArch64 translation table.
 ///
@@ -59,7 +61,6 @@ pub trait RowBuilder {
 /// A builder for table rows.
 pub struct TableRowBuilder {
     address: usize,
-    access_flag: bool,
 }
 
 impl TableRowBuilder {
@@ -67,20 +68,13 @@ impl TableRowBuilder {
     pub fn new(address: PhysicalAddress<Table>) -> Self {
         Self {
             address: Into::into(address),
-            access_flag: false,
         }
-    }
-
-    /// Sets the given access flag value.
-    pub fn with_access_flag(mut self, access_flag: bool) -> Self {
-        self.access_flag = access_flag;
-        self
     }
 }
 
 impl RowBuilder for TableRowBuilder {
     unsafe fn build(&self) -> u64 {
-        PT_TABLE | self.address as u64 | (if self.access_flag { PT_AF } else { 0 })
+        DESC_TABLE | self.address as u64
     }
 }
 
@@ -89,7 +83,7 @@ pub struct BlockRowBuilder {
     address: usize,
     attribute: Attribute,
     global: bool,
-    access_flag: bool,
+    unprivileged: bool,
 }
 
 impl BlockRowBuilder {
@@ -97,9 +91,9 @@ impl BlockRowBuilder {
     pub fn new<const COUNT: usize>(address: PhysicalAddress<[u8; COUNT]>) -> Self {
         Self {
             address: Into::into(address),
-            attribute: Attribute::Device,
+            attribute: Attribute::Normal,
             global: false,
-            access_flag: false,
+            unprivileged: false,
         }
     }
 
@@ -115,20 +109,21 @@ impl BlockRowBuilder {
         self
     }
 
-    /// Sets the given access flag value.
-    pub fn with_access_flag(mut self, access_flag: bool) -> Self {
-        self.access_flag = access_flag;
+    /// Sets the given unprivileged value.
+    pub fn with_unprivileged(mut self, unprivileged: bool) -> Self {
+        self.unprivileged = unprivileged;
         self
     }
 }
 
 impl RowBuilder for BlockRowBuilder {
     unsafe fn build(&self) -> u64 {
-        PT_BLOCK
+        DESC_BLOCK
             | self.address as u64
-            | (if self.global { 0 } else { PT_NG })
-            | (if self.access_flag { PT_AF } else { 0 })
+            | (if self.global { 0 } else { NOT_GLOBAL })
+            | (if self.unprivileged { UNPRIVILEGED } else { 0 })
             | self.attribute as u64
+            | ACCESS_FLAG
     }
 }
 
@@ -137,7 +132,7 @@ pub struct PageRowBuilder {
     address: usize,
     attribute: Attribute,
     global: bool,
-    access_flag: bool,
+    unprivileged: bool,
 }
 
 impl PageRowBuilder {
@@ -145,9 +140,9 @@ impl PageRowBuilder {
     pub fn new(address: PhysicalAddress<Page>) -> Self {
         Self {
             address: Into::into(address),
-            attribute: Attribute::Device,
+            attribute: Attribute::Normal,
             global: false,
-            access_flag: false,
+            unprivileged: false,
         }
     }
 
@@ -163,29 +158,30 @@ impl PageRowBuilder {
         self
     }
 
-    /// Sets the given access flag value.
-    pub fn with_access_flag(mut self, access_flag: bool) -> Self {
-        self.access_flag = access_flag;
+    /// Sets the given unprivileged value.
+    pub fn with_unprivileged(mut self, unprivileged: bool) -> Self {
+        self.unprivileged = unprivileged;
         self
     }
 }
 
 impl RowBuilder for PageRowBuilder {
     unsafe fn build(&self) -> u64 {
-        PT_PAGE
+        DESC_PAGE
             | self.address as u64
-            | (if self.global { 0 } else { PT_NG })
-            | (if self.access_flag { PT_AF } else { 0 })
+            | (if self.global { 0 } else { NOT_GLOBAL })
+            | (if self.unprivileged { UNPRIVILEGED } else { 0 })
             | self.attribute as u64
+            | ACCESS_FLAG
     }
 }
 
 /// AArch64 memory attributes.
 ///
 /// The numeric index is used when initializing the MAIR_EL1 register.
-#[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Clone, Copy)]
 pub enum Attribute {
-    Device = 0, // nGnRnE (no gathering, no re-ordering, and no early write)
+    Device = 0,
     Normal = 1,
     NormalNC = 2,
 }

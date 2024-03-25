@@ -1,12 +1,13 @@
 use core::ops::Add;
 use core::time::Duration;
 
+use alloc::borrow::ToOwned;
 use alloc::vec;
 use alloc::vec::Vec;
 
 use crate::abi::system_calls::SysWrite;
 use crate::abi::{InterruptRouter, SystemCall, SystemCallRouter, VectorTable};
-use crate::context::{ContextSwitch, Scheduler, TaskCreationService};
+use crate::context::{ContextSwitch, Scheduler, TaskCreationService, TaskExecutionService};
 use crate::device::driver::armv8_timer::ArmV8Timer;
 use crate::device::driver::bcm2837_interrupt::{Bcm2837InterruptController, CNTPNSIRQ};
 use crate::device::driver::bcm2837_serial::Bcm2837Serial;
@@ -94,6 +95,9 @@ pub unsafe extern "C" fn kernel_init() -> ! {
     task_creation.create_and_become_kinit();
     scheduler.schedule();
 
+    let task_execution =
+        static_get_or_init!(TaskExecutionService, TaskExecutionService::new(scheduler));
+
     let example_thread = |num: u64| {
         let timer = timer.clone();
 
@@ -114,6 +118,12 @@ pub unsafe extern "C" fn kernel_init() -> ! {
     // Create example threads:
     task_creation.create_kthread(example_thread(1));
     task_creation.create_kthread(example_thread(2));
+
+    task_creation.create_kthread(|| {
+        task_execution.execute("/bin/example".to_owned());
+
+        Err(())
+    });
 
     kernel_main();
 

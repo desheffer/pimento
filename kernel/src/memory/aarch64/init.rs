@@ -11,9 +11,13 @@ use super::page_table::{Attribute, BlockLevel1, BlockRowBuilder, Table, TableRow
 const VA_BITS: u64 = 48; // Virtual addresses have a 16-bit prefix and a 48-bit address
 pub const VA_START: usize = !((1 << VA_BITS) - 1); // Kernel memory starting address
 
-const MAIR_EL1: u64 = 0x00 << (8 * Attribute::Device as u64)
-    | (0xFF << (8 * Attribute::Normal as u64))
-    | (0x44 << (8 * Attribute::NormalNC as u64));
+const MAIR_EL1_DEVICE: u64 = 0x00; // Device-nGnRnE memory (no gathering, no re-ordering, and no early write)
+const MAIR_EL1_NORMAL: u64 = 0xFF; // Normal memory
+const MAIR_EL1_NORMAL_NC: u64 = 0x44; // Normal memory, non-cacheable
+
+const MAIR_EL1: u64 = (MAIR_EL1_DEVICE << (8 * Attribute::Device as u64))
+    | (MAIR_EL1_NORMAL << (8 * Attribute::Normal as u64))
+    | (MAIR_EL1_NORMAL_NC << (8 * Attribute::NormalNC as u64));
 
 const TCR_EL1_T0SZ: u64 = 64 - VA_BITS; // Size offset for TTBR0_EL1 is 2 ** VA_BITS
 const TCR_EL1_TG0_4KB: u64 = 0b00 << 14; // 4 KB granule size for TTBR0_EL1
@@ -51,16 +55,13 @@ unsafe extern "C" fn virtual_memory_early_init() {
 
     // Initialize level 0 as an identity map.
     let addr = PhysicalAddress::from_ptr(addr_of!(INIT_TABLE_L1));
-    let row = TableRowBuilder::new(addr).with_access_flag(true);
+    let row = TableRowBuilder::new(addr);
     INIT_TABLE_L0.set_row(0, &row);
 
     // Initialize level 1 as an identity map.
     for i in 0..Table::len() {
         let addr: PhysicalAddress<BlockLevel1> = PhysicalAddress::new(size_of::<BlockLevel1>() * i);
-        let row = BlockRowBuilder::new(addr)
-            .with_attribute(Attribute::Device)
-            .with_global(true)
-            .with_access_flag(true);
+        let row = BlockRowBuilder::new(addr).with_attribute(Attribute::Device);
         INIT_TABLE_L1.set_row(i, &row);
     }
 
@@ -89,4 +90,7 @@ unsafe extern "C" fn virtual_memory_early_init() {
     INIT_MEMORY_CONTEXT
         .set(memory_context)
         .unwrap_or_else(|_| panic!("setting initial memory context failed"));
+
+    // TODO: Implement phase 2 that maps each section of kernel memory using the proper write and
+    // execute permission bits.
 }

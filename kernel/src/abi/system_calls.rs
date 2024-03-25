@@ -1,5 +1,4 @@
 use crate::abi::{SystemCall, SystemCallError, SystemCallNumber};
-use crate::println;
 
 pub struct SysWrite {}
 
@@ -23,7 +22,7 @@ impl SystemCall for SysWrite {
         _: usize,
         _: usize,
     ) -> Result<usize, SystemCallError> {
-        println!("<WRITE>");
+        crate::print!("<WRITE>");
         Ok(0)
     }
 }

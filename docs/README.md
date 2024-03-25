@@ -31,6 +31,7 @@ containing the Raspberry Pi firmware.
 This project has been heavily guided by the following resources:
 
 - The [Arm Architecture Reference Manual][arm-manual].
+- The [Arm Cortex-A53 Reference Manual][arm-cortex-a53-manual].
 - The [Raspberry Pi Processors][raspberrypi-processors] documentation.
 - The following tutorials:
   - https://github.com/bztsrc/raspi3-tutorial
@@ -38,6 +39,7 @@ This project has been heavily guided by the following resources:
   - https://github.com/s-matyukevich/raspberry-pi-os
 
 
+[arm-cortex-a53-manual]: https://developer.arm.com/documentation/ddi0500/latest/
 [arm-manual]: https://developer.arm.com/documentation/ddi0487/latest/
 [nix-installer]: https://github.com/DeterminateSystems/nix-installer
 [pi-boot-chain]: https://github.com/desheffer/pi-boot-chain

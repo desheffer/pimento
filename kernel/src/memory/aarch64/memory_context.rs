@@ -1,9 +1,10 @@
 use core::arch::asm;
+use core::cell::UnsafeCell;
 
 use alloc::vec::Vec;
 
 use crate::memory::{PageAllocation, PageAllocator, PhysicalAddress, Table};
-use crate::sync::{Arc, Mutex};
+use crate::sync::{Arc, Lock, Mutex};
 
 const TTBR_EL1_ASID_SHIFT: u64 = 48;
 
@@ -16,7 +17,7 @@ pub struct AddressSpaceId {
 impl AddressSpaceId {
     /// Generates the next available Address Space ID.
     pub fn next() -> Self {
-        static NEXT: Mutex<u16> = Mutex::new(1);
+        static NEXT: Mutex<u16> = Mutex::new(0);
         let mut next = NEXT.lock();
         let id = *next;
         *next += 1;
@@ -26,8 +27,9 @@ impl AddressSpaceId {
 
 /// An AArch64 translation table for a task.
 pub struct MemoryContext {
+    lock: Lock,
     page_allocator: Option<&'static PageAllocator>,
-    page_allocations: Vec<Arc<PageAllocation>>,
+    page_allocations: UnsafeCell<Vec<Arc<PageAllocation>>>,
     asid: AddressSpaceId,
     table_l0: *mut Table,
 }
@@ -40,8 +42,9 @@ impl MemoryContext {
         let page_allocations = Vec::new();
 
         Self {
+            lock: Lock::new(),
             page_allocator: None,
-            page_allocations,
+            page_allocations: UnsafeCell::new(page_allocations),
             asid: AddressSpaceId::next(),
             table_l0,
         }
@@ -60,8 +63,9 @@ impl MemoryContext {
         }
 
         Self {
+            lock: Lock::new(),
             page_allocator: Some(page_allocator),
-            page_allocations,
+            page_allocations: UnsafeCell::new(page_allocations),
             asid: AddressSpaceId::next(),
             table_l0,
         }
@@ -69,12 +73,13 @@ impl MemoryContext {
 
     /// Allocates a page and records the allocation.
     pub fn alloc_unmapped_page(&mut self) -> Arc<PageAllocation> {
-        // SAFETY: Safe because the page allocation is recorded.
-        unsafe {
+        // SAFETY: Safe because the call is behind a lock.
+        self.lock.call(|| unsafe {
+            let page_allocations = &mut *self.page_allocations.get();
             let allocation = Arc::new(self.page_allocator.unwrap().alloc());
-            self.page_allocations.push(allocation.clone());
+            page_allocations.push(allocation.clone());
             allocation
-        }
+        })
     }
 
     /// Generates the TTBR (Translation Table Base Register) value for this memory context.
