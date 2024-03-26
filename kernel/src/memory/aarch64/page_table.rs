@@ -129,14 +129,17 @@ impl TableManager {
         }
     }
 
-    /// Gets the index of the row containing the given address.
-    pub fn input_address_index(&self, address: usize) -> Option<usize> {
+    /// Gets the row in this table that contains the given address.
+    pub unsafe fn row_by_address(&self, address: usize) -> Option<TableRowManager> {
         let start = self.input_address_start() as usize;
         let end = start + self.input_address_bytes();
         let row_size = self.input_address_bytes() / ROW_COUNT;
 
         if start <= address && address < end {
-            Some((address - start) / row_size)
+            Some(TableRowManager {
+                table_manager: self,
+                index: (address - start) / row_size,
+            })
         } else {
             None
         }
@@ -282,6 +285,11 @@ impl BlockDescriptorBuilder {
             (self.pending_value & !ATTRIBUTE_MASK) | ((attribute as TableRow) << ATTRIBUTE_SHIFT);
     }
 
+    /// Gets the address contained in this builder.
+    pub fn address(&self) -> PhysicalAddress<u8> {
+        PhysicalAddress::<u8>::new((self.pending_value & BLOCK_ADDRESS_MASK) as _)
+    }
+
     /// Builds a table row.
     fn build(&self) -> TableRow {
         self.pending_value
@@ -306,6 +314,11 @@ impl PageDescriptorBuilder {
     pub fn set_attribute(&mut self, attribute: Attribute) {
         self.pending_value =
             (self.pending_value & !ATTRIBUTE_MASK) | ((attribute as TableRow) << ATTRIBUTE_SHIFT);
+    }
+
+    /// Gets the address contained in this builder.
+    pub fn address(&self) -> PhysicalAddress<Page> {
+        PhysicalAddress::<Page>::new((self.pending_value & PAGE_ADDRESS_MASK) as _)
     }
 
     /// Builds a table row.

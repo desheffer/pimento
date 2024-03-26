@@ -52,7 +52,7 @@ impl TaskCreationService {
 
         // Set the stack pointer (to the end of the page).
         // SAFETY: Safe because the stack grows downward.
-        let kernel_stack = memory_context.alloc_unmapped_page();
+        let kernel_stack = memory_context.alloc_page_unmapped();
         unsafe {
             cpu_context.set_stack_pointer(kernel_stack.page().add(1) as _);
         }

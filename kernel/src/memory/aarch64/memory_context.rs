@@ -84,81 +84,98 @@ impl MemoryContext {
     }
 
     /// Allocates a page and records the allocation.
-    pub fn alloc_unmapped_page(&self) -> Arc<PageAllocation> {
-        // SAFETY: Safe because the call is behind a lock.
-        self.lock.call(|| unsafe {
-            let page_allocations = &mut *self.page_allocations.get();
-            let allocation = Arc::new(self.page_allocator.unwrap().alloc());
-            page_allocations.push(allocation.clone());
-            allocation
-        })
+    ///
+    /// The caller is responsible for ensuring that the lock is held during this process.
+    unsafe fn alloc_page_raw(&self) -> Arc<PageAllocation> {
+        let page_allocations = &mut *self.page_allocations.get();
+        let allocation = Arc::new(self.page_allocator.unwrap().alloc());
+        page_allocations.push(allocation.clone());
+        allocation
     }
 
-    /// Allocates a page, maps it to the given virtual address, and records the allocation.
-    pub fn alloc_mapped_page<T>(&self, address: UserVirtualAddress<T>) {
+    /// Allocates a page, but does not map it to a virtual address within this context.
+    pub fn alloc_page_unmapped(&self) -> Arc<PageAllocation> {
+        // SAFETY: Safe because the call is behind a lock.
+        self.lock.call(|| unsafe { self.alloc_page_raw() })
+    }
+
+    /// Creates or loads a table as a row within the given table manager.
+    ///
+    /// The caller is responsible for ensuring that the lock is held during this process.
+    unsafe fn traverse_table_to_table<T>(
+        &self,
+        table: &TableManager,
+        address: UserVirtualAddress<T>,
+    ) -> TableManager {
+        let row = table.row_by_address(address.ptr() as _).unwrap();
+
+        let next_table = match row.descriptor_type() {
+            Some(DescriptorType::Table) => row.load_table().address(),
+            _ => {
+                let allocation = self.alloc_page_raw();
+                let page: PhysicalAddress<Table> = allocation.address().convert();
+
+                let builder = TableDescriptorBuilder::new_with_address(page);
+                row.write_table(builder);
+
+                page
+            }
+        };
+
+        TableManager::new(
+            MEMORY_MAPPER.virtual_address(next_table),
+            table.level() + 1,
+            row.input_address_start(),
+        )
+    }
+
+    /// Creates or loads a page as a row within the given table manager.
+    ///
+    /// The caller is responsible for ensuring that the lock is held during this process.
+    unsafe fn traverse_table_to_page<T>(
+        &self,
+        table: &TableManager,
+        address: UserVirtualAddress<T>,
+    ) -> PhysicalAddress<Page> {
+        let row = table.row_by_address(address.ptr() as _).unwrap();
+
+        match row.descriptor_type() {
+            Some(DescriptorType::Page) => row.load_page().address(),
+            _ => {
+                let allocation = self.alloc_page_raw();
+                let page: PhysicalAddress<Page> = allocation.address().convert();
+
+                let mut builder = PageDescriptorBuilder::new_with_address(page);
+                builder.set_attribute(Attribute::Normal);
+                row.write_page(builder);
+
+                page
+            }
+        }
+    }
+
+    /// Allocates a page and maps it to the given virtual address within this context.
+    pub fn alloc_page<T>(&self, address: UserVirtualAddress<T>) {
         // SAFETY: Safe because the call is behind a lock.
         self.lock.call(|| unsafe {
-            let page_allocations = &mut *self.page_allocations.get();
-
             let mut table = TableManager::new(self.table_l0, LEVEL_ROOT, ptr::null());
 
-            // Iterate from level 0 to level 2. At each level, find or create a table to map the
-            // given input address.
             while table.level() < LEVEL_MAX {
-                let index = table.input_address_index(address.ptr() as _).unwrap();
-                let row = table.row(index);
-
-                let next_table_data = match row.descriptor_type() {
-                    // If a table already exists, then load it.
-                    Some(DescriptorType::Table) => row.load_table().address(),
-                    // Otherwise, create a table.
-                    _ => {
-                        let allocation = Arc::new(self.page_allocator.unwrap().alloc());
-                        let page: PhysicalAddress<Table> = allocation.address().convert();
-                        page_allocations.push(allocation);
-
-                        let builder = TableDescriptorBuilder::new_with_address(page);
-                        row.write_table(builder);
-                        page
-                    }
-                };
-
-                table = TableManager::new(
-                    MEMORY_MAPPER.virtual_address(next_table_data),
-                    table.level() + 1,
-                    row.input_address_start(),
-                );
+                table = self.traverse_table_to_table(&table, address);
             }
 
-            // At level 3, allocate and map the target page.
-            {
-                let index = table.input_address_index(address.ptr() as _).unwrap();
-                let row = table.row(index);
-
-                match row.descriptor_type() {
-                    // If a page is already mapped, then do nothing.
-                    Some(DescriptorType::Page) => {}
-                    // Otherwise, create a page.
-                    _ => {
-                        let allocation = Arc::new(self.page_allocator.unwrap().alloc());
-                        let page: PhysicalAddress<Page> = allocation.address().convert();
-                        page_allocations.push(allocation);
-
-                        let mut builder = PageDescriptorBuilder::new_with_address(page);
-                        builder.set_attribute(Attribute::Normal);
-                        row.write_page(builder);
-                    }
-                };
-            }
+            self.traverse_table_to_page(&table, address);
         })
     }
 
     /// Copies data from a kernel virtual address to a user virtual address.
+    // TODO: Handle case where user virtual address is not mapped and/or would generate fault.
     pub unsafe fn copy_to_user<T>(&self, src: *const T, dst: UserVirtualAddress<T>, count: usize) {
         core::ptr::copy(src, dst.ptr(), count);
     }
 
     /// Copies data from a user virtual address to a kernel virtual address.
+    // TODO: Handle case where user virtual address is not mapped and/or would generate fault.
     pub unsafe fn copy_from_user<T>(&self, src: UserVirtualAddress<T>, dst: *mut T, count: usize) {
         core::ptr::copy(src.ptr(), dst, count);
     }
