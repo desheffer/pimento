@@ -1,14 +1,11 @@
 use core::arch::asm;
-use core::ptr::addr_of_mut;
+use core::ptr::{self, addr_of_mut};
 
-use crate::memory::arch::page_table::LEVEL_ROOT;
-use crate::memory::PhysicalAddress;
-use crate::sync::OnceLock;
-
-use super::memory_context::MemoryContext;
-use super::page_table::{
-    Attribute, BlockDescriptorBuilder, Table, TableDescriptorBuilder, TableManager,
+use crate::memory::{
+    Attribute, BlockDescriptorBuilder, MemoryContext, PhysicalAddress, Table,
+    TableDescriptorBuilder, TableManager, LEVEL_ROOT,
 };
+use crate::sync::OnceLock;
 
 const VA_BITS: u64 = 48; // Virtual addresses have a 16-bit prefix and a 48-bit address
 pub const VA_START: usize = !((1 << VA_BITS) - 1); // Kernel memory starting address
@@ -58,7 +55,7 @@ unsafe extern "C" fn virtual_memory_early_init() {
     let table_l0_data = addr_of_mut!(INIT_TABLE_L0);
     let table_l1_data = addr_of_mut!(INIT_TABLE_L1);
 
-    let table_l0 = TableManager::new(table_l0_data, LEVEL_ROOT, core::ptr::null());
+    let table_l0 = TableManager::new(table_l0_data, LEVEL_ROOT, ptr::null());
 
     // Initialize level 0 as an identity map.
     let row = table_l0.row(0);
@@ -66,12 +63,12 @@ unsafe extern "C" fn virtual_memory_early_init() {
     let builder = TableDescriptorBuilder::new_with_address(addr);
     row.write_table(builder);
 
-    let table_l1 = TableManager::new(table_l1_data, LEVEL_ROOT + 1, core::ptr::null());
+    let table_l1 = TableManager::new(table_l1_data, LEVEL_ROOT + 1, row.input_address_start());
 
     // Initialize level 1 as an identity map.
     for i in 0..table_l1.len() {
         let row = table_l1.row(i);
-        let addr = PhysicalAddress::<()>::new((row.input_address_start() as usize) & !VA_START);
+        let addr = PhysicalAddress::<u8>::new((row.input_address_start() as usize) & !VA_START);
         let mut builder = BlockDescriptorBuilder::new_with_address(addr);
         builder.set_attribute(Attribute::Device);
         row.write_block(builder);

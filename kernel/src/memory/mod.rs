@@ -1,4 +1,4 @@
-pub use self::address::PhysicalAddress;
+pub use self::address::{PhysicalAddress, UserVirtualAddress};
 pub use self::arch::*;
 pub use self::page::{PageAllocation, PageAllocator};
 

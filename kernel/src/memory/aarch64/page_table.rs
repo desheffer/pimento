@@ -128,6 +128,19 @@ impl TableManager {
             index,
         }
     }
+
+    /// Gets the index of the row containing the given address.
+    pub fn input_address_index(&self, address: usize) -> Option<usize> {
+        let start = self.input_address_start() as usize;
+        let end = start + self.input_address_bytes();
+        let row_size = self.input_address_bytes() / ROW_COUNT;
+
+        if start <= address && address < end {
+            Some((address - start) / row_size)
+        } else {
+            None
+        }
+    }
 }
 
 /// An AArch64 translation table row manager.
@@ -256,7 +269,7 @@ impl BlockDescriptorBuilder {
     /// Creates a builder with the given address.
     ///
     /// The caller is responsible for ensuring that the size of the block is appropriate.
-    pub fn new_with_address(address: PhysicalAddress<()>) -> Self {
+    pub fn new_with_address(address: PhysicalAddress<u8>) -> Self {
         assert!(address.address() as u64 & !BLOCK_ADDRESS_MASK == 0);
         Self {
             pending_value: TYPE_BLOCK | ACCESS_FLAG | NOT_GLOBAL | address.address() as u64,

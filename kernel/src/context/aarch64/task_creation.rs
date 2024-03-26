@@ -46,7 +46,7 @@ impl TaskCreationService {
         F: Fn() -> Result<(), ()>,
         F: Send + 'static,
     {
-        let mut memory_context = MemoryContext::new(self.page_allocator);
+        let memory_context = MemoryContext::new(self.page_allocator);
 
         let mut cpu_context = CpuContext::new();
 

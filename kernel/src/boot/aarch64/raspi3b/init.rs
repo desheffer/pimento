@@ -1,4 +1,5 @@
 use core::ops::Add;
+use core::ptr::addr_of;
 use core::time::Duration;
 
 use alloc::borrow::ToOwned;
@@ -47,7 +48,7 @@ pub unsafe extern "C" fn kernel_init() -> ! {
         PageAllocator::new(
             0x4000_0000,
             vec![
-                PhysicalAddress::new(0)..MEMORY_MAPPER.physical_address(&__end),
+                PhysicalAddress::new(0)..MEMORY_MAPPER.physical_address(addr_of!(__end) as _),
                 PhysicalAddress::new(0x3F00_0000)..PhysicalAddress::new(0x4000_0000),
             ],
         )

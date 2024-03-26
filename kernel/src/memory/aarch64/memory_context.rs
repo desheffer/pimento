@@ -1,9 +1,14 @@
 use core::arch::asm;
 use core::cell::UnsafeCell;
+use core::ptr;
 
 use alloc::vec::Vec;
 
-use crate::memory::{PageAllocation, PageAllocator, Table, MEMORY_MAPPER};
+use crate::memory::{
+    Attribute, DescriptorType, Page, PageAllocation, PageAllocator, PageDescriptorBuilder,
+    PhysicalAddress, Table, TableDescriptorBuilder, TableManager, UserVirtualAddress, LEVEL_MAX,
+    LEVEL_ROOT, MEMORY_MAPPER,
+};
 use crate::sync::{Arc, Lock, Mutex};
 
 const TTBR_EL1_ASID_SHIFT: u64 = 48;
@@ -71,8 +76,15 @@ impl MemoryContext {
         }
     }
 
+    /// Generates the TTBR (Translation Table Base Register) value for this memory context.
+    pub fn ttbr(&self) -> u64 {
+        let asid = self.asid.id as u64;
+        let table = MEMORY_MAPPER.physical_address(self.table_l0).address();
+        (asid << TTBR_EL1_ASID_SHIFT) | table as u64
+    }
+
     /// Allocates a page and records the allocation.
-    pub fn alloc_unmapped_page(&mut self) -> Arc<PageAllocation> {
+    pub fn alloc_unmapped_page(&self) -> Arc<PageAllocation> {
         // SAFETY: Safe because the call is behind a lock.
         self.lock.call(|| unsafe {
             let page_allocations = &mut *self.page_allocations.get();
@@ -82,11 +94,73 @@ impl MemoryContext {
         })
     }
 
-    /// Generates the TTBR (Translation Table Base Register) value for this memory context.
-    pub fn ttbr(&self) -> u64 {
-        let asid = self.asid.id as u64;
-        let table = MEMORY_MAPPER.physical_address(self.table_l0).address();
-        (asid << TTBR_EL1_ASID_SHIFT) | table as u64
+    /// Allocates a page, maps it to the given virtual address, and records the allocation.
+    pub fn alloc_mapped_page<T>(&self, address: UserVirtualAddress<T>) {
+        // SAFETY: Safe because the call is behind a lock.
+        self.lock.call(|| unsafe {
+            let page_allocations = &mut *self.page_allocations.get();
+
+            let mut table = TableManager::new(self.table_l0, LEVEL_ROOT, ptr::null());
+
+            // Iterate from level 0 to level 2. At each level, find or create a table to map the
+            // given input address.
+            while table.level() < LEVEL_MAX {
+                let index = table.input_address_index(address.ptr() as _).unwrap();
+                let row = table.row(index);
+
+                let next_table_data = match row.descriptor_type() {
+                    // If a table already exists, then load it.
+                    Some(DescriptorType::Table) => row.load_table().address(),
+                    // Otherwise, create a table.
+                    _ => {
+                        let allocation = Arc::new(self.page_allocator.unwrap().alloc());
+                        let page: PhysicalAddress<Table> = allocation.address().convert();
+                        page_allocations.push(allocation);
+
+                        let builder = TableDescriptorBuilder::new_with_address(page);
+                        row.write_table(builder);
+                        page
+                    }
+                };
+
+                table = TableManager::new(
+                    MEMORY_MAPPER.virtual_address(next_table_data),
+                    table.level() + 1,
+                    row.input_address_start(),
+                );
+            }
+
+            // At level 3, allocate and map the target page.
+            {
+                let index = table.input_address_index(address.ptr() as _).unwrap();
+                let row = table.row(index);
+
+                match row.descriptor_type() {
+                    // If a page is already mapped, then do nothing.
+                    Some(DescriptorType::Page) => {}
+                    // Otherwise, create a page.
+                    _ => {
+                        let allocation = Arc::new(self.page_allocator.unwrap().alloc());
+                        let page: PhysicalAddress<Page> = allocation.address().convert();
+                        page_allocations.push(allocation);
+
+                        let mut builder = PageDescriptorBuilder::new_with_address(page);
+                        builder.set_attribute(Attribute::Normal);
+                        row.write_page(builder);
+                    }
+                };
+            }
+        })
+    }
+
+    /// Copies data from a kernel virtual address to a user virtual address.
+    pub unsafe fn copy_to_user<T>(&self, src: *const T, dst: UserVirtualAddress<T>, count: usize) {
+        core::ptr::copy(src, dst.ptr(), count);
+    }
+
+    /// Copies data from a user virtual address to a kernel virtual address.
+    pub unsafe fn copy_from_user<T>(&self, src: UserVirtualAddress<T>, dst: *mut T, count: usize) {
+        core::ptr::copy(src.ptr(), dst, count);
     }
 }
 

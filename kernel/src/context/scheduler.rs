@@ -127,6 +127,27 @@ impl Scheduler {
         // TODO: Update to support multiple cores.
         0
     }
+
+    /// Gets the current task ID.
+    pub fn current_task_id(&self) -> TaskId {
+        // SAFETY: Safe because call is behind a lock.
+        self.lock.call(|| unsafe {
+            let current_core = self.current_core();
+            let current_tasks = &*self.current_tasks.get();
+
+            current_tasks[current_core].unwrap()
+        })
+    }
+
+    /// Gets a reference to the task with the given task ID.
+    pub fn task(&self, task_id: TaskId) -> Option<&Task> {
+        // SAFETY: Safe because call is behind a lock.
+        self.lock.call(|| unsafe {
+            let tasks = &mut *self.tasks.get();
+
+            tasks.get(&task_id).map(|task| task.as_ref())
+        })
+    }
 }
 
 unsafe impl Send for Scheduler {}
