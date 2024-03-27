@@ -1,8 +1,6 @@
-use core::ops::Add;
 use core::ptr::addr_of;
 use core::time::Duration;
 
-use alloc::borrow::ToOwned;
 use alloc::vec;
 use alloc::vec::Vec;
 
@@ -12,8 +10,7 @@ use crate::context::{ContextSwitch, Scheduler, TaskCreationService, TaskExecutio
 use crate::device::driver::armv8_timer::ArmV8Timer;
 use crate::device::driver::bcm2837_interrupt::{Bcm2837InterruptController, CNTPNSIRQ};
 use crate::device::driver::bcm2837_serial::Bcm2837Serial;
-use crate::device::Monotonic;
-use crate::kernel_main;
+use crate::kernel::Kernel;
 use crate::memory::{PageAllocator, PhysicalAddress, MEMORY_MAPPER};
 use crate::print;
 use crate::sync::{Arc, OnceLock};
@@ -99,36 +96,9 @@ pub unsafe extern "C" fn kernel_init() -> ! {
     let task_execution =
         static_get_or_init!(TaskExecutionService, TaskExecutionService::new(scheduler));
 
-    let example_thread = |num: u64| {
-        let timer = timer.clone();
-
-        let sleep = move |duration: Duration| {
-            let target = timer.monotonic().add(duration);
-
-            while timer.monotonic() < target {
-                scheduler.schedule();
-            }
-        };
-
-        move || loop {
-            crate::print!("{}", num);
-            sleep(Duration::from_secs(num));
-        }
-    };
-
-    // Create example threads:
-    task_creation.create_kthread(example_thread(1)).unwrap();
-    task_creation.create_kthread(example_thread(2)).unwrap();
-
-    task_creation
-        .create_kthread(|| {
-            task_execution.execute("/bin/example".to_owned())?;
-
-            Err(())
-        })
-        .unwrap();
-
-    kernel_main();
+    // Initialization is complete. Run the kernel.
+    let kernel = Kernel::new(task_execution);
+    kernel.run().unwrap();
 
     unimplemented!("shutdown");
 }
