@@ -63,7 +63,7 @@ impl MemoryContext {
         let table_l0: *mut Table;
         unsafe {
             let table_l0_page = Arc::new(page_allocator.alloc()?);
-            table_l0 = table_l0_page.page().unwrap() as _;
+            table_l0 = table_l0_page.page() as _;
             page_allocations.push(table_l0_page);
         }
 
@@ -115,7 +115,7 @@ impl MemoryContext {
             Some(DescriptorType::Table) => row.load_table()?.address(),
             _ => {
                 let allocation = self.alloc_page_raw()?;
-                let page: PhysicalAddress<Table> = allocation.address().unwrap().convert();
+                let page: PhysicalAddress<Table> = allocation.address().convert();
 
                 let builder = TableDescriptorBuilder::new_with_address(page)?;
                 row.write_table(builder)?;
@@ -145,7 +145,7 @@ impl MemoryContext {
             Some(DescriptorType::Page) => row.load_page()?.address(),
             _ => {
                 let allocation = self.alloc_page_raw()?;
-                let page: PhysicalAddress<Page> = allocation.address().unwrap().convert();
+                let page: PhysicalAddress<Page> = allocation.address().convert();
 
                 let mut builder = PageDescriptorBuilder::new_with_address(page)?;
                 builder.set_attribute(Attribute::Normal);

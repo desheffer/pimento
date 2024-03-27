@@ -5,7 +5,7 @@ use crate::memory::PhysicalAddress;
 
 pub type Page = [u8; 4096]; // The size of one page (4 KB)
 
-const ROW_COUNT: usize = size_of::<Page>() / 8; // The number of rows in a translation table
+const ROW_COUNT: usize = size_of::<Page>() / size_of::<TableRow>(); // The number of rows in a translation table
 
 pub const LEVEL_ROOT: i8 = 0; // The root level, where translation starts
 pub const LEVEL_MAX: i8 = 3; // The last level, where each row is a page

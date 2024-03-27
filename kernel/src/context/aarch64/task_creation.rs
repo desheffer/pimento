@@ -54,7 +54,7 @@ impl TaskCreationService {
         // SAFETY: Safe because the stack grows downward.
         let kernel_stack = memory_context.alloc_page_unmapped()?;
         unsafe {
-            cpu_context.set_stack_pointer(kernel_stack.page().unwrap().add(1) as _);
+            cpu_context.set_stack_pointer(kernel_stack.page().add(1) as _);
         }
 
         // Wrap the `Fn()` trait so that it can be accessed like a `fn()` pointer.

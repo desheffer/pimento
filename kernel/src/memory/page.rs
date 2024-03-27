@@ -69,65 +69,55 @@ impl PageAllocator {
         // Zero out the page.
         ptr::write_bytes(ptr, 0, 1);
 
-        Ok(PageAllocation::new(addr, ptr))
+        Ok(PageAllocation::new(self, addr, ptr))
     }
 
     /// Deallocates a page of memory.
-    pub unsafe fn dealloc(&self, page: &mut PageAllocation) {
-        // Flag the allocation so that re-use can be detected.
-        ptr::write_bytes(page.ptr, 0xDE, 1);
+    unsafe fn dealloc(&self, page: &mut PageAllocation) {
+        // Clear the allocation so that re-use can be detected.
+        ptr::write_bytes(page.ptr, 0x00, 1);
 
         // TODO: Implement deallocation.
-
-        page.set_deallocated();
     }
 }
 
 /// An allocated page of physical memory.
 pub struct PageAllocation {
+    page_allocator: &'static PageAllocator,
     address: PhysicalAddress<Page>,
     ptr: *mut Page,
-    allocated: Mutex<bool>,
 }
 
 impl PageAllocation {
     /// Creates a page allocation.
-    fn new(address: PhysicalAddress<Page>, ptr: *mut Page) -> Self {
+    fn new(
+        page_allocator: &'static PageAllocator,
+        address: PhysicalAddress<Page>,
+        ptr: *mut Page,
+    ) -> Self {
         PageAllocation {
+            page_allocator,
             address,
             ptr,
-            allocated: Mutex::new(true),
         }
     }
 
     /// Gets the physical address of the allocated page.
-    pub fn address(&self) -> Option<PhysicalAddress<Page>> {
-        if *self.allocated.lock() {
-            Some(self.address)
-        } else {
-            None
-        }
+    pub fn address(&self) -> PhysicalAddress<Page> {
+        self.address
     }
 
     /// Gets the virtual address of the allocated page.
-    pub fn page(&self) -> Option<*mut Page> {
-        if *self.allocated.lock() {
-            Some(self.ptr)
-        } else {
-            None
-        }
-    }
-
-    /// Sets the page allocation as deallocated.
-    fn set_deallocated(&mut self) {
-        *self.allocated.lock() = false;
+    pub fn page(&self) -> *mut Page {
+        self.ptr
     }
 }
 
 impl Drop for PageAllocation {
-    /// Drops the page allocation.
     fn drop(&mut self) {
-        assert!(!*self.allocated.lock());
+        unsafe {
+            self.page_allocator.dealloc(self);
+        }
     }
 }
 
