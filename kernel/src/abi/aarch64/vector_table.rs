@@ -101,7 +101,7 @@ pub unsafe extern "C" fn vector_sync_el1(_regs: *mut Registers, esr_el1: u64, fa
 pub unsafe extern "C" fn vector_sync_el0(regs: *mut Registers, esr_el1: u64, far_el1: u64) {
     match (esr_el1 & ESR_EL1_EC_MASK) >> ESR_EL1_EC_SHIFT {
         ESR_EL1_EC_SVC64 => {
-            let inner = &**INSTALLED_TABLE.get().unwrap();
+            let inner = INSTALLED_TABLE.get().unwrap();
             (*regs).x0 = inner.system_call_handler.handle(
                 (*regs).x8 as _,
                 (*regs).x0 as _,
@@ -124,7 +124,7 @@ pub unsafe extern "C" fn vector_sync_el0(regs: *mut Registers, esr_el1: u64, far
 /// Handles IRQ exceptions from the vector table.
 #[no_mangle]
 pub unsafe extern "C" fn vector_irq() {
-    let inner = &**INSTALLED_TABLE.get().unwrap();
+    let inner = INSTALLED_TABLE.get().unwrap();
     inner.local_interrupt_handler.handle();
 }
 

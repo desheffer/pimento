@@ -56,24 +56,24 @@ impl MemoryContext {
     }
 
     /// Creates a memory context.
-    pub fn new(page_allocator: &'static PageAllocator) -> Self {
+    pub fn new(page_allocator: &'static PageAllocator) -> Result<Self, ()> {
         let mut page_allocations = Vec::new();
 
         // SAFETY: Safe because the page allocation is recorded.
         let table_l0: *mut Table;
         unsafe {
-            let table_l0_page = Arc::new(page_allocator.alloc());
-            table_l0 = table_l0_page.page() as _;
+            let table_l0_page = Arc::new(page_allocator.alloc()?);
+            table_l0 = table_l0_page.page().unwrap() as _;
             page_allocations.push(table_l0_page);
         }
 
-        Self {
+        Ok(Self {
             lock: Lock::new(),
             page_allocator: Some(page_allocator),
             page_allocations: UnsafeCell::new(page_allocations),
             asid: AddressSpaceId::next(),
             table_l0,
-        }
+        })
     }
 
     /// Generates the TTBR (Translation Table Base Register) value for this memory context.
@@ -86,15 +86,17 @@ impl MemoryContext {
     /// Allocates a page and records the allocation.
     ///
     /// The caller is responsible for ensuring that the lock is held during this process.
-    unsafe fn alloc_page_raw(&self) -> Arc<PageAllocation> {
+    unsafe fn alloc_page_raw(&self) -> Result<Arc<PageAllocation>, ()> {
         let page_allocations = &mut *self.page_allocations.get();
-        let allocation = Arc::new(self.page_allocator.unwrap().alloc());
+
+        let allocation = Arc::new(self.page_allocator.unwrap().alloc()?);
         page_allocations.push(allocation.clone());
-        allocation
+
+        Ok(allocation)
     }
 
     /// Allocates a page, but does not map it to a virtual address within this context.
-    pub fn alloc_page_unmapped(&self) -> Arc<PageAllocation> {
+    pub fn alloc_page_unmapped(&self) -> Result<Arc<PageAllocation>, ()> {
         // SAFETY: Safe because the call is behind a lock.
         self.lock.call(|| unsafe { self.alloc_page_raw() })
     }
@@ -106,27 +108,27 @@ impl MemoryContext {
         &self,
         table: &TableManager,
         address: UserVirtualAddress<T>,
-    ) -> TableManager {
-        let row = table.row_by_address(address.ptr() as _).unwrap();
+    ) -> Result<TableManager, ()> {
+        let row = table.row_by_address(address.ptr() as _)?;
 
         let next_table = match row.descriptor_type() {
-            Some(DescriptorType::Table) => row.load_table().address(),
+            Some(DescriptorType::Table) => row.load_table()?.address(),
             _ => {
-                let allocation = self.alloc_page_raw();
-                let page: PhysicalAddress<Table> = allocation.address().convert();
+                let allocation = self.alloc_page_raw()?;
+                let page: PhysicalAddress<Table> = allocation.address().unwrap().convert();
 
-                let builder = TableDescriptorBuilder::new_with_address(page);
-                row.write_table(builder);
+                let builder = TableDescriptorBuilder::new_with_address(page)?;
+                row.write_table(builder)?;
 
                 page
             }
         };
 
-        TableManager::new(
+        Ok(TableManager::new(
             MEMORY_MAPPER.virtual_address(next_table),
             table.level() + 1,
             row.input_address_start(),
-        )
+        ))
     }
 
     /// Creates or loads a page as a row within the given table manager.
@@ -136,35 +138,40 @@ impl MemoryContext {
         &self,
         table: &TableManager,
         address: UserVirtualAddress<T>,
-    ) -> PhysicalAddress<Page> {
-        let row = table.row_by_address(address.ptr() as _).unwrap();
+    ) -> Result<PhysicalAddress<Page>, ()> {
+        let row = table.row_by_address(address.ptr() as _)?;
 
-        match row.descriptor_type() {
-            Some(DescriptorType::Page) => row.load_page().address(),
+        let page = match row.descriptor_type() {
+            Some(DescriptorType::Page) => row.load_page()?.address(),
             _ => {
-                let allocation = self.alloc_page_raw();
-                let page: PhysicalAddress<Page> = allocation.address().convert();
+                let allocation = self.alloc_page_raw()?;
+                let page: PhysicalAddress<Page> = allocation.address().unwrap().convert();
 
-                let mut builder = PageDescriptorBuilder::new_with_address(page);
+                let mut builder = PageDescriptorBuilder::new_with_address(page)?;
                 builder.set_attribute(Attribute::Normal);
-                row.write_page(builder);
+                row.write_page(builder)?;
 
                 page
             }
-        }
+        };
+
+        Ok(page)
     }
 
     /// Allocates a page and maps it to the given virtual address within this context.
-    pub fn alloc_page<T>(&self, address: UserVirtualAddress<T>) {
+    pub fn alloc_page<T>(
+        &self,
+        address: UserVirtualAddress<T>,
+    ) -> Result<PhysicalAddress<Page>, ()> {
         // SAFETY: Safe because the call is behind a lock.
         self.lock.call(|| unsafe {
             let mut table = TableManager::new(self.table_l0, LEVEL_ROOT, ptr::null());
 
             while table.level() < LEVEL_MAX {
-                table = self.traverse_table_to_table(&table, address);
+                table = self.traverse_table_to_table(&table, address)?;
             }
 
-            self.traverse_table_to_page(&table, address);
+            self.traverse_table_to_page(&table, address)
         })
     }
 

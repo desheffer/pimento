@@ -24,7 +24,7 @@ impl TaskExecutionService {
     /// Executes a user program in the current context.
     ///
     /// This is a work-in-progress that runs a contrived example program.
-    pub fn execute(&self, _path: String) {
+    pub fn execute(&self, _path: String) -> Result<(), ()> {
         // Get the current task.
         let task_id = self.scheduler.current_task_id();
         let task = self.scheduler.task(task_id).unwrap();
@@ -41,7 +41,7 @@ impl TaskExecutionService {
 
         // Copy the user code into the user context.
         unsafe {
-            task.memory_context.alloc_page(user_entry);
+            task.memory_context.alloc_page(user_entry)?;
 
             task.memory_context.copy_to_user(
                 addr_of!(user_code_start),
@@ -57,7 +57,7 @@ impl TaskExecutionService {
         // Create a stack for the user context (where `stack_start` is the end of the page).
         unsafe {
             let stack_end = UserVirtualAddress::<Page>::new(stack_start.ptr().sub(1) as _);
-            task.memory_context.alloc_page(stack_end);
+            task.memory_context.alloc_page(stack_end)?;
 
             let sp_el0 = stack_start.ptr();
             asm!("msr sp_el0, {}", in(reg) sp_el0)
@@ -71,7 +71,7 @@ impl TaskExecutionService {
 }
 
 extern "C" {
-    fn enter_el0(entry: *const ());
+    fn enter_el0(entry: *const ()) -> !;
 }
 
 global_asm!(

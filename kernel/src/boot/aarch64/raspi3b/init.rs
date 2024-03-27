@@ -38,10 +38,10 @@ macro_rules! static_get_or_init {
 pub unsafe extern "C" fn kernel_init() -> ! {
     let serial = Arc::new(Bcm2837Serial::new());
     serial.init();
-    print::set_logger(serial.clone());
+    print::set_logger(serial.clone()).unwrap();
 
     let timer = Arc::new(ArmV8Timer::new());
-    print::set_monotonic(timer.clone());
+    print::set_monotonic(timer.clone()).unwrap();
 
     let page_allocator = static_get_or_init!(
         PageAllocator,
@@ -93,7 +93,7 @@ pub unsafe extern "C" fn kernel_init() -> ! {
         TaskCreationService,
         TaskCreationService::new(scheduler, page_allocator)
     );
-    task_creation.create_and_become_kinit();
+    task_creation.create_and_become_kinit().unwrap();
     scheduler.schedule();
 
     let task_execution =
@@ -117,14 +117,16 @@ pub unsafe extern "C" fn kernel_init() -> ! {
     };
 
     // Create example threads:
-    task_creation.create_kthread(example_thread(1));
-    task_creation.create_kthread(example_thread(2));
+    task_creation.create_kthread(example_thread(1)).unwrap();
+    task_creation.create_kthread(example_thread(2)).unwrap();
 
-    task_creation.create_kthread(|| {
-        task_execution.execute("/bin/example".to_owned());
+    task_creation
+        .create_kthread(|| {
+            task_execution.execute("/bin/example".to_owned())?;
 
-        Err(())
-    });
+            Err(())
+        })
+        .unwrap();
 
     kernel_main();
 

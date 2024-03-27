@@ -24,8 +24,8 @@ impl TaskCreationService {
 
     /// Creates and assumes the role of the kernel initialization task. This is necessary because
     /// this task effectively creates itself.
-    pub unsafe fn create_and_become_kinit(&self) -> TaskId {
-        let memory_context = MemoryContext::new(self.page_allocator);
+    pub unsafe fn create_and_become_kinit(&self) -> Result<TaskId, ()> {
+        let memory_context = MemoryContext::new(self.page_allocator)?;
 
         let cpu_context = CpuContext::new();
 
@@ -41,20 +41,20 @@ impl TaskCreationService {
     }
 
     /// Spawns a new kernel thread to execute the given function.
-    pub fn create_kthread<F>(&self, func: F) -> TaskId
+    pub fn create_kthread<F>(&self, func: F) -> Result<TaskId, ()>
     where
         F: Fn() -> Result<(), ()>,
         F: Send + 'static,
     {
-        let memory_context = MemoryContext::new(self.page_allocator);
+        let memory_context = MemoryContext::new(self.page_allocator)?;
 
         let mut cpu_context = CpuContext::new();
 
         // Set the stack pointer (to the end of the page).
         // SAFETY: Safe because the stack grows downward.
-        let kernel_stack = memory_context.alloc_page_unmapped();
+        let kernel_stack = memory_context.alloc_page_unmapped()?;
         unsafe {
-            cpu_context.set_stack_pointer(kernel_stack.page().add(1) as _);
+            cpu_context.set_stack_pointer(kernel_stack.page().unwrap().add(1) as _);
         }
 
         // Wrap the `Fn()` trait so that it can be accessed like a `fn()` pointer.

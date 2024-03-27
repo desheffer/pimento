@@ -32,7 +32,7 @@ impl PageAllocator {
     }
 
     /// Allocates a page of memory.
-    pub unsafe fn alloc(&'static self) -> PageAllocation {
+    pub unsafe fn alloc(&'static self) -> Result<PageAllocation, ()> {
         let mut allocated = self.allocated.lock();
         let mut alloc_start;
 
@@ -43,9 +43,9 @@ impl PageAllocator {
             // Reserve space to accommodate the page size.
             *allocated += size_of::<Page>();
 
-            // Return a null pointer if memory is exhausted.
+            // Return an error if memory is exhausted.
             if *allocated > self.capacity {
-                panic!("page allocation failed");
+                return Err(());
             }
 
             // Retry if this allocation intersects a reserved range.
@@ -69,7 +69,7 @@ impl PageAllocator {
         // Zero out the page.
         ptr::write_bytes(ptr, 0, 1);
 
-        PageAllocation::new(addr, ptr)
+        Ok(PageAllocation::new(addr, ptr))
     }
 
     /// Deallocates a page of memory.
@@ -101,22 +101,26 @@ impl PageAllocation {
     }
 
     /// Gets the physical address of the allocated page.
-    pub fn address(&self) -> PhysicalAddress<Page> {
-        assert!(*self.allocated.lock());
-        self.address
+    pub fn address(&self) -> Option<PhysicalAddress<Page>> {
+        if *self.allocated.lock() {
+            Some(self.address)
+        } else {
+            None
+        }
     }
 
     /// Gets the virtual address of the allocated page.
-    pub fn page(&self) -> *mut Page {
-        assert!(*self.allocated.lock());
-        self.ptr
+    pub fn page(&self) -> Option<*mut Page> {
+        if *self.allocated.lock() {
+            Some(self.ptr)
+        } else {
+            None
+        }
     }
 
     /// Sets the page allocation as deallocated.
     fn set_deallocated(&mut self) {
-        let mut allocated = self.allocated.lock();
-        assert!(*allocated);
-        *allocated = false;
+        *self.allocated.lock() = false;
     }
 }
 

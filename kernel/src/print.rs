@@ -7,17 +7,13 @@ static LOGGER: OnceLock<Arc<dyn Logger>> = OnceLock::new();
 static MONOTONIC: OnceLock<Arc<dyn Monotonic>> = OnceLock::new();
 
 /// Sets the kernel logger.
-pub fn set_logger(logger: Arc<dyn Logger>) {
-    if LOGGER.set(logger).is_err() {
-        panic!("logger already set");
-    }
+pub fn set_logger(logger: Arc<dyn Logger>) -> Result<(), ()> {
+    LOGGER.set(logger).map_err(|_| ())
 }
 
 /// Sets the monotonic clock to use when logging.
-pub fn set_monotonic(monotonic: Arc<dyn Monotonic>) {
-    if MONOTONIC.set(monotonic).is_err() {
-        panic!("monotonic already set");
-    }
+pub fn set_monotonic(monotonic: Arc<dyn Monotonic>) -> Result<(), ()> {
+    MONOTONIC.set(monotonic).map_err(|_| ())
 }
 
 /// Prints to the kernel logger.
@@ -60,7 +56,7 @@ macro_rules! dbg {
 
 pub fn _print(args: fmt::Arguments) {
     let mut writer = Writer {};
-    writer.write_fmt(args).unwrap();
+    let _ = writer.write_fmt(args);
 }
 
 pub fn _println(args: fmt::Arguments) {

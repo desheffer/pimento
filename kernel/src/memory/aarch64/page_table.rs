@@ -130,19 +130,19 @@ impl TableManager {
     }
 
     /// Gets the row in this table that contains the given address.
-    pub unsafe fn row_by_address(&self, address: usize) -> Option<TableRowManager> {
+    pub unsafe fn row_by_address(&self, address: usize) -> Result<TableRowManager, ()> {
         let start = self.input_address_start() as usize;
         let end = start + self.input_address_bytes();
         let row_size = self.input_address_bytes() / ROW_COUNT;
 
-        if start <= address && address < end {
-            Some(TableRowManager {
-                table_manager: self,
-                index: (address - start) / row_size,
-            })
-        } else {
-            None
+        if address < start || address >= end {
+            return Err(());
         }
+
+        Ok(TableRowManager {
+            table_manager: self,
+            index: (address - start) / row_size,
+        })
     }
 }
 
@@ -187,54 +187,75 @@ impl<'a> TableRowManager<'a> {
     }
 
     /// Writes a table descriptor to this row.
-    pub unsafe fn write_table(&self, builder: TableDescriptorBuilder) {
-        assert!(self.table_manager.level < LEVEL_MAX);
+    pub unsafe fn write_table(&self, builder: TableDescriptorBuilder) -> Result<(), ()> {
+        if self.table_manager.level >= LEVEL_MAX {
+            return Err(());
+        }
+
         self.set_value(builder.build());
+        Ok(())
     }
 
     /// Writes a block descriptor to this row.
-    pub unsafe fn write_block(&self, builder: BlockDescriptorBuilder) {
-        assert!(self.table_manager.level > 0);
+    pub unsafe fn write_block(&self, builder: BlockDescriptorBuilder) -> Result<(), ()> {
+        if self.table_manager.level <= 0 {
+            return Err(());
+        }
+
         self.set_value(builder.build());
+        Ok(())
     }
 
     /// Writes a page descriptor to this row.
-    pub unsafe fn write_page(&self, builder: PageDescriptorBuilder) {
-        assert!(self.table_manager.level == LEVEL_MAX);
+    pub unsafe fn write_page(&self, builder: PageDescriptorBuilder) -> Result<(), ()> {
+        if self.table_manager.level != LEVEL_MAX {
+            return Err(());
+        }
+
         self.set_value(builder.build());
+        Ok(())
     }
 
     /// Loads this row into a table descriptor builder.
     ///
     /// This function will panic if the row does not have a `Page` descriptor.
-    pub unsafe fn load_table(&self) -> TableDescriptorBuilder {
+    pub unsafe fn load_table(&self) -> Result<TableDescriptorBuilder, ()> {
         let desc = self.descriptor_type();
-        assert!(desc.is_some_and(|desc| desc == DescriptorType::Table));
-        TableDescriptorBuilder {
-            pending_value: self.value(),
+        if !desc.is_some_and(|desc| desc == DescriptorType::Table) {
+            return Err(());
         }
+
+        Ok(TableDescriptorBuilder {
+            pending_value: self.value(),
+        })
     }
 
     /// Loads this row into a block descriptor builder.
     ///
     /// This function will panic if the row does not have a `Block` descriptor.
-    pub unsafe fn load_block(&self) -> BlockDescriptorBuilder {
+    pub unsafe fn load_block(&self) -> Result<BlockDescriptorBuilder, ()> {
         let desc = self.descriptor_type();
-        assert!(desc.is_some_and(|desc| desc == DescriptorType::Block));
-        BlockDescriptorBuilder {
-            pending_value: self.value(),
+        if !desc.is_some_and(|desc| desc == DescriptorType::Block) {
+            return Err(());
         }
+
+        Ok(BlockDescriptorBuilder {
+            pending_value: self.value(),
+        })
     }
 
     /// Loads this row into a page descriptor builder.
     ///
     /// This function will panic if the row does not have a `Page` descriptor.
-    pub unsafe fn load_page(&self) -> PageDescriptorBuilder {
+    pub unsafe fn load_page(&self) -> Result<PageDescriptorBuilder, ()> {
         let desc = self.descriptor_type();
-        assert!(desc.is_some_and(|desc| desc == DescriptorType::Page));
-        PageDescriptorBuilder {
-            pending_value: self.value(),
+        if !desc.is_some_and(|desc| desc == DescriptorType::Page) {
+            return Err(());
         }
+
+        Ok(PageDescriptorBuilder {
+            pending_value: self.value(),
+        })
     }
 }
 
@@ -245,11 +266,14 @@ pub struct TableDescriptorBuilder {
 
 impl TableDescriptorBuilder {
     /// Creates a builder with the given address.
-    pub fn new_with_address(address: PhysicalAddress<Table>) -> Self {
-        assert!(address.address() as u64 & !TABLE_ADDRESS_MASK == 0);
-        Self {
-            pending_value: TYPE_TABLE | address.address() as u64,
+    pub fn new_with_address(address: PhysicalAddress<Table>) -> Result<Self, ()> {
+        if address.address() as u64 & !TABLE_ADDRESS_MASK != 0 {
+            return Err(());
         }
+
+        Ok(Self {
+            pending_value: TYPE_TABLE | address.address() as u64,
+        })
     }
 
     /// Gets the address contained in this builder.
@@ -272,11 +296,14 @@ impl BlockDescriptorBuilder {
     /// Creates a builder with the given address.
     ///
     /// The caller is responsible for ensuring that the size of the block is appropriate.
-    pub fn new_with_address(address: PhysicalAddress<u8>) -> Self {
-        assert!(address.address() as u64 & !BLOCK_ADDRESS_MASK == 0);
-        Self {
-            pending_value: TYPE_BLOCK | ACCESS_FLAG | NOT_GLOBAL | address.address() as u64,
+    pub fn new_with_address(address: PhysicalAddress<u8>) -> Result<Self, ()> {
+        if address.address() as u64 & !BLOCK_ADDRESS_MASK != 0 {
+            return Err(());
         }
+
+        Ok(Self {
+            pending_value: TYPE_BLOCK | ACCESS_FLAG | NOT_GLOBAL | address.address() as u64,
+        })
     }
 
     /// Sets the given memory attribute.
@@ -303,11 +330,14 @@ pub struct PageDescriptorBuilder {
 
 impl PageDescriptorBuilder {
     /// Creates a builder with the given address.
-    pub fn new_with_address(address: PhysicalAddress<Page>) -> Self {
-        assert!(address.address() as u64 & !PAGE_ADDRESS_MASK == 0);
-        Self {
-            pending_value: TYPE_PAGE | ACCESS_FLAG | NOT_GLOBAL | address.address() as u64,
+    pub fn new_with_address(address: PhysicalAddress<Page>) -> Result<Self, ()> {
+        if address.address() as u64 & !PAGE_ADDRESS_MASK != 0 {
+            return Err(());
         }
+
+        Ok(Self {
+            pending_value: TYPE_PAGE | ACCESS_FLAG | NOT_GLOBAL | address.address() as u64,
+        })
     }
 
     /// Sets the given memory attribute.
