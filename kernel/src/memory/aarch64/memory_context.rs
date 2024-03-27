@@ -177,14 +177,28 @@ impl MemoryContext {
 
     /// Copies data from a kernel virtual address to a user virtual address.
     // TODO: Handle case where user virtual address is not mapped and/or would generate fault.
-    pub unsafe fn copy_to_user<T>(&self, src: *const T, dst: UserVirtualAddress<T>, count: usize) {
+    pub unsafe fn copy_to_user<T>(
+        &self,
+        src: *const T,
+        dst: UserVirtualAddress<T>,
+        count: usize,
+    ) -> Result<(), ()> {
         core::ptr::copy(src, dst.ptr(), count);
+
+        Ok(())
     }
 
     /// Copies data from a user virtual address to a kernel virtual address.
     // TODO: Handle case where user virtual address is not mapped and/or would generate fault.
-    pub unsafe fn copy_from_user<T>(&self, src: UserVirtualAddress<T>, dst: *mut T, count: usize) {
+    pub unsafe fn copy_from_user<T>(
+        &self,
+        src: UserVirtualAddress<T>,
+        dst: *mut T,
+        count: usize,
+    ) -> Result<(), ()> {
         core::ptr::copy(src.ptr(), dst, count);
+
+        Ok(())
     }
 }
 

@@ -12,12 +12,12 @@ pub trait SystemCall {
     /// Executes the system call.
     fn call(
         &self,
-        _: usize,
-        _: usize,
-        _: usize,
-        _: usize,
-        _: usize,
-        _: usize,
+        _arg0: usize,
+        _arg1: usize,
+        _arg2: usize,
+        _arg3: usize,
+        _arg4: usize,
+        _arg5: usize,
     ) -> Result<usize, SystemCallError>;
 }
 
@@ -50,17 +50,17 @@ impl SystemCallRouter {
     pub unsafe fn handle(
         &self,
         num: usize,
-        a: usize,
-        b: usize,
-        c: usize,
-        d: usize,
-        e: usize,
-        f: usize,
+        arg0: usize,
+        arg1: usize,
+        arg2: usize,
+        arg3: usize,
+        arg4: usize,
+        arg5: usize,
     ) -> isize {
         let handler = self.handlers.get(num).unwrap_or(&None);
 
         if let Some(handler) = handler {
-            let res = handler.call(a, b, c, d, e, f);
+            let res = handler.call(arg0, arg1, arg2, arg3, arg4, arg5);
             match res {
                 Ok(val) => val as isize,
                 Err(val) => -(val as isize),

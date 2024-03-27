@@ -30,12 +30,12 @@ pub enum ParentTaskId {
 
 /// A task and the context it needs to run.
 pub struct Task {
-    pub(super) id: TaskId,
-    pub(super) parent_id: ParentTaskId,
-    pub(super) name: String,
-    pub(super) func: Option<Box<dyn Fn() -> Result<(), ()>>>,
-    pub(super) cpu_context: CpuContext,
-    pub(super) memory_context: MemoryContext,
+    pub id: TaskId,
+    pub parent_id: ParentTaskId,
+    pub name: String,
+    pub func: Option<Box<dyn Fn() -> Result<(), ()>>>,
+    pub cpu_context: CpuContext,
+    pub memory_context: MemoryContext,
 }
 
 impl Task {

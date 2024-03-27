@@ -47,7 +47,7 @@ impl TaskExecutionService {
                 addr_of!(user_code_start),
                 user_entry,
                 addr_of!(user_code_end) as usize - addr_of!(user_code_start) as usize,
-            );
+            )?;
         }
 
         // The stack starting address will be set at a later point. For now, almost any value
