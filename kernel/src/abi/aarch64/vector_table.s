@@ -1,4 +1,4 @@
-.section ".text._entry"
+.section .text._entry
 
 .macro vector_entry label
     .balign 0x80
@@ -11,7 +11,7 @@
     b vector_invalid
 .endm
 
-.globl vector_table
+.global vector_table
 .balign 0x800
 vector_table:
     // EL1t:

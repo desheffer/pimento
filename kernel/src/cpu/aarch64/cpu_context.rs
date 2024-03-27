@@ -55,8 +55,8 @@ impl CpuContext {
 extern "C" {
     /// Performs the CPU-specific steps of a context switch.
     pub fn cpu_context_switch(
-        prev: &mut CpuContext,
-        next: &mut CpuContext,
+        prev: *mut CpuContext,
+        next: *mut CpuContext,
         after_func: unsafe extern "C" fn(*const ()),
         after_data: *const (),
     );

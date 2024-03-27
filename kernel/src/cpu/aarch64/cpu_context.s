@@ -1,4 +1,6 @@
-.globl cpu_context_switch
+.section .text
+
+.global cpu_context_switch
 cpu_context_switch:
     // Save registers to `prev`.
     mov x9, sp

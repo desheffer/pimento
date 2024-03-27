@@ -1,4 +1,6 @@
-.globl cpu_context_entry
+.section .text
+
+.global cpu_context_entry
 cpu_context_entry:
     mov x0, x20
     mov x1, x21

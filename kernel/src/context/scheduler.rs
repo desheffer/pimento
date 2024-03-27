@@ -1,7 +1,6 @@
 use core::cell::UnsafeCell;
 use core::time::Duration;
 
-use alloc::boxed::Box;
 use alloc::collections::{BTreeMap, VecDeque};
 use alloc::vec;
 use alloc::vec::Vec;
@@ -14,7 +13,7 @@ use crate::sync::{Arc, UninterruptibleLock};
 /// A round-robin task scheduler.
 pub struct Scheduler {
     lock: UninterruptibleLock,
-    tasks: UnsafeCell<BTreeMap<TaskId, Box<Task>>>,
+    tasks: UnsafeCell<BTreeMap<TaskId, Arc<Task>>>,
     queue: UnsafeCell<VecDeque<TaskId>>,
     current_tasks: UnsafeCell<Vec<Option<TaskId>>>,
     timer: Arc<dyn Timer>,
@@ -57,7 +56,7 @@ impl Scheduler {
                 return Err(());
             }
 
-            tasks.insert(id, Box::new(task));
+            tasks.insert(id, Arc::new(task));
 
             // Skip the queue and set as current task.
             current_tasks[core_num] = Some(id);
@@ -75,7 +74,7 @@ impl Scheduler {
             let tasks = &mut *self.tasks.get();
             let queue = &mut *self.queue.get();
 
-            tasks.insert(id, Box::new(task));
+            tasks.insert(id, Arc::new(task));
             queue.push_back(id);
 
             Ok(id)
@@ -84,9 +83,11 @@ impl Scheduler {
 
     /// Determines the next task to run and performs a context switch.
     pub unsafe fn schedule(&self) {
-        let core_num = self.current_core();
+        let tasks = &*self.tasks.get();
         let queue = &mut *self.queue.get();
         let current_tasks = &mut *self.current_tasks.get();
+
+        let core_num = self.current_core();
 
         self.lock.lock();
 
@@ -96,15 +97,15 @@ impl Scheduler {
         let next_task_id = queue.pop_front().unwrap();
         current_tasks[core_num] = Some(next_task_id);
 
-        let prev_task = (*self.tasks.get()).get_mut(&prev_task_id).unwrap();
-        let next_task = (*self.tasks.get()).get_mut(&next_task_id).unwrap();
+        let prev_task = tasks.get(&prev_task_id).unwrap();
+        let next_task = tasks.get(&next_task_id).unwrap();
 
         /// Wraps the `after_schedule` function so that it can be called after the context switch.
         unsafe extern "C" fn after_schedule_trampoline(scheduler: &Scheduler) {
             scheduler.after_schedule();
         }
 
-        // SAFETY: Tasks are passed as mutable references. This is safe as long as the exclusive
+        // SAFETY: Tasks are passed as immutable references. This is safe as long as the exclusive
         // lock is held.
         self.context_switch
             .switch(prev_task, next_task, after_schedule_trampoline, self);
@@ -140,12 +141,12 @@ impl Scheduler {
     }
 
     /// Gets a reference to the task with the given task ID.
-    pub fn task(&self, task_id: TaskId) -> Option<&Task> {
+    pub fn task(&self, task_id: TaskId) -> Option<Arc<Task>> {
         // SAFETY: Safe because call is behind a lock.
         self.lock.call(|| unsafe {
-            let tasks = &mut *self.tasks.get();
+            let tasks = &*self.tasks.get();
 
-            tasks.get(&task_id).map(|task| task.as_ref())
+            tasks.get(&task_id).cloned()
         })
     }
 }

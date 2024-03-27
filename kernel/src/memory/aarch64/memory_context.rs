@@ -203,7 +203,7 @@ impl MemoryContext {
 }
 
 /// Performs the memory-specific steps of a context switch.
-pub unsafe fn memory_context_switch(next: &mut MemoryContext) {
+pub unsafe fn memory_context_switch(next: &MemoryContext) {
     // Set the translation table for user space.
     asm!(
         "msr ttbr0_el1, {ttbr0_el1}",

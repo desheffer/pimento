@@ -1,6 +1,6 @@
-.section ".text._start"
+.section .text._start
 
-.globl _start
+.global _start
 _start:
     // Get the range of BSS.
     ldr x9, =__bss_start

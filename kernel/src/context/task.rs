@@ -1,3 +1,5 @@
+use core::cell::UnsafeCell;
+
 use alloc::boxed::Box;
 use alloc::string::String;
 
@@ -34,7 +36,7 @@ pub struct Task {
     pub parent_id: ParentTaskId,
     pub name: String,
     pub func: Option<Box<dyn Fn() -> Result<(), ()>>>,
-    pub cpu_context: CpuContext,
+    pub cpu_context: UnsafeCell<CpuContext>,
     pub memory_context: MemoryContext,
 }
 
@@ -52,7 +54,7 @@ impl Task {
             parent_id,
             name,
             func,
-            cpu_context,
+            cpu_context: UnsafeCell::new(cpu_context),
             memory_context,
         }
     }

@@ -16,16 +16,16 @@ impl ContextSwitch {
     /// Performs a context switch.
     pub unsafe fn switch(
         &self,
-        prev: &mut Task,
-        next: &mut Task,
+        prev: &Task,
+        next: &Task,
         after_func: unsafe extern "C" fn(&Scheduler),
         after_data: &Scheduler,
     ) {
-        memory_context_switch(&mut next.memory_context);
+        memory_context_switch(&next.memory_context);
 
         cpu_context_switch(
-            &mut prev.cpu_context,
-            &mut next.cpu_context,
+            prev.cpu_context.get(),
+            next.cpu_context.get(),
             transmute(after_func),
             after_data as *const _ as *const _,
         );
