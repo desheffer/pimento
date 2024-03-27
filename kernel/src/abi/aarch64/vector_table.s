@@ -98,6 +98,7 @@ el1h_sync:
     mov x0, sp
     mrs x1, esr_el1
     mrs x2, far_el1
+    mrs x3, elr_el1
     bl vector_sync_el1
     load_regs
     eret
@@ -107,6 +108,7 @@ el0_sync:
     mov x0, sp
     mrs x1, esr_el1
     mrs x2, far_el1
+    mrs x3, elr_el1
     bl vector_sync_el0
     load_regs
     eret

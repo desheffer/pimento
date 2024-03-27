@@ -89,16 +89,26 @@ pub struct Registers {
 
 /// Handles synchronous kernel exceptions from the vector table.
 #[no_mangle]
-pub unsafe extern "C" fn vector_sync_el1(_regs: *mut Registers, esr_el1: u64, far_el1: u64) {
+pub unsafe extern "C" fn vector_sync_el1(
+    _regs: *mut Registers,
+    esr_el1: u64,
+    far_el1: u64,
+    elr_el1: u64,
+) {
     panic!(
-        "synchronous exception in EL1 (ESR = {:#018x}, FAR = {:#018x})",
-        esr_el1, far_el1
+        "synchronous exception in EL1 (ESR = {:#018x}, ELR = {:#018x}, FAR = {:#018x})",
+        esr_el1, elr_el1, far_el1
     );
 }
 
 /// Handles synchronous user exceptions from the vector table.
 #[no_mangle]
-pub unsafe extern "C" fn vector_sync_el0(regs: *mut Registers, esr_el1: u64, far_el1: u64) {
+pub unsafe extern "C" fn vector_sync_el0(
+    regs: *mut Registers,
+    esr_el1: u64,
+    far_el1: u64,
+    elr_el1: u64,
+) {
     match (esr_el1 & ESR_EL1_EC_MASK) >> ESR_EL1_EC_SHIFT {
         ESR_EL1_EC_SVC64 => {
             let inner = INSTALLED_TABLE.get().unwrap();
@@ -114,8 +124,8 @@ pub unsafe extern "C" fn vector_sync_el0(regs: *mut Registers, esr_el1: u64, far
         }
         _ => {
             panic!(
-                "synchronous exception in EL0 (ESR = {:#018x}, FAR = {:#018x})",
-                esr_el1, far_el1
+                "synchronous exception in EL0 (ESR = {:#018x}, ELR = {:#018x}, FAR = {:#018x})",
+                esr_el1, elr_el1, far_el1
             );
         }
     }
