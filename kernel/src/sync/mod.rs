@@ -1,4 +1,4 @@
-pub use self::arc::Arc;
+pub use self::arc::{Arc, Weak};
 pub use self::arch::*;
 pub use self::mutex::Mutex;
 pub use self::once::Once;
