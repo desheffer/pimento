@@ -39,7 +39,6 @@ pub enum Attribute {
 }
 
 /// AArch64 descriptor types.
-#[derive(PartialEq)]
 pub enum DescriptorType {
     Table,
     Block,
@@ -220,42 +219,36 @@ impl<'a> TableRowManager<'a> {
     ///
     /// This function will panic if the row does not have a `Page` descriptor.
     pub unsafe fn load_table(&self) -> Result<TableDescriptorBuilder, ()> {
-        let desc = self.descriptor_type();
-        if !desc.is_some_and(|desc| desc == DescriptorType::Table) {
-            return Err(());
+        match self.descriptor_type() {
+            Some(DescriptorType::Table) => Ok(TableDescriptorBuilder {
+                pending_value: self.value(),
+            }),
+            _ => Err(()),
         }
-
-        Ok(TableDescriptorBuilder {
-            pending_value: self.value(),
-        })
     }
 
     /// Loads this row into a block descriptor builder.
     ///
     /// This function will panic if the row does not have a `Block` descriptor.
     pub unsafe fn load_block(&self) -> Result<BlockDescriptorBuilder, ()> {
-        let desc = self.descriptor_type();
-        if !desc.is_some_and(|desc| desc == DescriptorType::Block) {
-            return Err(());
+        match self.descriptor_type() {
+            Some(DescriptorType::Block) => Ok(BlockDescriptorBuilder {
+                pending_value: self.value(),
+            }),
+            _ => Err(()),
         }
-
-        Ok(BlockDescriptorBuilder {
-            pending_value: self.value(),
-        })
     }
 
     /// Loads this row into a page descriptor builder.
     ///
     /// This function will panic if the row does not have a `Page` descriptor.
     pub unsafe fn load_page(&self) -> Result<PageDescriptorBuilder, ()> {
-        let desc = self.descriptor_type();
-        if !desc.is_some_and(|desc| desc == DescriptorType::Page) {
-            return Err(());
+        match self.descriptor_type() {
+            Some(DescriptorType::Page) => Ok(PageDescriptorBuilder {
+                pending_value: self.value(),
+            }),
+            _ => Err(()),
         }
-
-        Ok(PageDescriptorBuilder {
-            pending_value: self.value(),
-        })
     }
 }
 
