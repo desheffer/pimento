@@ -1,5 +1,3 @@
-use alloc::borrow::ToOwned;
-
 use crate::context::TaskExecutionService;
 use crate::println;
 
@@ -9,6 +7,7 @@ pub struct Kernel<'a> {
 }
 
 impl<'a> Kernel<'a> {
+    /// Creates a kernel.
     pub fn new(task_execution: &'a TaskExecutionService) -> Self {
         Self { task_execution }
     }
@@ -17,7 +16,7 @@ impl<'a> Kernel<'a> {
     pub fn run(&self) -> Result<(), ()> {
         println!("Hello, world!");
 
-        self.task_execution.execute("/bin/example".to_owned())?;
+        self.task_execution.execute("/bin/example")?;
 
         Ok(())
     }

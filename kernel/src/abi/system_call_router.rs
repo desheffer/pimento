@@ -28,7 +28,7 @@ pub struct SystemCallRouter {
 
 impl SystemCallRouter {
     /// Creates a system call router.
-    pub fn new(handlers: Vec<&'static dyn SystemCall>) -> Self {
+    pub fn new(handlers: &[&'static dyn SystemCall]) -> Self {
         let max_number = handlers
             .iter()
             .map(|handler| handler.number() as usize)
@@ -37,7 +37,7 @@ impl SystemCallRouter {
 
         let mut handlers_indexed = vec![None; max_number + 1];
         for handler in handlers {
-            handlers_indexed[handler.number() as usize] = Some(handler);
+            handlers_indexed[handler.number() as usize] = Some(*handler);
         }
 
         Self {

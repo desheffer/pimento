@@ -18,10 +18,10 @@ pub struct PageAllocator {
 
 impl PageAllocator {
     /// Creates a page allocator.
-    pub fn new(capacity: usize, reserved_ranges: Vec<Range<PhysicalAddress<u8>>>) -> Self {
+    pub fn new(capacity: usize, reserved_ranges: &[Range<PhysicalAddress<u8>>]) -> Self {
         let reserved_ranges = reserved_ranges
             .iter()
-            .map(|v| v.start.address()..v.end.address())
+            .map(|range| range.start.address()..range.end.address())
             .collect();
 
         Self {

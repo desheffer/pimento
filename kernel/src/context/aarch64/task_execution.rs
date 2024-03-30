@@ -1,8 +1,6 @@
 use core::arch::{asm, global_asm};
 use core::ptr::addr_of;
 
-use alloc::string::String;
-
 use crate::context::Scheduler;
 use crate::memory::{Page, UserVirtualAddress};
 
@@ -22,9 +20,8 @@ impl TaskExecutionService {
     }
 
     /// Executes a user program in the current context.
-    ///
-    /// This is a work-in-progress that runs a contrived example program.
-    pub fn execute(&self, _path: String) -> Result<(), ()> {
+    // TODO: This is a work-in-progress that runs a contrived example program.
+    pub fn execute(&self, _path: &str) -> Result<(), ()> {
         // Get the current task.
         let task_id = self.scheduler.current_task_id();
         let task = self.scheduler.task(task_id).unwrap();

@@ -1,7 +1,6 @@
 use core::ptr::addr_of;
 use core::time::Duration;
 
-use alloc::vec;
 use alloc::vec::Vec;
 
 use crate::abi::{InterruptRouter, SysWrite, SystemCall, SystemCallRouter, VectorTable};
@@ -43,7 +42,7 @@ pub unsafe extern "C" fn kernel_init() -> ! {
         PageAllocator,
         PageAllocator::new(
             0x4000_0000,
-            vec![
+            &[
                 PhysicalAddress::new(0)..MEMORY_MAPPER.physical_address(addr_of!(__end) as _),
                 PhysicalAddress::new(0x3F00_0000)..PhysicalAddress::new(0x4000_0000),
             ],
@@ -68,7 +67,7 @@ pub unsafe extern "C" fn kernel_init() -> ! {
     system_call_table.push(static_get_or_init!(SysWrite, SysWrite::new(scheduler)));
 
     let system_call_router =
-        static_get_or_init!(SystemCallRouter, SystemCallRouter::new(system_call_table));
+        static_get_or_init!(SystemCallRouter, SystemCallRouter::new(&system_call_table));
 
     let vector_table = static_get_or_init!(
         VectorTable,

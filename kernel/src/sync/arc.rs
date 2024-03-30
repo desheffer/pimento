@@ -84,6 +84,11 @@ impl<T: ?Sized> Arc<T> {
 
         Weak { ptr: this.ptr }
     }
+
+    /// Returns `true` if the two `Arc`s point to the same allocation.
+    pub fn ptr_eq(this: &Self, other: &Self) -> bool {
+        ptr::addr_eq(this.ptr.as_ptr(), other.ptr.as_ptr())
+    }
 }
 
 impl<T: ?Sized + Unsize<U>, U: ?Sized> CoerceUnsized<Arc<U>> for Arc<T> {}
@@ -135,6 +140,7 @@ impl<T: ?Sized + PartialEq> PartialEq for Arc<T> {
         ptr::addr_eq(self.ptr.as_ptr(), other.ptr.as_ptr()) || **self == **other
     }
 
+    #[allow(clippy::partialeq_ne_impl)]
     fn ne(&self, other: &Self) -> bool {
         !ptr::addr_eq(self.ptr.as_ptr(), other.ptr.as_ptr()) && **self != **other
     }

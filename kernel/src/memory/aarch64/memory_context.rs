@@ -30,7 +30,7 @@ impl AddressSpaceId {
     }
 }
 
-/// An AArch64 translation table for a task.
+/// The AArch64 translation table and pages allocated for a task.
 pub struct MemoryContext {
     lock: Lock,
     page_allocator: Option<&'static PageAllocator>,

@@ -11,6 +11,7 @@ pub struct SysWrite {
 }
 
 impl SysWrite {
+    /// Creates a write handler.
     pub fn new(scheduler: &'static Scheduler) -> Self {
         Self { scheduler }
     }
