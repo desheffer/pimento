@@ -9,7 +9,7 @@ use crate::memory::{
     PhysicalAddress, Table, TableDescriptorBuilder, TableManager, UserVirtualAddress, LEVEL_MAX,
     LEVEL_ROOT, MEMORY_MAPPER,
 };
-use crate::sync::{Arc, Lock, Mutex};
+use crate::sync::{Arc, AtomicCounter, Lock};
 
 const TTBR_EL1_ASID_SHIFT: u64 = 48;
 
@@ -22,10 +22,8 @@ pub struct AddressSpaceId {
 impl AddressSpaceId {
     /// Generates the next available Address Space ID.
     pub fn next() -> Self {
-        static NEXT: Mutex<u16> = Mutex::new(0);
-        let mut next = NEXT.lock();
-        let id = *next;
-        *next += 1;
+        static COUNTER: AtomicCounter = AtomicCounter::new(0);
+        let id = COUNTER.inc().try_into().unwrap();
         Self { id }
     }
 }
