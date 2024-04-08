@@ -203,6 +203,11 @@ impl<T: ?Sized> Weak<T> {
             phantom: PhantomData,
         })
     }
+
+    /// Returns `true` if the two `Weak`s point to the same allocation.
+    pub fn ptr_eq(&self, other: &Self) -> bool {
+        ptr::addr_eq(self.ptr.as_ptr(), other.ptr.as_ptr())
+    }
 }
 
 impl<T: ?Sized + Unsize<U>, U: ?Sized> CoerceUnsized<Weak<U>> for Weak<T> {}

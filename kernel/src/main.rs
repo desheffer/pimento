@@ -17,6 +17,7 @@ mod boot;
 mod context;
 mod cpu;
 mod device;
+mod fs;
 mod kernel;
 mod memory;
 mod panic;

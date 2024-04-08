@@ -8,6 +8,7 @@ use crate::context::{ContextSwitch, Scheduler, TaskCreationService, TaskExecutio
 use crate::device::driver::armv8_timer::ArmV8Timer;
 use crate::device::driver::bcm2837_interrupt::{Bcm2837InterruptController, CNTPNSIRQ};
 use crate::device::driver::bcm2837_serial::Bcm2837Serial;
+use crate::fs::{FileManager, PathInfo, Tmpfs, VirtualFileSystem};
 use crate::kernel::Kernel;
 use crate::memory::{PageAllocator, PhysicalAddress, MEMORY_MAPPER};
 use crate::print;
@@ -48,6 +49,15 @@ pub unsafe extern "C" fn kernel_init() -> ! {
             ],
         )
     );
+
+    let file_system = static_get_or_init!(VirtualFileSystem, VirtualFileSystem::new());
+    let file_manager = FileManager::new(file_system);
+
+    // Mount the root file system.
+    let root = Tmpfs::new();
+    file_manager
+        .mount(&PathInfo::absolute("/").unwrap(), root)
+        .unwrap();
 
     let context_switcher = static_get_or_init!(ContextSwitch, ContextSwitch::new());
 
