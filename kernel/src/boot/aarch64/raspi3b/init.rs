@@ -8,6 +8,7 @@ use crate::context::{ContextSwitch, Scheduler, TaskCreationService, TaskExecutio
 use crate::device::driver::armv8_timer::ArmV8Timer;
 use crate::device::driver::bcm2837_interrupt::{Bcm2837InterruptController, CNTPNSIRQ};
 use crate::device::driver::bcm2837_serial::Bcm2837Serial;
+use crate::device::Devfs;
 use crate::fs::{FileManager, PathInfo, Tmpfs, VirtualFileSystem};
 use crate::kernel::Kernel;
 use crate::memory::{PageAllocator, PhysicalAddress, MEMORY_MAPPER};
@@ -34,7 +35,7 @@ macro_rules! static_get_or_init {
 pub unsafe extern "C" fn kernel_init() -> ! {
     let serial = Arc::new(Bcm2837Serial::new());
     serial.init();
-    print::set_logger(serial.clone()).unwrap();
+    print::set_character_device(serial.clone()).unwrap();
 
     let timer = Arc::new(ArmV8Timer::new());
     print::set_monotonic(timer.clone()).unwrap();
@@ -57,6 +58,17 @@ pub unsafe extern "C" fn kernel_init() -> ! {
     let root = Tmpfs::new();
     file_manager
         .mount(&PathInfo::absolute("/").unwrap(), root)
+        .unwrap();
+
+    // Mount the device file system.
+    let dev = PathInfo::absolute("/dev").unwrap();
+    file_manager.mkdir(&dev).unwrap();
+    let devfs = Devfs::new();
+    file_manager.mount(&dev, devfs.clone()).unwrap();
+
+    // Register the serial device.
+    devfs
+        .register_character_device("ttyS0", serial.clone())
         .unwrap();
 
     let context_switcher = static_get_or_init!(ContextSwitch, ContextSwitch::new());

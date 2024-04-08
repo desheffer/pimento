@@ -1,14 +1,14 @@
 use core::fmt::{self, Write};
 
-use crate::device::{Logger, Monotonic};
+use crate::device::{CharacterDevice, Monotonic};
 use crate::sync::{Arc, OnceLock};
 
-static LOGGER: OnceLock<Arc<dyn Logger>> = OnceLock::new();
+static DEVICE: OnceLock<Arc<dyn CharacterDevice>> = OnceLock::new();
 static MONOTONIC: OnceLock<Arc<dyn Monotonic>> = OnceLock::new();
 
 /// Sets the kernel logger.
-pub fn set_logger(logger: Arc<dyn Logger>) -> Result<(), ()> {
-    LOGGER.set(logger).map_err(|_| ())
+pub fn set_character_device(logger: Arc<dyn CharacterDevice>) -> Result<(), ()> {
+    DEVICE.set(logger).map_err(|_| ())
 }
 
 /// Sets the monotonic clock to use when logging.
@@ -73,8 +73,8 @@ struct Writer {}
 
 impl fmt::Write for Writer {
     fn write_str(&mut self, s: &str) -> fmt::Result {
-        if let Some(logger) = LOGGER.get() {
-            logger.write_str(s);
+        if let Some(logger) = DEVICE.get() {
+            let _ = logger.write(s.as_bytes());
         }
         Ok(())
     }

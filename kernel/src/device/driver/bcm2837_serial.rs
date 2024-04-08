@@ -1,6 +1,8 @@
 use core::arch::asm;
 
-use crate::device::Logger;
+use alloc::vec::Vec;
+
+use crate::device::CharacterDevice;
 use crate::sync::Lock;
 
 const GPFSEL1: *mut u32 = 0xFFFF_0000_3F20_0004 as *mut _; // GPIO function select 1
@@ -106,13 +108,13 @@ impl Bcm2837Serial {
         });
     }
 
-    fn write_byte(&self, c: u8) {
+    fn write_byte(&self, byte: u8) {
         // SAFETY: Safe because call is behind a lock.
         self.lock.call(|| unsafe {
             // Wait until transmitter is empty.
             while AUX_MU_LSR.read_volatile() & AUX_MU_LSR_TX_EMPTY == 0 {}
 
-            AUX_MU_IO.write_volatile(c);
+            AUX_MU_IO.write_volatile(byte);
         });
     }
 
@@ -129,10 +131,22 @@ impl Bcm2837Serial {
     }
 }
 
-impl Logger for Bcm2837Serial {
-    fn write_str(&self, s: &str) {
-        for c in s.bytes() {
-            self.write_byte(c);
+impl CharacterDevice for Bcm2837Serial {
+    fn read(&self, count: usize) -> Result<Vec<u8>, ()> {
+        let mut buf = Vec::with_capacity(count);
+
+        while let Some(byte) = self.read_byte() {
+            buf.push(byte);
         }
+
+        Ok(buf)
+    }
+
+    fn write(&self, buf: &[u8]) -> Result<usize, ()> {
+        for byte in buf {
+            self.write_byte(*byte);
+        }
+
+        Ok(buf.len())
     }
 }
