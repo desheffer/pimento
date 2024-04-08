@@ -4,6 +4,7 @@ use alloc::boxed::Box;
 use alloc::string::String;
 
 use crate::cpu::CpuContext;
+use crate::fs::FsContext;
 use crate::memory::MemoryContext;
 use crate::sync::AtomicCounter;
 
@@ -35,6 +36,7 @@ pub struct Task {
     pub func: Option<Box<dyn Fn() -> Result<(), ()>>>,
     pub cpu_context: UnsafeCell<CpuContext>,
     pub memory_context: MemoryContext,
+    pub fs_context: FsContext,
 }
 
 impl Task {
@@ -45,6 +47,7 @@ impl Task {
         func: Option<Box<dyn Fn() -> Result<(), ()>>>,
         cpu_context: CpuContext,
         memory_context: MemoryContext,
+        fs_context: FsContext,
     ) -> Self {
         Task {
             id: TaskId::next(),
@@ -53,6 +56,7 @@ impl Task {
             func,
             cpu_context: UnsafeCell::new(cpu_context),
             memory_context,
+            fs_context,
         }
     }
 }

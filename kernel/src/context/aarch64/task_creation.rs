@@ -5,6 +5,7 @@ use alloc::boxed::Box;
 
 use crate::context::{ParentTaskId, Scheduler, Task, TaskId};
 use crate::cpu::CpuContext;
+use crate::fs::FsContext;
 use crate::memory::{MemoryContext, PageAllocator};
 
 /// A service for creating new tasks.
@@ -25,9 +26,9 @@ impl TaskCreationService {
     /// Creates and assumes the role of the kernel initialization task. This is necessary because
     /// this task effectively creates itself.
     pub unsafe fn create_and_become_kinit(&self) -> Result<TaskId, ()> {
-        let memory_context = MemoryContext::new(self.page_allocator)?;
-
         let cpu_context = CpuContext::new();
+        let memory_context = MemoryContext::new(self.page_allocator)?;
+        let fs_context = FsContext::new();
 
         let task = Task::new(
             ParentTaskId::Root,
@@ -35,6 +36,7 @@ impl TaskCreationService {
             None,
             cpu_context,
             memory_context,
+            fs_context,
         );
 
         self.scheduler.become_kinit(task)
@@ -46,9 +48,9 @@ impl TaskCreationService {
         F: Fn() -> Result<(), ()>,
         F: Send + 'static,
     {
-        let memory_context = MemoryContext::new(self.page_allocator)?;
-
         let mut cpu_context = CpuContext::new();
+        let memory_context = MemoryContext::new(self.page_allocator)?;
+        let fs_context = FsContext::new();
 
         // Set the stack pointer (to the end of the page).
         // SAFETY: Safe because the stack grows downward.
@@ -89,6 +91,7 @@ impl TaskCreationService {
             Some(func_box),
             cpu_context,
             memory_context,
+            fs_context,
         );
 
         self.scheduler.add_task(task)
