@@ -16,18 +16,16 @@ user_code_start:
     // Call `write`:
     mov x0, 1
     adr x1, user_string
-    mov x2, 11
+    mov x2, 19
     mov x8, #64
     svc #0
 
-    mov x9, #0x500000
 user_wait:
-    sub x9, x9, #1
-    cbnz x9, user_wait
-    b user_code_start
+    wfi
+    b user_wait
 
 user_string:
-.ascii "<user_code>"
+.ascii "<hello from a task>"
 
 .global user_code_end
 user_code_end:
