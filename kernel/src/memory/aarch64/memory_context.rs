@@ -147,6 +147,7 @@ impl MemoryContext {
 
                 let mut builder = PageDescriptorBuilder::new_with_address(page)?;
                 builder.set_attribute(Attribute::Normal);
+                builder.set_unprivileged(true);
                 row.write_page(builder)?;
 
                 page

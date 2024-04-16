@@ -339,6 +339,14 @@ impl PageDescriptorBuilder {
             (self.pending_value & !ATTRIBUTE_MASK) | ((attribute as TableRow) << ATTRIBUTE_SHIFT);
     }
 
+    /// Sets the unprivileged value.
+    pub fn set_unprivileged(&mut self, unprivileged: bool) {
+        self.pending_value = match unprivileged {
+            true => self.pending_value | UNPRIVILEGED,
+            false => self.pending_value & !UNPRIVILEGED,
+        };
+    }
+
     /// Gets the address contained in this builder.
     pub fn address(&self) -> PhysicalAddress<Page> {
         PhysicalAddress::<Page>::new((self.pending_value & PAGE_ADDRESS_MASK) as _)
