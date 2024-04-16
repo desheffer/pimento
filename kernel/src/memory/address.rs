@@ -1,4 +1,5 @@
 use core::marker::PhantomData;
+use core::mem::size_of;
 
 /// A physical address.
 ///
@@ -56,9 +57,30 @@ impl<T> UserVirtualAddress<T> {
         }
     }
 
-    /// Gets the user virtual address pointer.
-    pub fn ptr(&self) -> *mut T {
+    /// Converts the type of the user virtual address.
+    pub fn convert<U>(&self) -> UserVirtualAddress<U> {
+        UserVirtualAddress::<U>::new(self.address)
+    }
+
+    /// Gets the user virtual address as a pointer.
+    pub unsafe fn as_ptr(&self) -> *mut T {
         self.address as *mut T
+    }
+
+    /// Calculates the offset from a pointer.
+    pub unsafe fn add(&self, count: usize) -> Self {
+        Self {
+            address: self.address + size_of::<T>() * count,
+            phantom: PhantomData,
+        }
+    }
+
+    /// Calculates the offset from a pointer.
+    pub unsafe fn sub(&self, count: usize) -> Self {
+        Self {
+            address: self.address - size_of::<T>() * count,
+            phantom: PhantomData,
+        }
     }
 }
 

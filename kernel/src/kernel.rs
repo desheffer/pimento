@@ -1,4 +1,5 @@
 use crate::context::TaskExecutionService;
+use crate::fs::PathInfo;
 use crate::println;
 
 /// An encapsulation of the core functionality of the kernel.
@@ -16,7 +17,8 @@ impl<'a> Kernel<'a> {
     pub fn run(&self) -> Result<(), ()> {
         println!("Hello, world!");
 
-        self.task_execution.execute("/bin/example")?;
+        let cli_path = PathInfo::absolute("/bin/cli").unwrap();
+        self.task_execution.execute(&cli_path)?;
 
         Ok(())
     }

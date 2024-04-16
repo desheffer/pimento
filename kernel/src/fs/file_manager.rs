@@ -122,26 +122,26 @@ impl PathInfo {
 
 /// A file system manager.
 pub struct FileManager {
-    vfs: &'static VirtualFileSystem,
+    file_system: &'static VirtualFileSystem,
 }
 
 impl FileManager {
     /// Creates a file system manager.
-    pub fn new(vfs: &'static VirtualFileSystem) -> Self {
-        Self { vfs }
+    pub fn new(file_system: &'static VirtualFileSystem) -> Self {
+        Self { file_system }
     }
 
     /// Walks the file system using the given path representation.
     fn walk(&self, path: &PathInfo) -> Result<Arc<Node>, ()> {
         let mut current_node = match path.start() {
-            PathStart::Root => self.vfs.root(),
+            PathStart::Root => self.file_system.root(),
             PathStart::Node(node) => node.clone(),
         };
 
         'outer: for token in path.tokens() {
             let target_name = token.to_str();
 
-            let directory = self.vfs.opendir(&current_node)?;
+            let directory = self.file_system.opendir(&current_node)?;
 
             while let Some(node_link) = directory.readdir()? {
                 if node_link.name() == target_name {
@@ -160,7 +160,7 @@ impl FileManager {
     pub fn mount(&self, mount_point: &PathInfo, subtree: Arc<dyn FileSystem>) -> Result<(), ()> {
         let mount_point = self.walk(mount_point)?;
 
-        self.vfs.mount(&mount_point, subtree)
+        self.file_system.mount(&mount_point, subtree)
     }
 
     /// Makes a directory.
@@ -168,7 +168,7 @@ impl FileManager {
         let parent = self.walk(&path.parent())?;
 
         if let Some(PathToken::Literal(name)) = path.last_token() {
-            self.vfs.mkdir(&parent, name)
+            self.file_system.mkdir(&parent, name)
         } else {
             Err(())
         }
@@ -179,7 +179,7 @@ impl FileManager {
         let parent = self.walk(&path.parent())?;
 
         if let Some(PathToken::Literal(name)) = path.last_token() {
-            self.vfs.rmdir(&parent, name)
+            self.file_system.rmdir(&parent, name)
         } else {
             Err(())
         }
@@ -190,7 +190,7 @@ impl FileManager {
         let parent = self.walk(&path.parent())?;
 
         if let Some(PathToken::Literal(name)) = path.last_token() {
-            self.vfs.mknod(&parent, name)
+            self.file_system.mknod(&parent, name)
         } else {
             Err(())
         }
@@ -201,7 +201,7 @@ impl FileManager {
         let parent = self.walk(&path.parent())?;
 
         if let Some(PathToken::Literal(name)) = path.last_token() {
-            self.vfs.unlink(&parent, name)
+            self.file_system.unlink(&parent, name)
         } else {
             Err(())
         }
@@ -216,13 +216,13 @@ impl FileManager {
     pub fn opendir(&self, path: &PathInfo) -> Result<Arc<Directory>, ()> {
         let node = self.walk(path)?;
 
-        self.vfs.opendir(&node)
+        self.file_system.opendir(&node)
     }
 
     /// Opens a file.
     pub fn open(&self, path: &PathInfo) -> Result<Arc<File>, ()> {
         let node = self.walk(path)?;
 
-        self.vfs.open(&node)
+        self.file_system.open(&node)
     }
 }

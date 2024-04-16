@@ -16,6 +16,10 @@ nix develop
 Build the kernel image and run it with QEMU:
 
 ```sh
+cd cli
+cargo make
+cd ..
+
 cd kernel
 cargo make qemu
 ```

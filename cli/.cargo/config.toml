@@ -1,0 +1,3 @@
+[build]
+target = "aarch64-unknown-none-softfloat"
+rustflags = ["-C", "link-arg=--script=src/aarch64/link.ld"]

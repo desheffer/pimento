@@ -107,7 +107,7 @@ impl MemoryContext {
         table: &TableManager,
         address: UserVirtualAddress<T>,
     ) -> Result<TableManager, ()> {
-        let row = table.row_by_address(address.ptr() as _)?;
+        let row = table.row_by_address(address.as_ptr() as _)?;
 
         let next_table = match row.descriptor_type() {
             Some(DescriptorType::Table) => row.load_table()?.address(),
@@ -137,7 +137,7 @@ impl MemoryContext {
         table: &TableManager,
         address: UserVirtualAddress<T>,
     ) -> Result<PhysicalAddress<Page>, ()> {
-        let row = table.row_by_address(address.ptr() as _)?;
+        let row = table.row_by_address(address.as_ptr() as _)?;
 
         let page = match row.descriptor_type() {
             Some(DescriptorType::Page) => row.load_page()?.address(),
@@ -181,7 +181,7 @@ impl MemoryContext {
         dst: UserVirtualAddress<T>,
         count: usize,
     ) -> Result<(), ()> {
-        core::ptr::copy(src, dst.ptr(), count);
+        core::ptr::copy(src, dst.as_ptr(), count);
 
         Ok(())
     }
@@ -194,7 +194,7 @@ impl MemoryContext {
         dst: *mut T,
         count: usize,
     ) -> Result<(), ()> {
-        core::ptr::copy(src.ptr(), dst, count);
+        core::ptr::copy(src.as_ptr(), dst, count);
 
         Ok(())
     }

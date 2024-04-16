@@ -1,11 +1,7 @@
 [package]
-name = "kernel"
+name = "cli"
 version = "0.1.0"
 edition = "2021"
-
-[features]
-default = ["bsp_raspi3b"]
-bsp_raspi3b = []
 
 [profile.release]
 strip = true

@@ -52,7 +52,7 @@ pub unsafe extern "C" fn kernel_init() -> ! {
     );
 
     let file_system = static_get_or_init!(VirtualFileSystem, VirtualFileSystem::new());
-    let file_manager = FileManager::new(file_system);
+    let file_manager = static_get_or_init!(FileManager, FileManager::new(file_system));
 
     // Mount the root file system.
     let root = Tmpfs::new();
@@ -61,15 +61,27 @@ pub unsafe extern "C" fn kernel_init() -> ! {
         .unwrap();
 
     // Mount the device file system.
-    let dev = PathInfo::absolute("/dev").unwrap();
-    file_manager.mkdir(&dev).unwrap();
+    let dev_path = PathInfo::absolute("/dev").unwrap();
+    file_manager.mkdir(&dev_path).unwrap();
     let devfs = Devfs::new();
-    file_manager.mount(&dev, devfs.clone()).unwrap();
+    file_manager.mount(&dev_path, devfs.clone()).unwrap();
 
     // Register the serial device.
     devfs
         .register_character_device("ttyS0", serial.clone())
         .unwrap();
+
+    // Create the bin directory.
+    let bin_path = PathInfo::absolute("/bin").unwrap();
+    file_manager.mkdir(&bin_path).unwrap();
+
+    // Register the CLI application.
+    let cli_path = PathInfo::absolute("/bin/cli").unwrap();
+    file_manager.mknod(&cli_path).unwrap();
+    let cli = file_manager.open(&cli_path).unwrap();
+    let cli_bytes =
+        include_bytes!("../../../../../cli/target/aarch64-unknown-none-softfloat/release/cli.img");
+    cli.write(cli_bytes).unwrap();
 
     let context_switcher = static_get_or_init!(ContextSwitch, ContextSwitch::new());
 
@@ -113,8 +125,10 @@ pub unsafe extern "C" fn kernel_init() -> ! {
     task_creation.create_and_become_kinit().unwrap();
     scheduler.schedule();
 
-    let task_execution =
-        static_get_or_init!(TaskExecutionService, TaskExecutionService::new(scheduler));
+    let task_execution = static_get_or_init!(
+        TaskExecutionService,
+        TaskExecutionService::new(scheduler, file_manager)
+    );
 
     // Initialization is complete. Run the kernel.
     let kernel = Kernel::new(task_execution);

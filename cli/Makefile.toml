@@ -1,0 +1,28 @@
+[env]
+TARGET = "aarch64-unknown-none-softfloat"
+ELF = "target/${TARGET}/release/cli"
+IMG = "target/${TARGET}/release/cli.img"
+
+[tasks.build]
+clear = true
+dependencies = ["clean", "cargo-build", "objcopy"]
+
+[tasks.cargo-build]
+command = "cargo"
+args = ["rustc", "--release"]
+
+[tasks.objcopy]
+command = "rust-objcopy"
+args = ["--strip-all", "-O", "binary", "${ELF}", "${IMG}"]
+
+[tasks.test]
+disabled = true
+
+[tasks.qemu]
+command = "qemu-aarch64"
+args = ["${ELF}"]
+dependencies = ["build"]
+
+[tasks.watch]
+command = "bash"
+args = ["-c", "find src | entr -c cargo make build"]
