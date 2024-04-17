@@ -37,8 +37,8 @@ impl InterruptRouter {
         interrupts.push(Interrupt {
             controller: interrupt_controller.clone(),
             number,
-            handler_func: transmute(handler_func),
-            handler_data: handler_data as *const _ as *const _,
+            handler_func: transmute::<unsafe fn(&T), unsafe fn(*const ())>(handler_func),
+            handler_data: handler_data as *const _ as _,
         });
         interrupt_controller.enable(number);
     }

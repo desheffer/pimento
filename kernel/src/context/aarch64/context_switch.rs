@@ -23,11 +23,16 @@ impl ContextSwitch {
     ) {
         memory_context_switch(&next.memory_context);
 
+        let after_func = transmute::<
+            unsafe extern "C" fn(&Scheduler),
+            unsafe extern "C" fn(*const ()),
+        >(after_func);
+
         cpu_context_switch(
             prev.cpu_context.get(),
             next.cpu_context.get(),
-            transmute(after_func),
-            after_data as *const _ as *const _,
+            after_func,
+            after_data as *const _ as _,
         );
     }
 }
