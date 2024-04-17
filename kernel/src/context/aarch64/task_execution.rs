@@ -30,14 +30,13 @@ impl TaskExecutionService {
         let task_id = self.scheduler.current_task_id();
         let task = self.scheduler.task(task_id).unwrap();
 
-        // The program entry point and the address of each section will be set by the ELF header
-        // (when we can load ELF files). For now, almost any value should work.
-        let user_entry = UserVirtualAddress::<Page>::new(0x1000_0000);
+        // TODO: Copy from the ELF headers when we can load ELF files.
+        let copy_start = UserVirtualAddress::<Page>::new(0x40_0000);
 
         // Open the user binary and copy it into the user context.
         let file = self.file_manager.open(path)?;
         unsafe {
-            let mut copy_dest = user_entry;
+            let mut copy_dest = copy_start;
 
             loop {
                 let binary = file.read(size_of::<Page>())?;
@@ -57,14 +56,16 @@ impl TaskExecutionService {
             }
         }
 
+        // TODO: Copy from the ELF headers when we can load ELF files.
+        let entry_point = UserVirtualAddress::<Page>::new(0x40_0000);
+
         // The stack starting address will be set at a later point. For now, almost any value
         // higher than `user_entry` should work.
         let stack_start = UserVirtualAddress::<Page>::new(0x8000_0000);
 
         // Create a stack for the user context (where `stack_start` is the end of the page).
         unsafe {
-            let stack_end = UserVirtualAddress::<Page>::new(stack_start.sub(1).as_ptr() as _);
-            task.memory_context.alloc_page(stack_end)?;
+            task.memory_context.alloc_page(stack_start.sub(1))?;
 
             let sp_el0 = stack_start.as_ptr();
             asm!("msr sp_el0, {}", in(reg) sp_el0)
@@ -72,7 +73,7 @@ impl TaskExecutionService {
 
         // Jump into the user context.
         unsafe {
-            enter_el0(user_entry.as_ptr() as _);
+            enter_el0(entry_point.as_ptr() as _);
         }
     }
 }

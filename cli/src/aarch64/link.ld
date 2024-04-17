@@ -1,6 +1,6 @@
 SECTIONS
 {
-    . = 0x40080000;
+    . = 0x400000;
     __start = .;
 
     __text_start = .;
