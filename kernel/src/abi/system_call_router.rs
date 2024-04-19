@@ -66,8 +66,8 @@ impl SystemCallRouter {
                 Err(val) => -(val as isize),
             }
         } else {
-            println!("not implemented: system call {:#x}", num);
-            -1
+            println!("not implemented: system call {} ({:#x})", num, num);
+            -(SystemCallError::FunctionNotImplemented as isize)
         }
     }
 }
