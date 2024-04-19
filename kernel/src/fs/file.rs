@@ -30,6 +30,17 @@ impl File {
         *self.position.lock()
     }
 
+    /// Seeks to a new position in the file.
+    pub fn seek(&self, position: usize) -> Result<(), ()> {
+        let file_system = self.node().file_system().upgrade().ok_or(())?;
+        let me = &self.me.upgrade().ok_or(())?;
+        file_system.seek(me, position)?;
+
+        *self.position.lock() = position;
+
+        Ok(())
+    }
+
     /// Reads bytes from the file.
     pub fn read(&self, count: usize) -> Result<Vec<u8>, ()> {
         let mut position = self.position.lock();

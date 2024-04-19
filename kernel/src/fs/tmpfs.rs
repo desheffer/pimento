@@ -135,6 +135,10 @@ impl FileSystem for Tmpfs {
         Ok(())
     }
 
+    fn seek(&self, _file: &Arc<File>, _position: usize) -> Result<(), ()> {
+        Ok(())
+    }
+
     fn read(&self, file: &Arc<File>, position: usize, count: usize) -> Result<Vec<u8>, ()> {
         let files = self.files.lock();
 

@@ -16,7 +16,7 @@ struct Allocator<const N: usize> {
 }
 
 impl<const N: usize> Allocator<N> {
-    /// Creates a new allocator.
+    /// Creates an allocator.
     const fn new() -> Self {
         Self {
             heap: UnsafeCell::new([0; N]),

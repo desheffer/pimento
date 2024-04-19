@@ -80,7 +80,7 @@ pub unsafe extern "C" fn kernel_init() -> ! {
     file_manager.mknod(&cli_path).unwrap();
     let cli = file_manager.open(&cli_path).unwrap();
     let cli_bytes =
-        include_bytes!("../../../../../cli/target/aarch64-unknown-none-softfloat/release/cli.img");
+        include_bytes!("../../../../../cli/target/aarch64-unknown-none-softfloat/release/cli");
     cli.write(cli_bytes).unwrap();
 
     let context_switcher = static_get_or_init!(ContextSwitch, ContextSwitch::new());

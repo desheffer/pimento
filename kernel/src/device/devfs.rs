@@ -94,6 +94,10 @@ impl FileSystem for Devfs {
         Ok(())
     }
 
+    fn seek(&self, _file: &Arc<File>, _position: usize) -> Result<(), ()> {
+        Ok(())
+    }
+
     fn read(&self, file: &Arc<File>, _position: usize, count: usize) -> Result<Vec<u8>, ()> {
         let node_id = file.node().node_id();
 

@@ -75,7 +75,7 @@ impl<T> Arc<T> {
 }
 
 impl<T: ?Sized> Arc<T> {
-    /// Creates a new `Weak` pointer to this allocation.
+    /// Creates a `Weak` pointer to this allocation.
     pub fn downgrade(this: &Self) -> Weak<T> {
         let inner = unsafe { this.ptr.as_ref() };
         let mut weak = inner.weak.lock();

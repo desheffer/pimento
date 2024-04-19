@@ -61,6 +61,11 @@ pub trait FileSystem {
         Err(())
     }
 
+    /// Seeks to a new position in a file.
+    fn seek(&self, _file: &Arc<File>, _position: usize) -> Result<(), ()> {
+        Err(())
+    }
+
     /// Reads bytes from a file.
     fn read(&self, _file: &Arc<File>, _position: usize, _count: usize) -> Result<Vec<u8>, ()> {
         Err(())

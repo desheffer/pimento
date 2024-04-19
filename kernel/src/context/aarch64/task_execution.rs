@@ -1,13 +1,15 @@
 use core::arch::{asm, global_asm};
-use core::mem::size_of;
+use core::mem::transmute;
 
-use crate::context::Scheduler;
+use crate::context::{Elf64Reader, Scheduler};
 use crate::fs::{FileManager, PathInfo};
 use crate::memory::{Page, UserVirtualAddress};
 
 const SPSR_EL1_M_EL0T: u64 = 0b0000; // EL0 with SP_EL0 (EL0t)
 
 const SPSR_EL1_INIT_EL0: u64 = SPSR_EL1_M_EL0T;
+
+const STACK_INIT: usize = 0x8000_0000;
 
 /// A service for executing code.
 pub struct TaskExecutionService {
@@ -30,56 +32,42 @@ impl TaskExecutionService {
         let task_id = self.scheduler.current_task_id();
         let task = self.scheduler.task(task_id).unwrap();
 
-        // TODO: Copy from the ELF headers when we can load ELF files.
-        let copy_start = UserVirtualAddress::<Page>::new(0x40_0000);
-
-        // Open the user binary and copy it into the user context.
+        // Open the binary file.
         let file = self.file_manager.open(path)?;
-        unsafe {
-            let mut copy_dest = copy_start;
+        let reader = Elf64Reader::new(file)?;
 
-            loop {
-                let binary = file.read(size_of::<Page>())?;
-                if binary.is_empty() {
-                    break;
-                }
+        // Copy each section from the binary file.
+        for loadable_page in reader.loadable_pages() {
+            task.memory_context.alloc_page(loadable_page.address())?;
 
-                task.memory_context.alloc_page(copy_dest)?;
-
+            unsafe {
                 task.memory_context.copy_to_user(
-                    binary.as_ptr(),
-                    copy_dest.convert(),
-                    binary.len(),
+                    loadable_page.bytes().as_ptr(),
+                    loadable_page.address(),
+                    loadable_page.bytes().len(),
                 )?;
-
-                copy_dest = copy_dest.add(1);
             }
         }
 
-        // TODO: Copy from the ELF headers when we can load ELF files.
-        let entry_point = UserVirtualAddress::<Page>::new(0x40_0000);
-
-        // The stack starting address will be set at a later point. For now, almost any value
-        // higher than `user_entry` should work.
-        let stack_start = UserVirtualAddress::<Page>::new(0x8000_0000);
-
-        // Create a stack for the user context (where `stack_start` is the end of the page).
+        // Create a stack for the user context (where `STACK_INIT` is the starting address of the
+        // following page).
         unsafe {
-            task.memory_context.alloc_page(stack_start.sub(1))?;
+            let stack_init = UserVirtualAddress::<Page>::new(STACK_INIT);
+            task.memory_context.alloc_page(stack_init.sub(1))?;
 
-            let sp_el0 = stack_start.as_ptr();
-            asm!("msr sp_el0, {}", in(reg) sp_el0)
+            asm!("msr sp_el0, {}", in(reg) stack_init.as_ptr());
         }
 
         // Jump into the user context.
         unsafe {
-            enter_el0(entry_point.as_ptr() as _);
+            let entry_point = transmute::<usize, extern "C" fn()>(reader.entry_point());
+            enter_el0(entry_point);
         }
     }
 }
 
 extern "C" {
-    fn enter_el0(entry: *const ()) -> !;
+    fn enter_el0(entry: extern "C" fn()) -> !;
 }
 
 global_asm!(
