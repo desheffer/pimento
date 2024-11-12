@@ -13,9 +13,7 @@ fn panic(info: &PanicInfo) -> ! {
             location.column()
         );
     }
-    if let Some(message) = info.message() {
-        println!("{}", message);
-    }
+    println!("{}", info.message());
 
     hang();
 }
