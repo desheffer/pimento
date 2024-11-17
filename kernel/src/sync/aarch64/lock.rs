@@ -6,7 +6,7 @@ use crate::cpu::INTERRUPT_MASK;
 /// A simple spin lock.
 ///
 /// This lock assumes that the system has a single core.
-// TODO: Update to support multiple cores.
+// TODO: Use an AtomicBool once the MMU is fully enabled (using normal memory).
 pub struct Lock {
     locked: UnsafeCell<bool>,
 }
@@ -21,7 +21,6 @@ impl Lock {
 
     /// Obtains the lock.
     pub fn lock(&self) {
-        // TODO: Use the core::intrinsics::coreatomic_cxchg_* functions once the MMU is enabled.
         // SAFETY: Safe on a single core because interrupts are disabled.
         unsafe {
             // Spin until the lock is acquired.
@@ -43,7 +42,6 @@ impl Lock {
 
     /// Releases the lock.
     pub fn unlock(&self) {
-        // TODO: Use the core::intrinsics::coreatomic_cxchg_* functions once the MMU is enabled.
         // SAFETY: Safe on a single core because interrupts are disabled.
         unsafe {
             INTERRUPT_MASK.call(|| {

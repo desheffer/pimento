@@ -44,7 +44,7 @@ struct Elf64Header {
 }
 
 impl Elf64Header {
-    /// Returns `true` is the header is valid.
+    /// Returns `true` if the header is valid.
     pub fn is_valid(&self) -> bool {
         self.ident_magic == [0x7F, b'E', b'L', b'F']
             && self.ident_class == HEADER_IDENT_CLASS_64_BIT
@@ -56,7 +56,7 @@ impl Elf64Header {
             && self.program_header_entry_size as usize == size_of::<Elf64ProgramHeader>()
     }
 
-    /// Returns `true` is the header has a machine type of AArch64.
+    /// Returns `true` if the header has a machine type of AArch64.
     pub fn is_aarch64(&self) -> bool {
         self.machine == HEADER_MACHINE_AARCH64
     }

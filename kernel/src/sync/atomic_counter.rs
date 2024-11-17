@@ -1,6 +1,7 @@
 use crate::sync::Mutex;
 
 /// An atomic counter.
+// TODO: Use an AtomicU64 once the MMU is fully enabled (using normal memory).
 pub struct AtomicCounter {
     next: Mutex<u64>,
 }
