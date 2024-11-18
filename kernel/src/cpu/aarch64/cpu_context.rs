@@ -1,8 +1,8 @@
-use core::arch::global_asm;
+use core::{arch::global_asm, cell::UnsafeCell};
 
-/// The AArch64 registers to persist between context switches.
+/// The AArch64 registers to save between context switches.
 #[repr(C)]
-pub struct CpuContext {
+pub struct Registers {
     x19: u64,
     x20: u64,
     x21: u64,
@@ -18,8 +18,8 @@ pub struct CpuContext {
     sp: u64,
 }
 
-impl CpuContext {
-    /// Creates a CPU context initialized with all zeroes.
+impl Registers {
+    /// Creates a registers record initialized with all zeroes.
     pub fn new() -> Self {
         Self {
             x19: 0,
@@ -37,26 +37,40 @@ impl CpuContext {
             sp: 0,
         }
     }
+}
+
+/// The AArch64 CPU context for a task.
+pub struct CpuContext {
+    pub registers: UnsafeCell<Registers>,
+}
+
+impl CpuContext {
+    /// Creates a CPU context.
+    pub fn new() -> Self {
+        Self {
+            registers: UnsafeCell::new(Registers::new()),
+        }
+    }
 
     /// Sets the stack pointer.
     pub unsafe fn set_stack_pointer(&mut self, sp: u64) {
-        self.sp = sp as _;
+        (*self.registers.get()).sp = sp as _;
     }
 
     /// Sets the link register.
     pub unsafe fn set_link_register(&mut self, lr: u64, x19: u64, x20: u64, x21: u64) {
-        self.lr = lr;
-        self.x19 = x19;
-        self.x20 = x20;
-        self.x21 = x21;
+        (*self.registers.get()).lr = lr;
+        (*self.registers.get()).x19 = x19;
+        (*self.registers.get()).x20 = x20;
+        (*self.registers.get()).x21 = x21;
     }
 }
 
 extern "C" {
     /// Performs the CPU-specific steps of a context switch.
     pub fn cpu_context_switch(
-        prev: *mut CpuContext,
-        next: *mut CpuContext,
+        prev: *mut Registers,
+        next: *mut Registers,
         after_func: unsafe extern "C" fn(*const ()),
         after_data: *const (),
     );

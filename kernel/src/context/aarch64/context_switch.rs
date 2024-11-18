@@ -29,8 +29,8 @@ impl ContextSwitch {
         >(after_func);
 
         cpu_context_switch(
-            prev.cpu_context.get(),
-            next.cpu_context.get(),
+            prev.cpu_context.registers.get(),
+            next.cpu_context.registers.get(),
             after_func,
             after_data as *const _ as _,
         );
