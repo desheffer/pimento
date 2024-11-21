@@ -22,7 +22,7 @@ pub struct AddressSpaceId {
 impl AddressSpaceId {
     /// Generates the next available Address Space ID.
     pub fn next() -> Self {
-        static COUNTER: AtomicCounter = AtomicCounter::new(0);
+        static COUNTER: AtomicCounter = AtomicCounter::new(1);
         let id = COUNTER.inc().try_into().unwrap();
         Self { id }
     }
@@ -31,28 +31,13 @@ impl AddressSpaceId {
 /// The AArch64 translation table and pages allocated for a task.
 pub struct MemoryContext {
     lock: Lock,
-    page_allocator: Option<&'static PageAllocator>,
+    page_allocator: &'static PageAllocator,
     page_allocations: UnsafeCell<Vec<Arc<PageAllocation>>>,
     asid: AddressSpaceId,
     table_l0: *mut Table,
 }
 
 impl MemoryContext {
-    /// Creates a memory context for kernel virtual memory.
-    ///
-    /// This function is called early in the initialization process.
-    pub fn new_for_kinit(table_l0: *mut Table) -> Self {
-        let page_allocations = Vec::new();
-
-        Self {
-            lock: Lock::new(),
-            page_allocator: None,
-            page_allocations: UnsafeCell::new(page_allocations),
-            asid: AddressSpaceId::next(),
-            table_l0,
-        }
-    }
-
     /// Creates a memory context.
     pub fn new(page_allocator: &'static PageAllocator) -> Result<Self, ()> {
         let mut page_allocations = Vec::new();
@@ -67,7 +52,7 @@ impl MemoryContext {
 
         Ok(Self {
             lock: Lock::new(),
-            page_allocator: Some(page_allocator),
+            page_allocator,
             page_allocations: UnsafeCell::new(page_allocations),
             asid: AddressSpaceId::next(),
             table_l0,
@@ -87,7 +72,7 @@ impl MemoryContext {
     unsafe fn alloc_page_raw(&self) -> Result<Arc<PageAllocation>, ()> {
         let page_allocations = &mut *self.page_allocations.get();
 
-        let allocation = Arc::new(self.page_allocator.unwrap().alloc()?);
+        let allocation = Arc::new(self.page_allocator.alloc()?);
         page_allocations.push(allocation.clone());
 
         Ok(allocation)

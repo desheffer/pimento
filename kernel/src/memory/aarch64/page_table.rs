@@ -16,7 +16,7 @@ const TYPE_BLOCK: u64 = 0b01; // Block
 const TYPE_PAGE: u64 = 0b11; // Page
 
 const TABLE_ADDRESS_MASK: u64 = 0xFFFFFFFFF000; // Output address[47:12]
-const BLOCK_ADDRESS_MASK: u64 = 0xFFFFC0000000; // Output address[47:30]
+const BLOCK_ADDRESS_MASK: u64 = 0xFFFFFFE00000; // Output address[47:21]
 const PAGE_ADDRESS_MASK: u64 = 0xFFFFFFFFF000; // Output address[47:12]
 
 const UNPRIVILEGED: u64 = 0b1 << 6; // Unprivileged
