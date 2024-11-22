@@ -1,6 +1,8 @@
 use core::arch::asm;
 use core::cell::UnsafeCell;
 use core::ptr;
+use core::sync::atomic::AtomicU16;
+use core::sync::atomic::Ordering::Relaxed;
 
 use alloc::vec::Vec;
 
@@ -9,7 +11,7 @@ use crate::memory::{
     PhysicalAddress, Table, TableDescriptorBuilder, TableManager, UserVirtualAddress, LEVEL_MAX,
     LEVEL_ROOT, MEMORY_MAPPER,
 };
-use crate::sync::{Arc, AtomicCounter, Lock};
+use crate::sync::{Arc, Lock};
 
 const TTBR_EL1_ASID_SHIFT: u64 = 48;
 
@@ -22,9 +24,10 @@ pub struct AddressSpaceId {
 impl AddressSpaceId {
     /// Generates the next available Address Space ID.
     pub fn next() -> Self {
-        static COUNTER: AtomicCounter = AtomicCounter::new(1);
-        let id = COUNTER.inc().try_into().unwrap();
-        Self { id }
+        static COUNTER: AtomicU16 = AtomicU16::new(1);
+        Self {
+            id: COUNTER.fetch_add(1, Relaxed),
+        }
     }
 }
 

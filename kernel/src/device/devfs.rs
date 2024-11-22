@@ -1,3 +1,6 @@
+use core::sync::atomic::AtomicU64;
+use core::sync::atomic::Ordering::Relaxed;
+
 use alloc::borrow::ToOwned;
 use alloc::collections::BTreeMap;
 use alloc::vec;
@@ -5,13 +8,13 @@ use alloc::vec::Vec;
 
 use crate::device::CharacterDevice;
 use crate::fs::{Directory, File, FileSystem, Node, NodeId, NodeLink, NodeType, CURRENT, PARENT};
-use crate::sync::{Arc, AtomicCounter, Mutex, Weak};
+use crate::sync::{Arc, Mutex, Weak};
 
 /// A device file system.
 pub struct Devfs {
     me: Weak<Devfs>,
     root: Arc<Node>,
-    node_counter: AtomicCounter,
+    node_counter: AtomicU64,
     directories: Mutex<BTreeMap<NodeId, Vec<NodeLink>>>,
     character_devices: Mutex<BTreeMap<NodeId, Arc<dyn CharacterDevice>>>,
 }
@@ -35,7 +38,7 @@ impl Devfs {
             Self {
                 me: me.clone(),
                 root,
-                node_counter: AtomicCounter::new(1),
+                node_counter: AtomicU64::new(1),
                 directories: Mutex::new(directories),
                 character_devices: Mutex::new(BTreeMap::new()),
             }
@@ -51,7 +54,7 @@ impl Devfs {
         let mut directories = self.directories.lock();
         let mut character_devices = self.character_devices.lock();
 
-        let node_id = self.node_counter.inc();
+        let node_id = self.node_counter.fetch_add(1, Relaxed);
         let child_node = Node::new(self.root.file_system(), node_id, NodeType::CharacterDevice);
 
         character_devices.insert(node_id, device);

@@ -1,10 +1,13 @@
+use core::sync::atomic::AtomicU64;
+use core::sync::atomic::Ordering::Relaxed;
+
 use alloc::borrow::ToOwned;
 use alloc::collections::BTreeMap;
 use alloc::vec;
 use alloc::vec::Vec;
 
 use crate::fs::{Directory, File, FileSystem, Node, NodeId, NodeLink, NodeType, CURRENT, PARENT};
-use crate::sync::{Arc, AtomicCounter, Mutex, Weak};
+use crate::sync::{Arc, Mutex, Weak};
 
 /// A temporary file system.
 // TODO: The heap has a global limit of 4 MB. For file data, use a data structure that is backed by
@@ -12,7 +15,7 @@ use crate::sync::{Arc, AtomicCounter, Mutex, Weak};
 pub struct Tmpfs {
     me: Weak<Tmpfs>,
     root: Arc<Node>,
-    node_counter: AtomicCounter,
+    node_counter: AtomicU64,
     directories: Mutex<BTreeMap<NodeId, Vec<NodeLink>>>,
     files: Mutex<BTreeMap<NodeId, Vec<u8>>>,
 }
@@ -36,7 +39,7 @@ impl Tmpfs {
             Self {
                 me: me.clone(),
                 root,
-                node_counter: AtomicCounter::new(1),
+                node_counter: AtomicU64::new(1),
                 directories: Mutex::new(directories),
                 files: Mutex::new(BTreeMap::new()),
             }
@@ -52,7 +55,7 @@ impl FileSystem for Tmpfs {
     fn mkdir(&self, dir: &Arc<Node>, name: &str) -> Result<(), ()> {
         let mut directories = self.directories.lock();
 
-        let node_id = self.node_counter.inc();
+        let node_id = self.node_counter.fetch_add(1, Relaxed);
         let child_node = Node::new(dir.file_system(), node_id, NodeType::Directory);
 
         directories
@@ -84,7 +87,7 @@ impl FileSystem for Tmpfs {
         let mut directories = self.directories.lock();
         let mut files = self.files.lock();
 
-        let node_id = self.node_counter.inc();
+        let node_id = self.node_counter.fetch_add(1, Relaxed);
         let child_node = Node::new(dir.file_system(), node_id, NodeType::File);
 
         files.insert(node_id, Vec::new());

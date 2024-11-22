@@ -1,10 +1,12 @@
+use core::sync::atomic::AtomicU64;
+use core::sync::atomic::Ordering::Relaxed;
+
 use alloc::boxed::Box;
 use alloc::string::String;
 
 use crate::cpu::CpuContext;
 use crate::fs::FsContext;
 use crate::memory::MemoryContext;
-use crate::sync::AtomicCounter;
 
 /// An auto-incrementing task ID.
 #[derive(Clone, Copy, Eq, Ord, PartialEq, PartialOrd)]
@@ -15,8 +17,10 @@ pub struct TaskId {
 impl TaskId {
     /// Generates the next available task ID.
     pub fn next() -> Self {
-        static COUNTER: AtomicCounter = AtomicCounter::new(1);
-        Self { id: COUNTER.inc() }
+        static COUNTER: AtomicU64 = AtomicU64::new(1);
+        Self {
+            id: COUNTER.fetch_add(1, Relaxed),
+        }
     }
 }
 
