@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 
 use crate::abi::{SystemCall, SystemCallError, SystemCallNumber};
 use crate::context::Scheduler;
-use crate::memory::UserVirtualAddress;
+use crate::memory::UserAddress;
 
 pub struct SysWrite {
     scheduler: &'static Scheduler,
@@ -35,7 +35,7 @@ impl SystemCall for SysWrite {
         _arg5: usize,
     ) -> Result<usize, SystemCallError> {
         let fd = arg0;
-        let buf = UserVirtualAddress::<u8>::new(arg1);
+        let buf = UserAddress::<u8>::new(arg1);
         let count = arg2;
 
         if fd != 1 {

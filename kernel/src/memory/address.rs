@@ -43,12 +43,12 @@ impl<T> Copy for PhysicalAddress<T> {}
 /// This is used to differentiate a user-space virtual address from a kernel-space virtual address.
 /// A user-space virtual address is only valid in a specific context and is presumed to require
 /// additional scrutiny.
-pub struct UserVirtualAddress<T> {
+pub struct UserAddress<T> {
     address: usize,
     phantom: PhantomData<*mut T>,
 }
 
-impl<T> UserVirtualAddress<T> {
+impl<T> UserAddress<T> {
     /// Creates a user virtual address.
     pub fn new(address: usize) -> Self {
         Self {
@@ -58,8 +58,8 @@ impl<T> UserVirtualAddress<T> {
     }
 
     /// Converts the type of the user virtual address.
-    pub fn convert<U>(&self) -> UserVirtualAddress<U> {
-        UserVirtualAddress::<U>::new(self.address)
+    pub fn convert<U>(&self) -> UserAddress<U> {
+        UserAddress::<U>::new(self.address)
     }
 
     /// Gets the user virtual address as a pointer.
@@ -84,10 +84,10 @@ impl<T> UserVirtualAddress<T> {
     }
 }
 
-impl<T> Clone for UserVirtualAddress<T> {
+impl<T> Clone for UserAddress<T> {
     fn clone(&self) -> Self {
         *self
     }
 }
 
-impl<T> Copy for UserVirtualAddress<T> {}
+impl<T> Copy for UserAddress<T> {}

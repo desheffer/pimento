@@ -201,7 +201,7 @@ impl<'a> TableRowManager<'a> {
 
     /// Writes a block descriptor to this row.
     pub unsafe fn write_block(&self, builder: &BlockDescriptorBuilder) -> Result<(), ()> {
-        if self.table_manager.level <= 0 {
+        if self.table_manager.level <= LEVEL_ROOT {
             return Err(());
         }
 

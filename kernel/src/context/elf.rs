@@ -5,7 +5,7 @@ use core::ops::Range;
 use alloc::vec::Vec;
 
 use crate::fs::File;
-use crate::memory::{Page, UserVirtualAddress};
+use crate::memory::{Page, UserAddress};
 use crate::sync::Arc;
 
 const HEADER_IDENT_CLASS_64_BIT: u8 = 0x02;
@@ -255,7 +255,7 @@ impl Iterator for LoadablePages<'_> {
             self.page_index += 1;
 
             // Return the starting virtual address and the contents of this page.
-            let address = UserVirtualAddress::new(range.1.start);
+            let address = UserAddress::new(range.1.start);
             return Some(LoadablePage::new(address, bytes));
         }
     }
@@ -263,17 +263,17 @@ impl Iterator for LoadablePages<'_> {
 
 /// A page-sized chunk to be loaded into memory.
 pub struct LoadablePage {
-    address: UserVirtualAddress<u8>,
+    address: UserAddress<u8>,
     bytes: Vec<u8>,
 }
 
 impl LoadablePage {
     /// Creates a loadable page.
-    pub fn new(address: UserVirtualAddress<u8>, bytes: Vec<u8>) -> Self {
+    pub fn new(address: UserAddress<u8>, bytes: Vec<u8>) -> Self {
         Self { address, bytes }
     }
 
-    pub fn address(&self) -> UserVirtualAddress<u8> {
+    pub fn address(&self) -> UserAddress<u8> {
         self.address
     }
 

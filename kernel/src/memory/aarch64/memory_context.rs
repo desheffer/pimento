@@ -8,7 +8,7 @@ use alloc::vec::Vec;
 
 use crate::memory::{
     Attribute, DescriptorType, Page, PageAllocation, PageAllocator, PageDescriptorBuilder,
-    PhysicalAddress, Table, TableDescriptorBuilder, TableManager, UserVirtualAddress, LEVEL_MAX,
+    PhysicalAddress, Table, TableDescriptorBuilder, TableManager, UserAddress, LEVEL_MAX,
     LEVEL_ROOT, MEMORY_MAPPER,
 };
 use crate::sync::{Arc, Lock};
@@ -93,7 +93,7 @@ impl MemoryContext {
     unsafe fn traverse_table_to_table<T>(
         &self,
         table: &TableManager,
-        address: UserVirtualAddress<T>,
+        address: UserAddress<T>,
     ) -> Result<TableManager, ()> {
         let row = table.row_by_address(address.as_ptr() as _)?;
 
@@ -123,7 +123,7 @@ impl MemoryContext {
     unsafe fn traverse_table_to_page<T>(
         &self,
         table: &TableManager,
-        address: UserVirtualAddress<T>,
+        address: UserAddress<T>,
     ) -> Result<PhysicalAddress<Page>, ()> {
         let row = table.row_by_address(address.as_ptr() as _)?;
 
@@ -146,10 +146,7 @@ impl MemoryContext {
     }
 
     /// Allocates a page and maps it to the given virtual address within this context.
-    pub fn alloc_page<T>(
-        &self,
-        address: UserVirtualAddress<T>,
-    ) -> Result<PhysicalAddress<Page>, ()> {
+    pub fn alloc_page<T>(&self, address: UserAddress<T>) -> Result<PhysicalAddress<Page>, ()> {
         // SAFETY: Safe because the call is behind a lock.
         self.lock.call(|| unsafe {
             let mut table = TableManager::new(self.table_l0, LEVEL_ROOT, ptr::null());
@@ -167,7 +164,7 @@ impl MemoryContext {
     pub unsafe fn copy_to_user<T>(
         &self,
         src: *const T,
-        dst: UserVirtualAddress<T>,
+        dst: UserAddress<T>,
         count: usize,
     ) -> Result<(), ()> {
         core::ptr::copy(src, dst.as_ptr(), count);
@@ -179,7 +176,7 @@ impl MemoryContext {
     // TODO: Handle case where user virtual address is not mapped and/or would generate fault.
     pub unsafe fn copy_from_user<T>(
         &self,
-        src: UserVirtualAddress<T>,
+        src: UserAddress<T>,
         dst: *mut T,
         count: usize,
     ) -> Result<(), ()> {

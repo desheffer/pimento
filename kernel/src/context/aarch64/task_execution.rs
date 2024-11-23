@@ -3,7 +3,7 @@ use core::mem::transmute;
 
 use crate::context::{Elf64Reader, Scheduler};
 use crate::fs::{FileManager, PathInfo};
-use crate::memory::{Page, UserVirtualAddress};
+use crate::memory::{Page, UserAddress};
 
 const SPSR_EL1_M_EL0T: u64 = 0b0000; // EL0 with SP_EL0 (EL0t)
 
@@ -52,7 +52,7 @@ impl TaskExecutionService {
         // Create a stack for the user context (where `STACK_INIT` is the starting address of the
         // following page).
         unsafe {
-            let stack_init = UserVirtualAddress::<Page>::new(STACK_INIT);
+            let stack_init = UserAddress::<Page>::new(STACK_INIT);
             task.memory_context.alloc_page(stack_init.sub(1))?;
 
             asm!("msr sp_el0, {}", in(reg) stack_init.as_ptr());
