@@ -1,41 +1,40 @@
+__page_size = 4K; # The size of one page
+__page_row_count = 512; # The number of rows in a translation table
+__l3_table_count = 3; # The number of level 3 translation tables configured in `virtual_memory_early_init`
+
+MEMORY
+{
+    RAM (rwx) : ORIGIN = 0xFFFF000000000000, LENGTH = __page_size * __page_row_count * __l3_table_count
+}
+
 SECTIONS
 {
-    . = 0xFFFF000000080000;
-    __start = .;
+    .stack (NOLOAD): {
+        . += 0x80000;
+        __stack_start = .;
+    }
 
-    __stack_start = .;
-
-    __text_start = .;
-    .text : {
+    .text ALIGN(__page_size) : {
         KEEP(*(.text._start))
         KEEP(*(.text._entry))
         *(.text*)
     }
-    . = ALIGN(4096);
-    __text_end = .;
 
-    __rodata_start = .;
-    .rodata : {
+    .rodata ALIGN(__page_size) : {
         *(.rodata*)
     }
-    . = ALIGN(4096);
-    __rodata_end = .;
 
-    __data_start = .;
-    .data : {
+    .data ALIGN(__page_size) : {
         *(.data*)
     }
-    . = ALIGN(4096);
-    __data_end = .;
 
-    __bss_start = .;
-    .bss : {
+    .bss ALIGN(__page_size) : {
+        __bss_start = .;
         *(.bss*)
+        __bss_end = .;
     }
-    . = ALIGN(4096);
-    __bss_end = .;
+
+    __end = ORIGIN(RAM) + LENGTH(RAM);
 
     /DISCARD/ : { *(.comment) }
-
-    __end = .;
 }

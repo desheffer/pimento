@@ -97,9 +97,9 @@ impl TableManager {
         }
     }
 
-    /// Gets the number of rows in this table.
-    pub fn len(&self) -> usize {
-        ROW_COUNT
+    /// Gets the table.
+    pub fn table(&self) -> *mut Table {
+        self.table
     }
 
     /// Gets the level of this table.
@@ -107,17 +107,22 @@ impl TableManager {
         self.level
     }
 
+    /// Gets the number of rows in this table.
+    pub fn row_count(&self) -> usize {
+        ROW_COUNT
+    }
+
+    /// Gets the starting address for bytes that are addressed by this table.
+    pub fn start(&self) -> *const () {
+        self.input_address_start
+    }
+
     /// Gets the number of bytes that are addressed by this table.
-    pub fn input_address_bytes(&self) -> usize {
+    pub fn len(&self) -> usize {
         // The address space for a level 3 table is `size_of::<Page>()` * `ROW_COUNT` bytes. For
         // all other levels, the address space for a level N table is `ROW_COUNT` times larger than
         // a level N+1 table.
         size_of::<Page>() * ROW_COUNT.pow((LEVEL_MAX - self.level + 1) as u32)
-    }
-
-    /// Gets the starting address for bytes that are addressed by this table.
-    pub fn input_address_start(&self) -> *const () {
-        self.input_address_start
     }
 
     /// Gets the row in this table with the given index.
@@ -130,9 +135,9 @@ impl TableManager {
 
     /// Gets the row in this table that contains the given address.
     pub unsafe fn row_by_address(&self, address: usize) -> Result<TableRowManager, ()> {
-        let start = self.input_address_start() as usize;
-        let end = start + self.input_address_bytes();
-        let row_size = self.input_address_bytes() / ROW_COUNT;
+        let start = self.start() as usize;
+        let end = start + self.len();
+        let row_size = self.len() / ROW_COUNT;
 
         if address < start || address >= end {
             return Err(());
@@ -162,15 +167,14 @@ impl<'a> TableRowManager<'a> {
         (*self.table_manager.table)[self.index] = value;
     }
 
-    /// Gets the number of bytes that are addressed by this row.
-    pub fn input_address_bytes(&self) -> usize {
-        self.table_manager.input_address_bytes() / ROW_COUNT
+    /// Gets the starting address for bytes that are addressed by this row.
+    pub fn start(&self) -> *const () {
+        (self.table_manager.start() as usize + self.len() * self.index) as _
     }
 
-    /// Gets the starting address for bytes that are addressed by this row.
-    pub fn input_address_start(&self) -> *const () {
-        (self.table_manager.input_address_start() as usize
-            + self.input_address_bytes() * self.index) as _
+    /// Gets the number of bytes that are addressed by this row.
+    pub fn len(&self) -> usize {
+        self.table_manager.len() / ROW_COUNT
     }
 
     /// Gets the descriptor type of this row or `None` if the row is not initialized.
@@ -186,7 +190,7 @@ impl<'a> TableRowManager<'a> {
     }
 
     /// Writes a table descriptor to this row.
-    pub unsafe fn write_table(&self, builder: TableDescriptorBuilder) -> Result<(), ()> {
+    pub unsafe fn write_table(&self, builder: &TableDescriptorBuilder) -> Result<(), ()> {
         if self.table_manager.level >= LEVEL_MAX {
             return Err(());
         }
@@ -196,7 +200,7 @@ impl<'a> TableRowManager<'a> {
     }
 
     /// Writes a block descriptor to this row.
-    pub unsafe fn write_block(&self, builder: BlockDescriptorBuilder) -> Result<(), ()> {
+    pub unsafe fn write_block(&self, builder: &BlockDescriptorBuilder) -> Result<(), ()> {
         if self.table_manager.level <= 0 {
             return Err(());
         }
@@ -206,7 +210,7 @@ impl<'a> TableRowManager<'a> {
     }
 
     /// Writes a page descriptor to this row.
-    pub unsafe fn write_page(&self, builder: PageDescriptorBuilder) -> Result<(), ()> {
+    pub unsafe fn write_page(&self, builder: &PageDescriptorBuilder) -> Result<(), ()> {
         if self.table_manager.level != LEVEL_MAX {
             return Err(());
         }
@@ -259,7 +263,7 @@ pub struct TableDescriptorBuilder {
 
 impl TableDescriptorBuilder {
     /// Creates a builder with the given address.
-    pub fn new_with_address(address: PhysicalAddress<Table>) -> Result<Self, ()> {
+    pub fn new(address: PhysicalAddress<Table>) -> Result<Self, ()> {
         if address.address() as u64 & !TABLE_ADDRESS_MASK != 0 {
             return Err(());
         }
@@ -289,7 +293,7 @@ impl BlockDescriptorBuilder {
     /// Creates a builder with the given address.
     ///
     /// The caller is responsible for ensuring that the size of the block is appropriate.
-    pub fn new_with_address(address: PhysicalAddress<u8>) -> Result<Self, ()> {
+    pub fn new(address: PhysicalAddress<u8>) -> Result<Self, ()> {
         if address.address() as u64 & !BLOCK_ADDRESS_MASK != 0 {
             return Err(());
         }
@@ -300,9 +304,10 @@ impl BlockDescriptorBuilder {
     }
 
     /// Sets the given memory attribute.
-    pub fn set_attribute(&mut self, attribute: Attribute) {
+    pub fn set_attribute(mut self, attribute: Attribute) -> Self {
         self.pending_value =
             (self.pending_value & !ATTRIBUTE_MASK) | ((attribute as TableRow) << ATTRIBUTE_SHIFT);
+        self
     }
 
     /// Gets the address contained in this builder.
@@ -323,7 +328,7 @@ pub struct PageDescriptorBuilder {
 
 impl PageDescriptorBuilder {
     /// Creates a builder with the given address.
-    pub fn new_with_address(address: PhysicalAddress<Page>) -> Result<Self, ()> {
+    pub fn new(address: PhysicalAddress<Page>) -> Result<Self, ()> {
         if address.address() as u64 & !PAGE_ADDRESS_MASK != 0 {
             return Err(());
         }
@@ -334,17 +339,19 @@ impl PageDescriptorBuilder {
     }
 
     /// Sets the given memory attribute.
-    pub fn set_attribute(&mut self, attribute: Attribute) {
+    pub fn set_attribute(mut self, attribute: Attribute) -> Self {
         self.pending_value =
             (self.pending_value & !ATTRIBUTE_MASK) | ((attribute as TableRow) << ATTRIBUTE_SHIFT);
+        self
     }
 
     /// Sets the unprivileged value.
-    pub fn set_unprivileged(&mut self, unprivileged: bool) {
+    pub fn set_unprivileged(mut self, unprivileged: bool) -> Self {
         self.pending_value = match unprivileged {
             true => self.pending_value | UNPRIVILEGED,
             false => self.pending_value & !UNPRIVILEGED,
         };
+        self
     }
 
     /// Gets the address contained in this builder.

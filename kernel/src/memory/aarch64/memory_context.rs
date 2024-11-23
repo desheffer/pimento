@@ -103,8 +103,8 @@ impl MemoryContext {
                 let allocation = self.alloc_page_raw()?;
                 let page: PhysicalAddress<Table> = allocation.address().convert();
 
-                let builder = TableDescriptorBuilder::new_with_address(page)?;
-                row.write_table(builder)?;
+                let table_desc = TableDescriptorBuilder::new(page)?;
+                row.write_table(&table_desc)?;
 
                 page
             }
@@ -113,7 +113,7 @@ impl MemoryContext {
         Ok(TableManager::new(
             MEMORY_MAPPER.virtual_address(next_table),
             table.level() + 1,
-            row.input_address_start(),
+            row.start(),
         ))
     }
 
@@ -133,10 +133,10 @@ impl MemoryContext {
                 let allocation = self.alloc_page_raw()?;
                 let page: PhysicalAddress<Page> = allocation.address().convert();
 
-                let mut builder = PageDescriptorBuilder::new_with_address(page)?;
-                builder.set_attribute(Attribute::Normal);
-                builder.set_unprivileged(true);
-                row.write_page(builder)?;
+                let page_desc = PageDescriptorBuilder::new(page)?
+                    .set_attribute(Attribute::Normal)
+                    .set_unprivileged(true);
+                row.write_page(&page_desc)?;
 
                 page
             }

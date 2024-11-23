@@ -1,5 +1,5 @@
 use core::arch::asm;
-use core::ptr::{self, addr_of, addr_of_mut};
+use core::ptr;
 
 use crate::memory::{
     Attribute, BlockDescriptorBuilder, Page, PageDescriptorBuilder, PhysicalAddress, Table,
@@ -35,20 +35,83 @@ const SCTLR_EL1_M: u64 = 0b1 << 0; // Enable MMU
 const SCTLR_EL1_C: u64 = 0b1 << 2; // Enable stage 1 data cache
 const SCTLR_EL1_I: u64 = 0b1 << 12; // Enable stage 1 instruction cache
 
-static mut INIT_TABLE_L0: Table = Table::new();
-static mut INIT_TABLE_L1_0: Table = Table::new();
-static mut INIT_TABLE_L2_0_0: Table = Table::new();
-static mut INIT_TABLE_L3_0_0_0: Table = Table::new();
+const L3_TABLE_COUNT: usize = 3; // The number of level 3 translation tables
+const TABLE_COUNT: usize = 3 + L3_TABLE_COUNT; // The number of translation tables
+static mut TABLES: [Table; TABLE_COUNT] = [const { Table::new() }; TABLE_COUNT];
 
 extern "C" {
     static __end: u8;
 }
 
-/// Enable virtual memory.
+fn table_descriptor(table: &TableManager) -> Result<TableDescriptorBuilder, ()> {
+    let physical_address = PhysicalAddress::<Table>::new((table.table() as usize) & !VA_START);
+    TableDescriptorBuilder::new(physical_address)
+}
+
+fn block_descriptor(address: *const ()) -> Result<BlockDescriptorBuilder, ()> {
+    let physical_address = PhysicalAddress::<u8>::new((address as usize) & !VA_START);
+    BlockDescriptorBuilder::new(physical_address)
+}
+
+fn page_descriptor(address: *const ()) -> Result<PageDescriptorBuilder, ()> {
+    let physical_address = PhysicalAddress::<Page>::new((address as usize) & !VA_START);
+    PageDescriptorBuilder::new(physical_address)
+}
+
+/// Creates kernel translation tables. Returns the address of the root table.
+unsafe fn create_tables() -> Result<*mut Table, ()> {
+    let table_l0 = TableManager::new(&mut TABLES[0], LEVEL_ROOT, ptr::null());
+    let table_l1 = TableManager::new(&mut TABLES[1], LEVEL_ROOT + 1, table_l0.row(0).start());
+    let table_l2 = TableManager::new(&mut TABLES[2], LEVEL_ROOT + 2, table_l1.row(0).start());
+    let table_l3 = [
+        TableManager::new(&mut TABLES[3], LEVEL_ROOT + 3, table_l2.row(0).start()),
+        TableManager::new(&mut TABLES[4], LEVEL_ROOT + 3, table_l2.row(1).start()),
+        TableManager::new(&mut TABLES[5], LEVEL_ROOT + 3, table_l2.row(2).start()),
+    ];
+
+    // Level 0 [0, _, _, _]:
+    let row = table_l0.row(0);
+    row.write_table(&table_descriptor(&table_l1)?)?;
+
+    // Level 1 [0, i, _, _]:
+    for i in 0..table_l1.row_count() {
+        let row = table_l1.row(i);
+        if i == 0 {
+            row.write_table(&table_descriptor(&table_l2)?)?;
+        } else {
+            let desc = block_descriptor(row.start())?.set_attribute(Attribute::Device);
+            row.write_block(&desc)?;
+        }
+    }
+
+    // Level 2 [0, 0, i, _]:
+    for i in 0..table_l2.row_count() {
+        let row = table_l2.row(i);
+
+        // Level 3 [0, 0, i, j]:
+        if i < L3_TABLE_COUNT {
+            row.write_table(&table_descriptor(&table_l3[i])?)?;
+            for j in 0..table_l3[i].row_count() {
+                let row = table_l3[i].row(j);
+                let desc = page_descriptor(row.start())?.set_attribute(Attribute::Normal);
+                row.write_page(&desc)?;
+            }
+        } else {
+            let desc = block_descriptor(row.start())?.set_attribute(Attribute::Device);
+            row.write_block(&desc)?;
+        }
+    }
+
+    Ok(table_l0.table())
+}
+
+/// Enables virtual memory.
 ///
 /// This function is called early in the initialization process.
 #[no_mangle]
 unsafe extern "C" fn virtual_memory_early_init() {
+    let table_l0 = create_tables().unwrap();
+
     // Set predefined memory attributes.
     asm!(
         "msr mair_el1, {mair_el1}",
@@ -58,85 +121,14 @@ unsafe extern "C" fn virtual_memory_early_init() {
         tcr_el1 = in(reg) TCR_EL1,
     );
 
-    let table_l0_data = addr_of_mut!(INIT_TABLE_L0);
-    let table_l1_0_data = addr_of_mut!(INIT_TABLE_L1_0);
-    let table_l2_0_0_data = addr_of_mut!(INIT_TABLE_L2_0_0);
-    let table_l3_0_0_0_data = addr_of_mut!(INIT_TABLE_L3_0_0_0);
-
-    let table_l0 = TableManager::new(table_l0_data, LEVEL_ROOT, ptr::null());
-    let table_l1_0 = TableManager::new(
-        table_l1_0_data,
-        LEVEL_ROOT + 1,
-        table_l0.row(0).input_address_start(),
-    );
-    let table_l2_0_0 = TableManager::new(
-        table_l2_0_0_data,
-        LEVEL_ROOT + 2,
-        table_l1_0.row(0).input_address_start(),
-    );
-    let table_l3_0_0_0 = TableManager::new(
-        table_l3_0_0_0_data,
-        LEVEL_ROOT + 3,
-        table_l2_0_0.row(0).input_address_start(),
-    );
-
-    // Level 0 [0]:
-    let row = table_l0.row(0);
-    let addr = PhysicalAddress::<Table>::new((table_l1_0_data as usize) & !VA_START);
-    let builder = TableDescriptorBuilder::new_with_address(addr).unwrap();
-    row.write_table(builder).unwrap();
-
-    // Level 1 [0, 0]:
-    let row = table_l1_0.row(0);
-    let addr = PhysicalAddress::<Table>::new((table_l2_0_0_data as usize) & !VA_START);
-    let builder = TableDescriptorBuilder::new_with_address(addr).unwrap();
-    row.write_table(builder).unwrap();
-
-    // Level 1 [0, N>=1]:
-    for i in 1..table_l1_0.len() {
-        let row = table_l1_0.row(i);
-        let addr = PhysicalAddress::<u8>::new((row.input_address_start() as usize) & !VA_START);
-        let mut builder = BlockDescriptorBuilder::new_with_address(addr).unwrap();
-        builder.set_attribute(Attribute::Device);
-        row.write_block(builder).unwrap();
-    }
-
-    // Level 2 [0, 0, 0]:
-    let row = table_l2_0_0.row(0);
-    let addr = PhysicalAddress::<Table>::new((table_l3_0_0_0_data as usize) & !VA_START);
-    let builder = TableDescriptorBuilder::new_with_address(addr).unwrap();
-    row.write_table(builder).unwrap();
-
-    // Level 2 [0, 0, N>=1]:
-    for i in 1..table_l2_0_0.len() {
-        let row = table_l2_0_0.row(i);
-        let addr = PhysicalAddress::<u8>::new((row.input_address_start() as usize) & !VA_START);
-        let mut builder = BlockDescriptorBuilder::new_with_address(addr).unwrap();
-        builder.set_attribute(Attribute::Device);
-        row.write_block(builder).unwrap();
-    }
-
-    // Level 3 [0, 0, 0, N>=0]:
-    for i in 0..table_l3_0_0_0.len() {
-        let row = table_l3_0_0_0.row(i);
-        let addr = PhysicalAddress::<Page>::new((row.input_address_start() as usize) & !VA_START);
-        let mut builder = PageDescriptorBuilder::new_with_address(addr).unwrap();
-        if addr.address() < addr_of!(__end) as _ {
-            builder.set_attribute(Attribute::Normal);
-        } else {
-            builder.set_attribute(Attribute::Device);
-        }
-        row.write_page(builder).unwrap();
-    }
-
     // Set the translation tables for user space (temporary) and kernel space. The ASID is omitted
     // because it is 0.
     asm!(
         "msr ttbr0_el1, {ttbr0_el1}",
         "msr ttbr1_el1, {ttbr1_el1}",
         "isb",
-        ttbr0_el1 = in(reg) table_l0_data,
-        ttbr1_el1 = in(reg) table_l0_data,
+        ttbr0_el1 = in(reg) table_l0,
+        ttbr1_el1 = in(reg) table_l0,
     );
 
     // Enable the MMU.

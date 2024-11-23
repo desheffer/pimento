@@ -1,38 +1,25 @@
+__page_size = 4K; # The size of one page
+
 SECTIONS
 {
     . = 0x400000;
-    __start = .;
 
-    __text_start = .;
-    .text : {
+    .text ALIGN(__page_size) : {
         KEEP(*(.text._start))
         *(.text*)
     }
-    . = ALIGN(4096);
-    __text_end = .;
 
-    __rodata_start = .;
-    .rodata : {
+    .rodata ALIGN(__page_size) : {
         *(.rodata*)
     }
-    . = ALIGN(4096);
-    __rodata_end = .;
 
-    __data_start = .;
-    .data : {
+    .data ALIGN(__page_size) : {
         *(.data*)
     }
-    . = ALIGN(4096);
-    __data_end = .;
 
-    __bss_start = .;
-    .bss : {
+    .bss ALIGN(__page_size) : {
         *(.bss*)
     }
-    . = ALIGN(4096);
-    __bss_end = .;
 
     /DISCARD/ : { *(.comment) }
-
-    __end = .;
 }
