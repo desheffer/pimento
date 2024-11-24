@@ -125,6 +125,24 @@ pub unsafe extern "C" fn kernel_init() -> ! {
     task_creation.create_and_become_kinit().unwrap();
     scheduler.schedule();
 
+    task_creation
+        .create_kthread(|| loop {
+            print!("<k1>");
+            for _ in 0..100_000_000 {
+                core::arch::asm!("nop");
+            }
+        })
+        .unwrap();
+
+    task_creation
+        .create_kthread(|| loop {
+            print!("<k2>");
+            for _ in 0..100_000_000 {
+                core::arch::asm!("nop");
+            }
+        })
+        .unwrap();
+
     let task_execution = static_get_or_init!(
         TaskExecutionService,
         TaskExecutionService::new(scheduler, file_manager)

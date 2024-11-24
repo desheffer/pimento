@@ -60,7 +60,7 @@ impl TaskCreationService {
         }
 
         // Wrap the `Fn()` trait so that it can be accessed like a `fn()` pointer.
-        unsafe fn fn_trait_wrapper<F>(func: *const F, scheduler: *const Scheduler) -> !
+        unsafe fn fn_trait_wrapper<F>(func: *const F) -> !
         where
             F: Fn() -> Result<(), ()>,
             F: Send + 'static,
@@ -68,9 +68,7 @@ impl TaskCreationService {
             let _ = (*func)();
 
             // TODO: Exit the task and remove it from the scheduling queue.
-            loop {
-                (*scheduler).schedule();
-            }
+            loop {}
         }
 
         // Set the program counter (link register) by proxy.
@@ -81,7 +79,6 @@ impl TaskCreationService {
                 cpu_context_entry as usize as _,
                 fn_trait_wrapper::<F> as usize as _,
                 func_box.as_ref() as *const _ as _,
-                self.scheduler as *const _ as _,
             );
         }
 

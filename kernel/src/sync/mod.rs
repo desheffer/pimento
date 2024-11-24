@@ -1,5 +1,4 @@
 pub use self::arc::{Arc, Weak};
-pub use self::arch::*;
 pub use self::lock::Lock;
 pub use self::mutex::Mutex;
 pub use self::once::Once;
@@ -10,7 +9,3 @@ mod lock;
 mod mutex;
 mod once;
 mod once_lock;
-
-#[cfg(target_arch = "aarch64")]
-#[path = "aarch64/mod.rs"]
-mod arch;

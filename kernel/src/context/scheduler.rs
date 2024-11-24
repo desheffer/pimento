@@ -6,13 +6,13 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use crate::context::{ContextSwitch, Task, TaskId};
-use crate::cpu::INTERRUPT_MASK;
+use crate::cpu::{critical, enable_interrupts};
 use crate::device::Timer;
-use crate::sync::{Arc, UninterruptibleLock};
+use crate::sync::{Arc, Lock};
 
 /// A round-robin task scheduler.
 pub struct Scheduler {
-    lock: UninterruptibleLock,
+    lock: Lock,
     tasks: UnsafeCell<BTreeMap<TaskId, Arc<Task>>>,
     queue: UnsafeCell<VecDeque<TaskId>>,
     current_tasks: UnsafeCell<Vec<Option<TaskId>>>,
@@ -30,7 +30,7 @@ impl Scheduler {
         context_switch: &'static ContextSwitch,
     ) -> Self {
         Self {
-            lock: UninterruptibleLock::new(),
+            lock: Lock::new(),
             tasks: UnsafeCell::new(BTreeMap::new()),
             queue: UnsafeCell::new(VecDeque::new()),
             current_tasks: UnsafeCell::new(vec![None; num_cores]),
@@ -120,7 +120,7 @@ impl Scheduler {
 
         self.timer.set_duration(self.quantum);
 
-        INTERRUPT_MASK.enable_interrupts();
+        enable_interrupts();
     }
 
     /// Gets the index number of the current CPU core.
@@ -132,21 +132,25 @@ impl Scheduler {
     /// Gets the current task ID.
     pub fn current_task_id(&self) -> TaskId {
         // SAFETY: Safe because call is behind a lock.
-        self.lock.call(|| unsafe {
-            let current_core = self.current_core();
-            let current_tasks = &*self.current_tasks.get();
+        critical(|| unsafe {
+            self.lock.call(|| {
+                let current_core = self.current_core();
+                let current_tasks = &*self.current_tasks.get();
 
-            current_tasks[current_core].unwrap()
+                current_tasks[current_core].unwrap()
+            })
         })
     }
 
     /// Gets a reference to the task with the given task ID.
     pub fn task(&self, task_id: TaskId) -> Option<Arc<Task>> {
         // SAFETY: Safe because call is behind a lock.
-        self.lock.call(|| unsafe {
-            let tasks = &*self.tasks.get();
+        critical(|| unsafe {
+            self.lock.call(|| {
+                let tasks = &*self.tasks.get();
 
-            tasks.get(&task_id).cloned()
+                tasks.get(&task_id).cloned()
+            })
         })
     }
 }

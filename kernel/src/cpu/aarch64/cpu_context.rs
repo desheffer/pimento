@@ -58,11 +58,10 @@ impl CpuContext {
     }
 
     /// Sets the link register.
-    pub unsafe fn set_link_register(&mut self, lr: u64, x19: u64, x20: u64, x21: u64) {
+    pub unsafe fn set_link_register(&mut self, lr: u64, x19: u64, x20: u64) {
         (*self.registers.get()).lr = lr;
         (*self.registers.get()).x19 = x19;
         (*self.registers.get()).x20 = x20;
-        (*self.registers.get()).x21 = x21;
     }
 }
 
