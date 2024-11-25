@@ -2,13 +2,14 @@ use core::cell::UnsafeCell;
 use core::time::Duration;
 
 use alloc::collections::{BTreeMap, VecDeque};
+use alloc::sync::Arc;
 use alloc::vec;
 use alloc::vec::Vec;
 
 use crate::context::{ContextSwitch, Task, TaskId};
 use crate::cpu::{critical, enable_interrupts};
 use crate::device::Timer;
-use crate::sync::{Arc, Lock};
+use crate::sync::Lock;
 
 /// A round-robin task scheduler.
 pub struct Scheduler {

@@ -1,5 +1,6 @@
+use alloc::sync::{Arc, Weak};
+
 use crate::fs::FileSystem;
-use crate::sync::{Arc, Weak};
 
 pub type NodeId = u64;
 

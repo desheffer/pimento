@@ -1,7 +1,8 @@
+use alloc::sync::Arc;
 use alloc::vec::Vec;
 
 use crate::fs::{Directory, File, FileSystem, Node, NodeLink, NodeType, Tmpfs, CURRENT, PARENT};
-use crate::sync::{Arc, Mutex};
+use crate::sync::Mutex;
 
 /// A record that `subtree` is mounted on `mount_point`.
 struct Mount {

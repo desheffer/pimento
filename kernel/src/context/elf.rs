@@ -2,11 +2,11 @@ use core::cmp::min;
 use core::mem::{size_of, transmute_copy};
 use core::ops::Range;
 
+use alloc::sync::Arc;
 use alloc::vec::Vec;
 
 use crate::fs::File;
 use crate::memory::{Page, UserAddress};
-use crate::sync::Arc;
 
 const HEADER_IDENT_CLASS_64_BIT: u8 = 0x02;
 const HEADER_IDENT_DATA_LE: u8 = 0x01;

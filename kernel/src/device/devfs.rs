@@ -3,12 +3,13 @@ use core::sync::atomic::Ordering::Relaxed;
 
 use alloc::borrow::ToOwned;
 use alloc::collections::BTreeMap;
+use alloc::sync::{Arc, Weak};
 use alloc::vec;
 use alloc::vec::Vec;
 
 use crate::device::CharacterDevice;
 use crate::fs::{Directory, File, FileSystem, Node, NodeId, NodeLink, NodeType, CURRENT, PARENT};
-use crate::sync::{Arc, Mutex, Weak};
+use crate::sync::Mutex;
 
 /// A device file system.
 pub struct Devfs {

@@ -1,7 +1,7 @@
+use alloc::sync::Arc;
 use alloc::vec::Vec;
 
 use crate::fs::{Directory, File, Node, NodeLink};
-use crate::sync::Arc;
 
 pub const CURRENT: &str = ".";
 pub const PARENT: &str = "..";

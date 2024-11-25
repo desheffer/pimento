@@ -1,7 +1,9 @@
 use core::fmt::{self, Write};
 
+use alloc::sync::Arc;
+
 use crate::device::{CharacterDevice, Monotonic};
-use crate::sync::{Arc, OnceLock};
+use crate::sync::OnceLock;
 
 static DEVICE: OnceLock<Arc<dyn CharacterDevice>> = OnceLock::new();
 static MONOTONIC: OnceLock<Arc<dyn Monotonic>> = OnceLock::new();

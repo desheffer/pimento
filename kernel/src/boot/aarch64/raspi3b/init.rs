@@ -1,6 +1,7 @@
 use core::ptr::addr_of;
 use core::time::Duration;
 
+use alloc::sync::Arc;
 use alloc::vec::Vec;
 
 use crate::abi::{InterruptRouter, SysWrite, SystemCall, SystemCallRouter, VectorTable};
@@ -13,7 +14,7 @@ use crate::fs::{FileManager, PathInfo, Tmpfs, VirtualFileSystem};
 use crate::kernel::Kernel;
 use crate::memory::{PageAllocator, PhysicalAddress, MEMORY_MAPPER};
 use crate::print;
-use crate::sync::{Arc, OnceLock};
+use crate::sync::OnceLock;
 
 extern "C" {
     static __end: u8;

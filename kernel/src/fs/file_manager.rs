@@ -1,9 +1,9 @@
 use alloc::borrow::ToOwned;
 use alloc::string::String;
+use alloc::sync::Arc;
 use alloc::vec::Vec;
 
 use crate::fs::{Directory, File, FileSystem, Node, VirtualFileSystem, CURRENT, PARENT};
-use crate::sync::Arc;
 
 pub const SLASH: char = '/';
 

@@ -1,7 +1,8 @@
+use alloc::sync::{Arc, Weak};
 use alloc::vec::Vec;
 
 use crate::fs::Node;
-use crate::sync::{Arc, Mutex, Weak};
+use crate::sync::Mutex;
 
 /// An open file.
 pub struct File {

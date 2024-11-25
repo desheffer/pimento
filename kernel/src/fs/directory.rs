@@ -1,7 +1,8 @@
 use alloc::string::String;
+use alloc::sync::{Arc, Weak};
 
 use crate::fs::Node;
-use crate::sync::{Arc, Mutex, Weak};
+use crate::sync::Mutex;
 
 /// A node linked from a directory.
 pub struct NodeLink {

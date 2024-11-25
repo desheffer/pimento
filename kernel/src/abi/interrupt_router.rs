@@ -1,9 +1,10 @@
 use core::mem::transmute;
 
+use alloc::sync::Arc;
 use alloc::vec::Vec;
 
 use crate::device::InterruptController;
-use crate::sync::{Arc, Mutex};
+use crate::sync::Mutex;
 
 type HandlerFn = unsafe fn(HandlerData);
 type HandlerData = *const ();

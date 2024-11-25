@@ -4,6 +4,7 @@ use core::ptr;
 use core::sync::atomic::AtomicU16;
 use core::sync::atomic::Ordering::Relaxed;
 
+use alloc::sync::Arc;
 use alloc::vec::Vec;
 
 use crate::memory::{
@@ -11,7 +12,7 @@ use crate::memory::{
     PhysicalAddress, Table, TableDescriptorBuilder, TableManager, UserAddress, LEVEL_MAX,
     LEVEL_ROOT, MEMORY_MAPPER,
 };
-use crate::sync::{Arc, Lock};
+use crate::sync::Lock;
 
 const TTBR_EL1_ASID_SHIFT: u64 = 48;
 
