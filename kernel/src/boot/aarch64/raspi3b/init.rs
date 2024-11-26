@@ -13,7 +13,7 @@ use crate::fs::{FileManager, PathInfo, Tmpfs, VirtualFileSystem};
 use crate::kernel::Kernel;
 use crate::memory::{PageAllocator, PhysicalAddress, MEMORY_MAPPER};
 use crate::sync::OnceLock;
-use crate::task::{set_scheduler, Scheduler, TaskCreationService, TaskExecutionService};
+use crate::task::{self, Scheduler, TaskCreationService, TaskExecutionService};
 use crate::{print, static_get_or_init};
 
 extern "C" {
@@ -82,7 +82,7 @@ pub unsafe extern "C" fn kernel_init() -> ! {
         Scheduler,
         Scheduler::new(num_cores, timer.clone(), Duration::from_millis(10))
     );
-    set_scheduler(scheduler).unwrap();
+    task::set_scheduler(scheduler).unwrap();
 
     let interrupt_router = static_get_or_init!(InterruptRouter, InterruptRouter::new());
 
@@ -118,23 +118,16 @@ pub unsafe extern "C" fn kernel_init() -> ! {
         TaskExecutionService::new(scheduler, file_manager)
     );
 
-    task_creation
-        .create_kthread(|| loop {
-            print!("<k1>");
-            for _ in 0..100_000_000 {
-                core::arch::asm!("nop");
-            }
-        })
-        .unwrap();
-
-    task_creation
-        .create_kthread(|| loop {
-            print!("<k2>");
-            for _ in 0..100_000_000 {
-                core::arch::asm!("nop");
-            }
-        })
-        .unwrap();
+    for _ in 0..2 {
+        task_creation
+            .create_kthread(|| loop {
+                print!("<k{}>", task::current_task().id);
+                for _ in 0..100_000_000 {
+                    core::arch::asm!("nop");
+                }
+            })
+            .unwrap();
+    }
 
     // Initialization is complete. Run the kernel.
     let kernel = Kernel::new(task_execution);

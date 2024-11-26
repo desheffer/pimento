@@ -10,15 +10,18 @@ main:
     // Call `write`:
     mov x0, 1
     adr x1, user_string
-    mov x2, 17
+    mov x2, 4
     mov x8, #64
     svc #0
 
-user_wait:
-    wfi
-    b user_wait
+    ldr x0, =100000000
+loop:
+    sub x0, x0, 1
+    nop
+    cbnz x0, loop
+    b main
 
 .section .rodata
 
 user_string:
-.ascii "<hello from cli>\n"
+.ascii "<u1>"
