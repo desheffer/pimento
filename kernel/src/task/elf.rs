@@ -273,10 +273,12 @@ impl LoadablePage {
         Self { address, bytes }
     }
 
+    /// Gets the address of the page.
     pub fn address(&self) -> UserAddress<u8> {
         self.address
     }
 
+    /// Gets the contents of the page.
     pub fn bytes(&self) -> &[u8] {
         self.bytes.as_slice()
     }

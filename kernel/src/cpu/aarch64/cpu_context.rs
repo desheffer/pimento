@@ -1,4 +1,5 @@
-use core::{arch::global_asm, cell::UnsafeCell};
+use core::arch::global_asm;
+use core::cell::UnsafeCell;
 
 /// The AArch64 registers to save between context switches.
 #[repr(C)]

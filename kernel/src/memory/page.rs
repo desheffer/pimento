@@ -120,6 +120,3 @@ impl Drop for PageAllocation {
         }
     }
 }
-
-unsafe impl Send for PageAllocation {}
-unsafe impl Sync for PageAllocation {}

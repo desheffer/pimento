@@ -3,10 +3,10 @@ use core::arch::global_asm;
 use alloc::borrow::ToOwned;
 use alloc::boxed::Box;
 
-use crate::context::{ParentTaskId, Scheduler, Task, TaskId};
 use crate::cpu::CpuContext;
 use crate::fs::FsContext;
 use crate::memory::{MemoryContext, PageAllocator};
+use crate::task::{ParentTaskId, Scheduler, Task, TaskId};
 
 /// A service for creating new tasks.
 pub struct TaskCreationService {

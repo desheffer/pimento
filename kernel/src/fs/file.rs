@@ -12,7 +12,7 @@ pub struct File {
 }
 
 impl File {
-    // Creates a file.
+    /// Creates a file.
     pub fn new(node: Arc<Node>) -> Arc<Self> {
         Arc::new_cyclic(|me| Self {
             me: me.clone(),

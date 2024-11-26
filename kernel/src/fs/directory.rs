@@ -35,7 +35,7 @@ pub struct Directory {
 }
 
 impl Directory {
-    // Creates a directory.
+    /// Creates a directory.
     pub fn new(node: Arc<Node>) -> Arc<Self> {
         Arc::new_cyclic(|me| Self {
             me: me.clone(),

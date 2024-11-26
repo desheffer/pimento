@@ -5,7 +5,6 @@ use alloc::sync::Arc;
 use alloc::vec::Vec;
 
 use crate::abi::{InterruptRouter, SysWrite, SystemCall, SystemCallRouter, VectorTable};
-use crate::context::{ContextSwitch, Scheduler, TaskCreationService, TaskExecutionService};
 use crate::device::driver::armv8_timer::ArmV8Timer;
 use crate::device::driver::bcm2837_interrupt::{Bcm2837InterruptController, CNTPNSIRQ};
 use crate::device::driver::bcm2837_serial::Bcm2837Serial;
@@ -14,6 +13,7 @@ use crate::fs::{FileManager, PathInfo, Tmpfs, VirtualFileSystem};
 use crate::kernel::Kernel;
 use crate::memory::{PageAllocator, PhysicalAddress, MEMORY_MAPPER};
 use crate::sync::OnceLock;
+use crate::task::{set_scheduler, Scheduler, TaskCreationService, TaskExecutionService};
 use crate::{print, static_get_or_init};
 
 extern "C" {
@@ -76,17 +76,13 @@ pub unsafe extern "C" fn kernel_init() -> ! {
         include_bytes!("../../../../../cli/target/aarch64-unknown-none-softfloat/release/cli");
     cli.write(cli_bytes).unwrap();
 
-    let context_switcher = static_get_or_init!(ContextSwitch, ContextSwitch::new());
-
+    // TODO: Support multiple cores.
+    let num_cores = 1;
     let scheduler = static_get_or_init!(
         Scheduler,
-        Scheduler::new(
-            1,
-            timer.clone(),
-            Duration::from_millis(10),
-            context_switcher
-        )
+        Scheduler::new(num_cores, timer.clone(), Duration::from_millis(10))
     );
+    set_scheduler(scheduler).unwrap();
 
     let interrupt_router = static_get_or_init!(InterruptRouter, InterruptRouter::new());
 
@@ -116,7 +112,11 @@ pub unsafe extern "C" fn kernel_init() -> ! {
         TaskCreationService::new(scheduler, page_allocator)
     );
     task_creation.create_and_become_kinit().unwrap();
-    scheduler.schedule();
+
+    let task_execution = static_get_or_init!(
+        TaskExecutionService,
+        TaskExecutionService::new(scheduler, file_manager)
+    );
 
     task_creation
         .create_kthread(|| loop {
@@ -135,11 +135,6 @@ pub unsafe extern "C" fn kernel_init() -> ! {
             }
         })
         .unwrap();
-
-    let task_execution = static_get_or_init!(
-        TaskExecutionService,
-        TaskExecutionService::new(scheduler, file_manager)
-    );
 
     // Initialization is complete. Run the kernel.
     let kernel = Kernel::new(task_execution);

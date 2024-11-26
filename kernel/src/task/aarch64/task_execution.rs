@@ -1,9 +1,9 @@
 use core::arch::{asm, global_asm};
 use core::mem::transmute;
 
-use crate::context::{Elf64Reader, Scheduler};
 use crate::fs::{FileManager, PathInfo};
 use crate::memory::{Page, UserAddress};
+use crate::task::{current_task, Elf64Reader, Scheduler};
 
 const SPSR_EL1_M_EL0T: u64 = 0b0000; // EL0 with SP_EL0 (EL0t)
 
@@ -28,9 +28,7 @@ impl TaskExecutionService {
 
     /// Executes a user program in the current context.
     pub fn execute(&self, path: &PathInfo) -> Result<(), ()> {
-        // Get the current task.
-        let task_id = self.scheduler.current_task_id();
-        let task = self.scheduler.task(task_id).unwrap();
+        let task = current_task();
 
         // Open the binary file.
         let file = self.file_manager.open(path)?;
