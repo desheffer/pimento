@@ -2,6 +2,7 @@ use core::sync::atomic::AtomicU64;
 use core::sync::atomic::Ordering::Relaxed;
 
 use alloc::boxed::Box;
+use alloc::fmt;
 use alloc::string::String;
 
 use crate::cpu::CpuContext;
@@ -21,6 +22,12 @@ impl TaskId {
         Self {
             id: COUNTER.fetch_add(1, Relaxed),
         }
+    }
+}
+
+impl fmt::Display for TaskId {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.id)
     }
 }
 
