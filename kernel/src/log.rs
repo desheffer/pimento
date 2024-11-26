@@ -22,7 +22,7 @@ pub fn set_monotonic(monotonic: Arc<dyn Monotonic>) -> Result<(), ()> {
 #[macro_export]
 macro_rules! print {
     ($($arg:tt)*) => {{
-        $crate::print::_print(format_args!($($arg)*));
+        $crate::log::_print(format_args!($($arg)*));
     }};
 }
 
@@ -30,10 +30,10 @@ macro_rules! print {
 #[macro_export]
 macro_rules! println {
     () => {
-        $crate::print::_println(format_args_nl!(""));
+        $crate::log::_println(format_args_nl!(""));
     };
     ($($arg:tt)*) => {{
-        $crate::print::_println(format_args_nl!($($arg)*));
+        $crate::log::_println(format_args_nl!($($arg)*));
     }};
 }
 
