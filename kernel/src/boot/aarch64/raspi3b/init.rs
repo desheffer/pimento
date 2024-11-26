@@ -11,6 +11,7 @@ use crate::device::driver::bcm2837_serial::Bcm2837Serial;
 use crate::device::Devfs;
 use crate::fs::{FileManager, PathInfo, Tmpfs, VirtualFileSystem};
 use crate::kernel::Kernel;
+use crate::log;
 use crate::memory::{PageAllocator, PhysicalAddress, MEMORY_MAPPER};
 use crate::sync::OnceLock;
 use crate::task::{self, Scheduler, TaskCreationService, TaskExecutionService};
@@ -28,10 +29,10 @@ extern "C" {
 pub unsafe extern "C" fn kernel_init() -> ! {
     let serial = Arc::new(Bcm2837Serial::new());
     serial.init();
-    print::set_character_device(serial.clone()).unwrap();
+    log::set_character_device(serial.clone()).unwrap();
 
     let timer = Arc::new(ArmV8Timer::new());
-    print::set_monotonic(timer.clone()).unwrap();
+    log::set_monotonic(timer.clone()).unwrap();
 
     let page_allocator = static_get_or_init!(
         PageAllocator,
