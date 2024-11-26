@@ -3,8 +3,8 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use crate::abi::{SystemCall, SystemCallError, SystemCallNumber};
-use crate::context::Scheduler;
 use crate::memory::UserAddress;
+use crate::task::{current_task, Scheduler};
 
 pub struct SysWrite {
     scheduler: &'static Scheduler,
@@ -42,8 +42,7 @@ impl SystemCall for SysWrite {
             return Err(SystemCallError::BadFileNumber);
         }
 
-        let task_id = self.scheduler.current_task_id();
-        let task = self.scheduler.task(task_id).unwrap();
+        let task = current_task();
 
         let mut k_buf: Vec<u8> = vec![0; count];
 

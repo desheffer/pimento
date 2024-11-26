@@ -74,6 +74,3 @@ struct Interrupt {
     handler_func: HandlerFn,
     handler_data: HandlerData,
 }
-
-unsafe impl Send for Interrupt {}
-unsafe impl Sync for Interrupt {}

@@ -1,6 +1,6 @@
 pub use self::arch::*;
 pub use self::elf::Elf64Reader;
-pub use self::scheduler::Scheduler;
+pub use self::scheduler::{current_task, set_scheduler, Scheduler};
 pub use self::task::{ParentTaskId, Task, TaskId};
 
 mod elf;
